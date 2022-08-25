@@ -5,16 +5,17 @@ date: '2022-08-25'
 ---
 
 ##Question 1
-```{r }
+```{r loading everything}
 library(palmerpenguins)
 library(ggplot2)
 library(rlang)
 suppressMessages(library(ggplot2))
 ```
 
-```{r}
+```{rload data}
 data("penguins")
 ```
+
 Based on the information we have so far, we are dealing wtih regression modelling task.
 
 ##Question 2
@@ -56,3 +57,12 @@ nrow(penguinsClean)
 ```
 
 There are 11 rows that contained missing data in the penguins data set. There are 333 rows left with in the penguinsClean data set.
+
+```{r histogram Penguine}
+ggplot(penguinsClean, aes(x=body_mass_g)) + geom_histogram(bins = 20, fill='blue', col = 'black')
+
+```
+```{r}
+ggplot(penguinsClean, aes(x=body_mass_g)) + geom_histogram(bins = 15, fill='blue', col = 'black')
+```
+
