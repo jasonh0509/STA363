@@ -1,0 +1,58 @@
+---
+title: "STAA 363 Lab1"
+output: html_document
+date: '2022-08-25'
+---
+
+##Question 1
+```{r }
+library(palmerpenguins)
+library(ggplot2)
+library(rlang)
+suppressMessages(library(ggplot2))
+```
+
+```{r}
+data("penguins")
+```
+Based on the information we have so far, we are dealing wtih regression modelling task.
+
+##Question 2
+For client 1, we are dealing with an association modeling task.
+
+##Question 3
+For client 2, we are dealing with a prediction modeling task.
+
+```{r}
+summary(penguins$body_mass_g)
+histpenguine<-ggplot(penguins, mapping = aes(x=penguins$body_mass_g))+
+  geom_histogram()
+histpenguine
+```
+
+## Question 4
+The smallest body mass in the dataset is 2700 grams.
+
+## Question 5
+50% of the penguines has body masss less than or equal to 4050 grams 
+
+## Question 6
+
+```{r count missing mass}
+sum(is.na(penguins$body_mass_g))
+```
+
+There are 2 penguines in the data set that do not have a body mass recorded
+
+```{r cleans}
+penguinsClean<-na.omit(penguins)
+```
+
+## Question 7
+
+```{r count missing}
+nrow(penguins)
+nrow(penguinsClean)
+```
+
+There are 11 rows that contained missing data in the penguins data set. There are 333 rows left with in the penguinsClean data set.
