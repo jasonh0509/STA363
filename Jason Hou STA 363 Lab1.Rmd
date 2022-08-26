@@ -1,15 +1,17 @@
 ---
-title: "STAA 363 Lab1"
+title: "STA 363 Lab1"
 output: html_document
 date: '2022-08-25'
 ---
 
-##Question 1
+## Question 1
 ```{r loading everything}
 library(palmerpenguins)
 library(ggplot2)
 library(rlang)
 suppressMessages(library(ggplot2))
+library(tidyverse)
+library(gridExtra)
 ```
 
 ```{rload data}
@@ -18,10 +20,11 @@ data("penguins")
 
 Based on the information we have so far, we are dealing wtih regression modelling task.
 
-##Question 2
+## Question 2
+
 For client 1, we are dealing with an association modeling task.
 
-##Question 3
+## Question 3
 For client 2, we are dealing with a prediction modeling task.
 
 ```{r}
@@ -62,7 +65,47 @@ There are 11 rows that contained missing data in the penguins data set. There ar
 ggplot(penguinsClean, aes(x=body_mass_g)) + geom_histogram(bins = 20, fill='blue', col = 'black')
 
 ```
+
+
+```{r histogram penguine flipper length with bin 15}
+ggplot(penguinsClean, aes(x=flipper_length_mm)) + geom_histogram(bins = 15, fill='cyan', col = 'white')
+```
+
+## Question 9
+
+```{r w/title}
+ggplot(penguinsClean, aes(x=flipper_length_mm)) + geom_histogram(bins = 15, fill='cyan', col = 'white')+
+  labs(title = "Figure 2:",x="Flipper Length (in mm)",y="Frequency")
+```
+
+```{r boxplot}
+MassBoxPlot<-penguinsClean%>%
+  ggplot(mapping = aes(x=body_mass_g))+
+  geom_boxplot(fill = "gold",col = "black")+
+  labs(title = "Figure 3:",x="Body Mass(in grams)")
+MassBoxPlot
+```
+
+## Question 11
+
+
+
+
+```{r fillper length vs body mass scatter plot}
+ggplot(penguinsClean, aes(x=flipper_length_mm, y = body_mass_g)) + geom_point()+labs(title = "Figure 4:",x = "Flipper Length(in mm)",y = "Body Mass (in grams)")
+
+```
+
+```{r scatter plot with LSLR line}
+ggplot(penguinsClean, aes(x=flipper_length_mm, y = body_mass_g)) + geom_point()+labs(title = "Figure 5:",x = "Flipper Length(in mm)",y = "Body Mass (in grams)")+
+stat_smooth(method = "lm", formula = y ~ x, size = 1, se = FALSE)
+```
+
+## Question 14
+Yes, based on the shape of the relationship,it seems reasonable for LSLR to be used for the model.
+
 ```{r}
-ggplot(penguinsClean, aes(x=body_mass_g)) + geom_histogram(bins = 15, fill='blue', col = 'black')
+ggplot(penguinsClean, aes(body_mass_g)) + geom_histogram(bins = 20, fill = "blue", col = "white")
+
 ```
 
