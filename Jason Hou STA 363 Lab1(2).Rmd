@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Question 1
 
-**Based on the information we have so far, are we dealing with a regression or classification modeling task?**
+*Based on the information we have so far, are we dealing with a regression or classification modeling task?*
 
 ```{r loading everything, include=FALSE}
 library(palmerpenguins)
@@ -31,19 +31,19 @@ Based on the information we have so far, we are dealing wtih regression modellin
 
 ## Question 2
 
-**For Client 1, are we dealing with a prediction or association modeling task?**
+*For Client 1, are we dealing with a prediction or association modeling task?*
 
 For Client 1, we are dealing with an association modeling task because Client 1 is interested in determing the relationship between the flipper length and body mass of a penguin.
 
 ## Question 3
 
-**For Client 2, are we dealing with a prediction or association modeling task?**
+*For Client 2, are we dealing with a prediction or association modeling task?*
 
 For client 2, we are dealing with a prediction modeling task, because Client 2 asked us to build a model to estimate the body mass of a penguin based on other certain characteristics.
 
 ## Question 4
 
-**What is the smallest body mass in the data set?**
+*What is the smallest body mass in the data set?*
 
 ```{r summary, echo=FALSE, warning=FALSE}
 summary(penguins$body_mass_g)
@@ -54,13 +54,13 @@ The smallest body mass in the data set is 2700 grams.
 
 ## Question 5
 
-**50% of penguins have a body mass that is less than or equal to how many grams?**
+*50% of penguins have a body mass that is less than or equal to how many grams?*
 
 50% of the penguins have body mass less than or equal to 4050 grams.
 
 ## Question 6
 
-**How many penguins in the data set do not have a body mass recorded?**
+*How many penguins in the data set do not have a body mass recorded?*
 
 ```{r count missing mass, include=FALSE}
 sum(is.na(penguins$body_mass_g))
@@ -74,20 +74,18 @@ penguinsClean<-na.omit(penguins)
 
 ## Question 7
 
-**In total, how many rows contained missing data in the penguins data set? How many penguins are we left with in the penguinsClean data set?**
+*In total, how many rows contained missing data in the penguins data set? How many penguins are we left with in the penguinsClean data set?*
 
 ```{r count missing, include=FALSE}
-
 nrow(penguins)
 nrow(penguinsClean)
-
 ```
 
 There are 11 rows that contained missing data in the penguins data set. There are 333 rows left within the penguinsClean data set.
 
 ## Question 8
 
-**Create a histogram of flipper length, using 15 bins. Make the bars of the histogram cyan and outline them in white. Show your result.**
+*Create a histogram of flipper length, using 15 bins. Make the bars of the histogram cyan and outline them in white. Show your result.*
 
 ```{r histogram penguine flipper length with bin 15}
 ggplot(penguinsClean, aes(x=flipper_length_mm)) + geom_histogram(bins = 15, fill='cyan', col = 'white')
@@ -96,7 +94,7 @@ ggplot(penguinsClean, aes(x=flipper_length_mm)) + geom_histogram(bins = 15, fill
 
 ## Question 9
 
-**Copy the code you used to make the graph from Question 8. Now, add the title "Figure 2:" and add appropriate labels to the x and y axis.**
+*Copy the code you used to make the graph from Question 8. Now, add the title "Figure 2:" and add appropriate labels to the x and y axis.*
 
 ```{r w/title}
 ggplot(penguinsClean, aes(x=flipper_length_mm)) + geom_histogram(bins = 15, fill='cyan', col = 'white')+
@@ -106,7 +104,7 @@ ggplot(penguinsClean, aes(x=flipper_length_mm)) + geom_histogram(bins = 15, fill
 
 ## Question 10
 
-**Create a box plot of body mass. Fill the plot in gold and outline it in black. Title your plot Figure 3, and label the x axis "Body Mass (in grams)". The y axis does not matter in this box plot (it literally gives us no information), so we want a blank axis label " " . Hint: Instead of a geom_bar, we want geom_boxplot, and box plots do not have bins.**
+*Create a box plot of body mass. Fill the plot in gold and outline it in black. Title your plot Figure 3, and label the x axis "Body Mass (in grams)". The y axis does not matter in this box plot (it literally gives us no information), so we want a blank axis label " " . Hint: Instead of a geom_bar, we want geom_boxplot, and box plots do not have bins.*
 
 ```{r boxplot}
 MassBoxPlot<-penguinsClean%>%
@@ -118,24 +116,21 @@ MassBoxPlot
 
 ## Question 11
 
-**Based on Figure 1 and Figure 3, describe the distribution of body mass. Do you see any outliers? Does the distribution seem unimodal or multimodal? Symmetric or skewed? Etc.**
+*Based on Figure 1 and Figure 3, describe the distribution of body mass. Do you see any outliers? Does the distribution seem unimodal or multimodal? Symmetric or skewed? Etc.*
 
-Based on Figure 1 and Figure 3, we could see that the distribution of the body mass seems unimodal with a slight skew to the right. No outlier was found based on these two graphs. 
+Based on Figure 1 and Figure 3, we could see that the distribution of the body mass seems unimodal with a slight skew to the right. No outliers were found based on these two graphs. 
 
 ## Question 12
 
-**Start with the code above to create a scatter plot for flipper length (X) vs body mass (Y). Color the dots purple.(Hint: This time we are not specifying a fill, but a color). Title your plot Figure 4, and label the x axis "Flipper Length (in mm)" and the y axis "Body Mass (in grams)".**
-
+*Start with the code above to create a scatter plot for flipper length (X) vs body mass (Y). Color the dots purple.(Hint: This time we are not specifying a fill, but a color). Title your plot Figure 4, and label the x axis "Flipper Length (in mm)" and the y axis "Body Mass (in grams)".*
 
 ```{r fillper length vs body mass scatter plot}
 ggplot(penguinsClean, aes(x=flipper_length_mm, y = body_mass_g)) + geom_point(color = "purple")+labs(title = "Figure 4: ",x = "Flipper Length (in mm)",y = "Body Mass (in grams)")
-
-
 ```
 
 ## Question 13
 
-**Add an LSLR line to Figure 4. Title the resulting graph Figure 5.**
+*Add an LSLR line to Figure 4. Title the resulting graph Figure 5.*
 
 ```{r scatter plot with LSLR line}
 ggplot(penguinsClean, aes(x=flipper_length_mm, y = body_mass_g)) + geom_point(color = "purple")+labs(title = "Figure 5:",x = "Flipper Length(in mm)",y = "Body Mass (in grams)")+
@@ -145,14 +140,13 @@ stat_smooth(method = "lm", formula = y ~ x, size = 1, se = FALSE)
 
 ## Question 14
 
-**Based on what you see so far, does the shape of the relationship seem reasonable for LSLR? Explain.**
+*Based on what you see so far, does the shape of the relationship seem reasonable for LSLR? Explain.*
 
 Yes, based on the shape of the relationship, it seems reasonable for LSLR to be used for the model.
 
-
 ## Question 15
 
-**Stack the 4 graphs you would use to explore the relationship between each of the 4 features (flipper length, bill length, species, and sex) versus the response (so flipper length vs. body mass, and then bill length vs. body mass,etc.). You need to stack the graphs in a 2 x 2 grid.**
+*Stack the 4 graphs you would use to explore the relationship between each of the 4 features (flipper length, bill length, species, and sex) versus the response (so flipper length vs. body mass, and then bill length vs. body mass,etc.). You need to stack the graphs in a 2 x 2 grid.*
 
 ```{r 4 graphs}
 Flip_vs_Mass<-ggplot(penguinsClean,aes(x=flipper_length_mm,y=body_mass_g))+geom_point()+labs(title = "Figure 6:",x = "Flipper Length(in mm)",y = "Body Mass (in grams)")
@@ -169,16 +163,14 @@ gridExtra::grid.arrange(Flip_vs_Mass,Bill_vs_Mass,Species_vs_Mass,Sex_vs_Mass)
 ```
 
 
-```{r include=FALSE}
+```{r first way of table, include=FALSE}
 table(penguins$species)
 ```
 
 
-
-
 ## Question 16
 
-**Create a table, using the second way to make a table, for the island where the penguins live. Label the columns appropriately.**
+*Create a table, using the second way to make a table, for the island where the penguins live. Label the columns appropriately.*
 
 ```{r species count table}
 knitr::kable(table(penguins$species), col.names=c("Species", "Count") )
@@ -190,9 +182,9 @@ knitr::kable(table(penguins$island), col.names=c("Island", "Count") )
 
 ## Question 17
 
-**Do we have the same number of male and female penguins on each island? Create a table to find out. Show the table, and answer the question in a complete sentence.**
+*Do we have the same number of male and female penguins on each island? Create a table to find out. Show the table, and answer the question in a complete sentence.*
 
-```{r penguine gender}
+```{r penguine gender count}
 knitr::kable(table(penguins$island, penguins$sex))
 ```
 
@@ -201,27 +193,27 @@ No, based on the table presented above regarding the population of male and fema
 
 ## Question 18
 
-**Our client wants to know if we should include the feature island in the data, or if including species is enough. Create a table to explore the relationship between species and island. Show the table, and respond to your client in a complete sentence.**
+*Our client wants to know if we should include the feature island in the data, or if including species is enough. Create a table to explore the relationship between species and island. Show the table, and respond to your client in a complete sentence.*
 
 ```{r island and species}
-knitr::kable(table(penguins$island, penguins$species))
+knitr::kable(table(penguins$species, penguins$island))
 ```
 
 It can be observed from the table that the three islands do not have all three species on each of them, therefore including the feature island is needed.
 
 ## Question 19
 
-**Create a scatter plot with bill depth on the x axis, body mass on the y axis, color the dots by island, and have a different shape for each island. Make sure to use appropriate titles/labels.**
+*Create a scatter plot with bill depth on the x axis, body mass on the y axis, color the dots by island, and have a different shape for each island. Make sure to use appropriate titles/labels.*
 
 ```{r relationship by island and species}
 ggplot(penguinsClean, aes(x= bill_depth_mm , y = body_mass_g, color = island,pch=species)) + geom_point()+
-  labs(title = "Relationship Between penguins Bill Depth and Body Mass (by species and islands)",x = "Bill Depth (in mm)",y = "Body Mass (in grams)")
+  labs(title = "Relationship Between penguins Bill Depth and Body Mass(by species & islands)",x = "Bill Depth (in mm)",y = "Body Mass (in grams)")
 
 ```
 
 ## Question 20
 
-**What command would you use if you wanted only two columns? Show the resultant plot, and add appropriate labels.**
+*What command would you use if you wanted only two columns? Show the resultant plot, and add appropriate labels.*
 
 ```{r stack graphs}
 ggplot(penguinsClean, aes(x=flipper_length_mm, y = body_mass_g, color = species))+ geom_point()+facet_wrap( ~ species, ncol=2)+labs(title = "Relationship Between penguins Bill Depth and Body Mass(by species)",x = "Flipper Length(in mm)",y = "Body Mass(in grams)")
@@ -232,10 +224,10 @@ I would use +facet_wrap( ~ species, ncol=2) to create the graph with only 2 colu
 
 ## Question 21
 
-**What command would you use if you wanted to add fitted LSLR lines to the facet plot? Show the resultant plot, and make sure the axes are appropriately labeled.**
+*What command would you use if you wanted to add fitted LSLR lines to the facet plot? Show the resultant plot, and make sure the axes are appropriately labeled.*
 
 ```{r LSLR graphs}
-ggplot(penguinsClean, aes(x=flipper_length_mm, y = body_mass_g, color = species))+stat_smooth(method = "lm", formula = y ~ x, size = 1, se = FALSE) + geom_point()+facet_wrap( ~ species, ncol=2)+labs(title = "Relationship Between penguins Bill Depth and Body Mass(by species)",x = "Flipper Length(in mm)",y = "Body Mass(in grams)")
+ggplot(penguinsClean, aes(x=flipper_length_mm, y = body_mass_g, color = species))+stat_smooth(method = "lm", formula = y ~ x, size = 1, se = FALSE,col = "black") + geom_point()+facet_wrap( ~ species, ncol=2)+labs(title = "Relationship Between penguins Bill Depth and Body Mass(by species)",x = "Flipper Length(in mm)",y = "Body Mass(in grams)")
 ```
 
 I would use +stat_smooth(method = "lm", formula = y ~ x, size = 1, se = FALSE) and place it before the geom_point() command to draw LSLR line to each facet plot.
