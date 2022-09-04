@@ -111,17 +111,17 @@ knitr::kable(table(results, testing$spam), caption= "Table 1", col = c("True Not
 
 *What is the sensitivity of your classification method? Do we prefer methods with larger or smaller sensitivity?*
 
-$\frac{18}{74+18}\approx0.19$
+$\frac{18}{74+18}\approx0.196$
 
-The sensitivity of the classification method is 0.19. We prefer methods to have a larer sensitivity.
+The sensitivity of the classification method is 0.196. We prefer methods to have a larer sensitivity.
 
 ## Question 9
 
 *What is the specificity of your classification of your classification method? Do we prefer methods with larger or smaller specificity?*
 
-$\frac{791}{791+17}\approx0.9789$
+$\frac{791}{791+17}\approx0.979$
 
-The specificity of the classification method is about 0.9785. We prefer method with higher specificity.
+The specificity of the classification method is about 0.979. We prefer method with higher specificity.
 
 
 
@@ -129,7 +129,7 @@ The specificity of the classification method is about 0.9785. We prefer method w
 
 *What is the false positive predictive rate (FPPR)? Do we prefer methods with larger or smaller FPPR?*
 
-$\frac{17}{17+18}\approx0.4857$
+$\frac{17}{17+18}\approx0.486$
 
 ## Question 11
 
@@ -143,7 +143,52 @@ $\frac{74}{791+74}\approx0.086$
 
 *What is the accuracy of your classification approach? Hint: This the proportion of the predictions that are correct.*
 
-$\frac{791+18}{900}\approx0.8988$
+$\frac{791+18}{900}\approx0.899$
+
+
+## Question 13
+
+*Run kNN using k=3,7,9. State the sensitivity and specificity that you get using each choice if k.*
+
+```{r knn 3}
+knn3<-knn(train = training[,c(12,13)] , test=testing[,c(12,13)], cl = training$spam, k = 3 )
+
+knitr::kable(table(knn3, testing$spam), caption= "Table 2", col = c("True Not Spam", "True Spam"))
+```
+
+$Sensitivity=\frac{25}{67+25}\approx0.272$
+
+$Specificity=\frac{779}{779+29}\approx0.964$
+
+```{r knn7}
+knn7<-knn(train = training[,c(12,13)] , test=testing[,c(12,13)], cl = training$spam, k = 7 )
+
+knitr::kable(table(knn7, testing$spam), caption= "Table 3", col = c("True Not Spam", "True Spam"))
+```
+
+$Sensitivity=\frac{17}{75+17}\approx0.185$
+
+$Specificity=\frac{799}{799+9}\approx0.989$
+
+
+```{r knn9}
+knn9<-knn(train = training[,c(12,13)] , test=testing[,c(12,13)], cl = training$spam, k = 9 )
+
+knitr::kable(table(knn9, testing$spam), caption= "Table 4", col = c("True Not Spam", "True Spam"))
+```
+
+$Sensitivity=\frac{17}{17+75}\approx0.185$
+
+$Specificity=\frac{798}{798+10}\approx0.988$
+
+We noticed that as the k increase, the specificity increases and hit the plateau when k reaches 9.
+
+
+## Question 15
+
+*Looking at the sensitivity and specificity from k=3,5,7,9, which k would you choose? Explain your choice.*
+
+I will choose k=3 since it has the highest sensitivity, in other words,the highest true positive rate of the prediction, among all four choices of k.
 
 
 ```{r function empirical logit}

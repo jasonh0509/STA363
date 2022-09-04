@@ -452,8 +452,8 @@ one row), or a matrix (multiple rows and columns)?</em></p>
 <p>The object “result” is a vector.</p>
 <pre><code>##          
 ## results   notspam spam
-##   notspam     791   75
-##   spam         17   17</code></pre>
+##   notspam     791   74
+##   spam         17   18</code></pre>
 </div>
 <div id="question-7" class="section level2">
 <h2>Question 7</h2>
@@ -472,12 +472,12 @@ predicted to be spam and not spam.</em></p>
 <tr class="odd">
 <td align="left">notspam</td>
 <td align="right">791</td>
-<td align="right">75</td>
+<td align="right">74</td>
 </tr>
 <tr class="even">
 <td align="left">spam</td>
 <td align="right">17</td>
-<td align="right">17</td>
+<td align="right">18</td>
 </tr>
 </tbody>
 </table>
@@ -516,6 +516,83 @@ methods with larger or smaller FNPR?</em></p>
 <p><em>What is the accuracy of your classification approach? Hint: This
 the proportion of the predictions that are correct.</em></p>
 <p><span class="math inline">\(\frac{791+18}{900}\approx0.8988\)</span></p>
+</div>
+<div id="question-13" class="section level2">
+<h2>Question 13</h2>
+<p><em>Run kNN using k=3,7,9. State the sensitivity and specificity that
+you get using each choice if k.</em></p>
+<table>
+<caption>Table 2</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">True Not Spam</th>
+<th align="right">True Spam</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">notspam</td>
+<td align="right">779</td>
+<td align="right">68</td>
+</tr>
+<tr class="even">
+<td align="left">spam</td>
+<td align="right">29</td>
+<td align="right">24</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(Sensitivity=\frac{25}{67+25}\approx0.2717\)</span></p>
+<p><span class="math inline">\(Specificity=\frac{779}{779+29}\approx0.9641\)</span></p>
+<table>
+<caption>Table 3</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">True Not Spam</th>
+<th align="right">True Spam</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">notspam</td>
+<td align="right">799</td>
+<td align="right">75</td>
+</tr>
+<tr class="even">
+<td align="left">spam</td>
+<td align="right">9</td>
+<td align="right">17</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(Sensitivity=\frac{17}{75+17}\approx0.2717\)</span></p>
+<p><span class="math inline">\(Specificity=\frac{799}{799+9}\approx0.9889\)</span></p>
+<table>
+<caption>Table 4</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">True Not Spam</th>
+<th align="right">True Spam</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">notspam</td>
+<td align="right">797</td>
+<td align="right">75</td>
+</tr>
+<tr class="even">
+<td align="left">spam</td>
+<td align="right">11</td>
+<td align="right">17</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(Sensitivity=\frac{17}{17+75}\approx0.1848\)</span></p>
+<p><span class="math inline">\(Specificity=\frac{798}{798+10}\approx0.9876\)</span></p>
 </div>
 
 
