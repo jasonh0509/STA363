@@ -1,0 +1,150 @@
+---
+title: "Jason Hou STA 363 Lab 2"
+output: html_document
+date: '2022-09-01'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r load package}
+library(tidyverse)
+library(broom)
+library(janitor)
+library(ggplot2)
+library(class)
+suppressMessages(library(class))
+```
+
+
+```{r load data}
+training<-read.csv("train.csv")
+testing<-read.csv("test.csv")
+```
+
+```{r}
+glimpse(training)
+```
+
+## Question 1
+
+*How many rows are in the test data set? What about the training data set?*
+
+```{r}
+nrow(training)
+```
+
+```{r}
+nrow(testing)
+```
+
+There are 900 rows in the test data set and 3012 rows in the testing data set.
+
+## Question 2
+
+*The test data set is smaller than the training data set. This is almost always the case in statistical learning applications. Explain why you think this is the case.*
+
+
+## Question 3
+
+*(a)Create a scatter plot where line breaks is on the x axis and the number of characters is on the Y axis.* 
+
+*(b) Did you use your training or test data set to create your plot?*
+
+```{r scatterplot}
+Train_Scatter<-training%>%
+  ggplot(mapping = aes(x=line_breaks,y=num_char))+
+  geom_point(color="blue")+
+  ggtitle("Figure 1: Scatterplot of Numer Line Breaks vs Number of Characteris in Email")
+Train_Scatter
+```
+
+I used training data set to create the plot.
+
+## Question 4
+
+*Change the color and/or the shape of the points on the graph based on Y. In other words, spam emails should be one shape and/or color and non spam emails should be a different shape and/or color. Hint: Look back at Lab 1 if you have questions on how to do this!*
+
+```{r change color shape}
+Train_Scatter_withColor<-training%>%
+  ggplot(mapping = aes(x=line_breaks,y=num_char,color=spam,pch=spam))+
+  geom_point()+
+  ggtitle("Figure 2: Scatterplot of Numer Line Breaks vs Number of Characteris in Email
+          (by spam/not spam)")
+Train_Scatter_withColor
+```
+
+## Question 5
+
+*Suppose an email has 175 characters and 3800 line breaks. Using the 3-nearest neighbors, what value $\hat{Y}$ would you predict for this email? Hint: You don’t need any code for this; look at the graph from Question 4.*
+
+Based on the graph from Question 4, we can locate this email near the top right corner of the graph, and I will predict  as not spam. 
+
+## Question 6
+
+*Using 5 nearest neighbors, run KNN. Look at the object results you have created. Is this a scalar (one value), a vector (one column or one row), or a matrix (multiple rows and columns)?*
+
+```{r knn, include=FALSE}
+results <- knn(train = training[,c(12,13)] , test=testing[,c(12,13)], cl = training$spam, k = 5 )
+results
+```
+
+The object "result" is a vector.
+
+```{r knn table}
+table1<-table(results,testing$spam)
+table1
+```
+
+
+## Question 7
+
+*Make a table to show how many emails 5-nearest neighbors predicted to be spam and not spam.*
+
+```{r table confusion Matrix}
+knitr::kable(table(results, testing$spam), caption= "Table 1", col = c("True Not Spam", "True Spam"))
+```
+
+## Question 8
+
+*What is the sensitivity of your classification method? Do we prefer methods with larger or smaller sensitivity?*
+
+$\frac{18}{74+18}\approx0.19$
+
+The sensitivity of the classification method is 0.19. We prefer methods to have a larer sensitivity.
+
+## Question 9
+
+*What is the specificity of your classification of your classification method? Do we prefer methods with larger or smaller specificity?*
+
+$\frac{791}{791+17}\approx0.9789$
+
+The specificity of the classification method is about 0.9785. We prefer method with higher specificity.
+
+
+```{r}
+
+```
+
+## Question 10
+
+*What is the false positive predictive rate (FPPR)? Do we prefer methods with larger or smaller FPPR?*
+
+```{r}
+
+```
+
+## Question 11
+
+*What is the false negative predictive rate (FNPR)? Do we prefer methods with larger or smaller FNPR?*
+
+
+```{r}
+
+```
+
+## Question 12
+
+*What is the accuracy of your classification approach? Hint: This the proportion of the predictions that are correct.*
