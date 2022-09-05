@@ -9,22 +9,23 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 
-```{r load package}
+```{r load package, include=FALSE}
 library(tidyverse)
 library(broom)
 library(janitor)
 library(ggplot2)
 library(class)
 suppressMessages(library(class))
+library(gridExtra)
 ```
 
 
 ```{r load data}
-training<-read.csv("train.csv")
-testing<-read.csv("test.csv")
+training<-read.csv("training.csv")
+testing<-read.csv("testing.csv")
 ```
 
-```{r}
+```{r include=FALSE}
 glimpse(training)
 ```
 
@@ -170,7 +171,6 @@ $Sensitivity=\frac{17}{75+17}\approx0.185$
 
 $Specificity=\frac{799}{799+9}\approx0.989$
 
-
 ```{r knn9}
 knn9<-knn(train = training[,c(12,13)] , test=testing[,c(12,13)], cl = training$spam, k = 9 )
 
@@ -189,6 +189,8 @@ We noticed that as the k increase, the specificity increases and hit the plateau
 *Looking at the sensitivity and specificity from k=3,5,7,9, which k would you choose? Explain your choice.*
 
 I will choose k=3 since it has the highest sensitivity, in other words,the highest true positive rate of the prediction, among all four choices of k.
+
+## Question 16
 
 
 ```{r function empirical logit}
@@ -260,4 +262,109 @@ prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
   }
 }
 ```
+
+
+```{r empirical log odd plot 1}
+emplogitPlot(x=training$line_breaks, y=training$spam, 
+             xlab = "Line Breaks", 
+             ylab = "Log Odds of Being Spam", 
+             main = "Figure 3")
+```
+
+I don't feel comfortable claiming that the shape of the condition is satisfied, because the linear approach does not effer a good fit to the relationship between predictor Line Breaks and log odds of being spam email.
+
+
+## Question 17
+
+*Create an empirical logit plot where the log of line breaks is on the x axis.Which of the empirical logit plots (using line breaks or using log line breaks) is more linear? Based on the plots, choose whether you will use line breaks or log line breaks as a feature in the model.*
+
+
+```{r transformation with log}
+emplogitPlot(x=log(training$line_breaks), y=training$spam, 
+             xlab = "Log of Line Breaks", 
+             ylab = "Log Odds of Being Spam", 
+             main = "Figure 3")
+```
+
+The empirical logit plots using log line breaks is more lineary. Based on the plots, log line breaks wil be used as a feature in the model.
+
+## Question 18 
+*Repeat this process for number of characters.*
+
+```{r num_char logit}
+emplogitPlot(x=training$num_char, y=training$spam,
+             xlab = "Log of Line Breaks",
+             ylab = "Log Odds of Being Spam",
+             main = "Figure 3")
+```
+
+```{r num_char with log}
+emplogitPlot(x=log(training$num_char), y=training$spam,
+             xlab = "Log of Line Breaks",
+             ylab = "Log Odds of Being Spam",
+             main = "Figure 3")
+```
+
+
+```{r}
+training<-training%>%
+  mutate(spam=recode(spam,
+                     "notspam" = "0",
+                     "spam" = "1"))
+
+training<-training%>%
+  mutate(spam=as.numeric(spam))
+```
+
+## Question 19
+
+*Train your chosen logistic regression model. Write down the trained logistic regression line in log odds form. Hint: For a template for write out your model in Markdown, copy and paste the following into the white space (NOT a chunk), and adapt it to match your trained model:*
+
+
+
+
+```{r model 1}
+m1<-glm(formula=spam ~ log(line_breaks)+log(num_char),family = "binomial",data = training)
+summary(m1)$coefficient
+```
+
+$$log\left(\frac{\hat{\pi}_i}{1-\hat{\pi}_i}\right) =1.09-0.87log(line\_breaks) + 0.18log(num\_char) $$
+ 
+## Question 20
+*Use your trained model to make predictions $\hat{Y}$ for each email in the test data set. Show a confusion matrix comparing the true values of $\hat{Y}$ in the test data to your predictions.*
+
+```{r}
+probabilities<-predict(m1,newdata = testing,type = "resp")
+#probabilities
+```
+
+```{r confusion matrix for logistic}
+predict.Y<-ifelse(probabilities>0.5,1,0)
+table("Prediction"= predict.Y,"Actual"=testing$spam)
+```
+
+## Question 21
+
+*What is the sensitivity of your classification approach?*
+
+## Question 22
+
+*What is the specificity of your classification approach?*
+
+## Question 23
+
+*What is the FPPR?*
+
+## Question 24
+
+*What is the FNPR?*
+
+## Question 25
+
+*What is the accuracy of your classification approach?*
+
+## Question 26
+
+*Compare the two classification approaches (kNN with your chosen k or logistic regression) in terms of (1) sensitivity, (2) specificity, and (3) accuracy.*
+
 
