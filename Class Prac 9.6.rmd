@@ -1,0 +1,11 @@
+---
+title: "Class Prac 9.6"
+author: "Jason Hou"
+date: '2022-09-06'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
