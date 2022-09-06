@@ -47,7 +47,7 @@ There are 900 rows in the test data set and 3012 rows in the testing data set.
 
 *The test data set is smaller than the training data set. This is almost always the case in statistical learning applications. Explain why you think this is the case.*
 
-The test data set is smaller than the training data set because we would need more data points to train the model in order to obtain better model for better prediction/association.
+The test data set is smaller than the training data set because we would need more data points to train the model to obtain a better model for better prediction/association.
 
 ## Question 3
 
@@ -115,7 +115,7 @@ knitr::kable(table(results, testing$spam), caption= "Table 1", col = c("True Not
 
 $\frac{17}{75+17}\approx0.185$
 
-The sensitivity of the classification method is 0.185. We prefer methods to have a larer sensitivity.
+The sensitivity of the classification method is 0.185. We prefer methods to have a higher sensitivity.
 
 ## Question 9
 
@@ -123,7 +123,7 @@ The sensitivity of the classification method is 0.185. We prefer methods to have
 
 $\frac{791}{791+17}\approx0.979$
 
-The specificity of the classification method is about 0.979. We prefer method with higher specificity.
+The specificity of the classification method is about 0.979. We prefer a method with higher specificity.
 
 
 ## Question 10
@@ -188,16 +188,16 @@ $Specificity=\frac{797}{797+11}\approx0.988=98.8%$
 
 *What trend to you notice in the specificity as the k increases? Explain why you think this is happening as k increases.*
 
-We noticed that as the k increase, the specificity increases from 96.4% to 98.9% when k increases from 3 to 7, but decreased slightly when k increases from 7 to 9 (from 98.9% to 98.8%, in other words, specificity hit the plateau when k reaches 9).
+We noticed that as the k increase, the specificity increases from 96.4% to 98.9% when k increases from 3 to 7 but decreased slightly when k increases from 7 to 9 (from 98.9% to 98.8%, in other words, specificity hit the plateau when k reaches 9).
 
-We believe is phenomenon happened because as k increases, there are more points included in the nearest-neighbor range, which increased the error of prediction, in other words, increased the chance of having spam email label as non_spam email. 
+We believe this phenomenon happened because as k increases, there are more points included in the nearest-neighbor range, which increased the error of prediction, in other words, increased the chance of having spam emails labeled as non_spam emails. 
 
 
 ## Question 15
 
 *Looking at the sensitivity and specificity from k=3,5,7,9, which k would you choose? Explain your choice.*
 
-I will choose k=3 since it has the highest sensitivity, in other words,the highest true positive rate of the prediction, among all four choices of k.
+I will choose k=3 since it has the highest sensitivity, in other words, the highest true positive rate of the prediction, among all four choices of k.
 
 ## Question 16
 
@@ -280,7 +280,7 @@ emplogitPlot(x=training$line_breaks, y=training$spam,
              main = "Figure 3")
 ```
 
-I don't feel comfortable claiming that the shape of the condition is satisfied, because the linear approach does not effer a good fit to the relationship between predictor Line Breaks and log odds of being spam email.
+I don't feel comfortable claiming that the shape of the condition is satisfying, because the linear approach does not offer a good fit for the relationship between predictor Line Breaks and log odds of being spam email.
 
 
 ## Question 17
@@ -292,26 +292,26 @@ I don't feel comfortable claiming that the shape of the condition is satisfied, 
 emplogitPlot(x=log(training$line_breaks), y=training$spam, 
              xlab = "Log of Line Breaks", 
              ylab = "Log Odds of Being Spam", 
-             main = "Figure 3")
+             main = "Figure 4")
 ```
 
-The empirical logit plots using log line breaks is more lineary. Based on the plots, log line breaks wil be used as a feature in the model.
+The empirical logit plots using log line breaks are more linear. Based on the plots, log line breaks will be used as a feature in the model.
 
 ## Question 18 
 *Repeat this process for number of characters.*
 
 ```{r num_char logit}
 emplogitPlot(x=training$num_char, y=training$spam,
-             xlab = "Log of Line Breaks",
+             xlab = "Log of Number of Characters",
              ylab = "Log Odds of Being Spam",
-             main = "Figure 3")
+             main = "Figure 4")
 ```
 
 ```{r num_char with log}
 emplogitPlot(x=log(training$num_char), y=training$spam,
-             xlab = "Log of Line Breaks",
+             xlab = "Log of Number of Characters",
              ylab = "Log Odds of Being Spam",
-             main = "Figure 3")
+             main = "Figure 5")
 ```
 
 
@@ -337,10 +337,21 @@ m1<-glm(formula=spam ~ log(line_breaks)+log(num_char),family = "binomial",data =
 summary(m1)$coefficient
 ```
 
-Trained model:
+From the summary of model m1 we have:
+
+$\beta_0=1.09$
+
+$\beta_1=-0.87$
+
+$\beta_2=0.18$
+
+
+Thus,the trained model is: 
+
 $$log\left(\frac{\hat{\pi}_i}{1-\hat{\pi}_i}\right) =1.09-0.87log(line\_breaks_i) + 0.18log(num\_char_i) $$
  
 ## Question 20
+
 *Use your trained model to make predictions $\hat{Y}$ for each email in the test data set. Show a confusion matrix comparing the true values of $\hat{Y}$ in the test data to your predictions.*
 
 ```{r}
@@ -357,31 +368,25 @@ table("Prediction"= predict.Y,"Actual"=testing$spam)
 
 *What is the sensitivity of your classification approach?*
 
-
 The sensitivity of this classification approach is $Sensitivity=\frac{2}{90+2}\approx0.02=2\%$
-
 
 ## Question 22
 
 *What is the specificity of your classification approach?*
 
-$Specificity=\frac{808}{808}\approx1=100\%$
-
-The specificity of this classification approach is 1.
+The specificity of this classification approach is $Specificity=\frac{808}{808}\approx1=100\%$.
 
 ## Question 23
 
 *What is the FPPR?*
 
-
 The FPPR of this classification approach is $FPPR=\frac{0}{2}\approx0$
-
 
 ## Question 24
 
 *What is the FNPR?*
 
-The FNPR of this classification approach $FNPR=\frac{90}{808+90}\approx0.1=10\% $
+The FNPR of this classification approach is  $FNPR=\frac{90}{808+90}\approx0.1=10\%$
 
 
 ## Question 25
@@ -397,6 +402,8 @@ The accuracy of this classification approach is $\frac{2+808}{900}=0.9=90\%$.
 
 |             | KNN   | Logistic | Winner   |
 |-------------|-------|----------|----------|
-| Sensitivity | 0.272 | 0.02     | KNN      |
+| Sensitivity | 0.261 | 0.02     | KNN      |
 | Specificity | 0.964 | 1        | Logistic |
-| Accuracy    | 0.893 | 0.9      | Logistic |
+| Accuracy    | 0.892 | 0.9      | Logistic |
+
+Based on the table, we could find that KNN provided a significantly better sensitivity compared to logistic regression. Logistic regression provided slightly better performance than KNN on specificity and accuracy in identifying spam emails. Therefore, using KNN with k=3 will be the appropriate choice for building the spam filter for the particular set of emails. 
