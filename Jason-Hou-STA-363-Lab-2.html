@@ -382,6 +382,9 @@ data set.</p>
 <p><em>The test data set is smaller than the training data set. This is
 almost always the case in statistical learning applications. Explain why
 you think this is the case.</em></p>
+<p>The test data set is smaller than the training data set because we
+would need more data points to train the model in order to obtain better
+model for better prediction/association.</p>
 </div>
 <div id="question-3" class="section level2">
 <h2>Question 3</h2>
@@ -407,7 +410,8 @@ the 3-nearest neighbors, what value <span class="math inline">\(\hat{Y}\)</span>
 Hint: You don’t need any code for this; look at the graph from Question
 4.</em></p>
 <p>Based on the graph from Question 4, we can locate this email near the
-top right corner of the graph, and I will predict as not spam.</p>
+top right corner of the graph, and I will predict as not spam based on
+the status of the nearest three neighboring data points.</p>
 </div>
 <div id="question-6" class="section level2">
 <h2>Question 6</h2>
@@ -417,8 +421,8 @@ one row), or a matrix (multiple rows and columns)?</em></p>
 <p>The object “result” is a vector.</p>
 <pre><code>##          
 ## results   notspam spam
-##   notspam     791   74
-##   spam         17   18</code></pre>
+##   notspam     791   75
+##   spam         17   17</code></pre>
 </div>
 <div id="question-7" class="section level2">
 <h2>Question 7</h2>
@@ -437,12 +441,12 @@ predicted to be spam and not spam.</em></p>
 <tr class="odd">
 <td align="left">notspam</td>
 <td align="right">791</td>
-<td align="right">74</td>
+<td align="right">75</td>
 </tr>
 <tr class="even">
 <td align="left">spam</td>
 <td align="right">17</td>
-<td align="right">18</td>
+<td align="right">17</td>
 </tr>
 </tbody>
 </table>
@@ -451,8 +455,8 @@ predicted to be spam and not spam.</em></p>
 <h2>Question 8</h2>
 <p><em>What is the sensitivity of your classification method? Do we
 prefer methods with larger or smaller sensitivity?</em></p>
-<p><span class="math inline">\(\frac{18}{74+18}\approx0.196\)</span></p>
-<p>The sensitivity of the classification method is 0.196. We prefer
+<p><span class="math inline">\(\frac{17}{75+17}\approx0.185\)</span></p>
+<p>The sensitivity of the classification method is 0.185. We prefer
 methods to have a larer sensitivity.</p>
 </div>
 <div id="question-9" class="section level2">
@@ -468,26 +472,27 @@ prefer method with higher specificity.</p>
 <h2>Question 10</h2>
 <p><em>What is the false positive predictive rate (FPPR)? Do we prefer
 methods with larger or smaller FPPR?</em></p>
-<p><span class="math inline">\(\frac{17}{17+18}\approx0.486\)</span></p>
+<p><span class="math inline">\(\frac{17}{17+17}=0.5\)</span></p>
 </div>
 <div id="question-11" class="section level2">
 <h2>Question 11</h2>
 <p><em>What is the false negative predictive rate (FNPR)? Do we prefer
 methods with larger or smaller FNPR?</em></p>
-<p><span class="math inline">\(\frac{74}{791+74}\approx0.086\)</span></p>
+<p><span class="math inline">\(\frac{75}{791+75}\approx0.087\)</span></p>
 </div>
 <div id="question-12" class="section level2">
 <h2>Question 12</h2>
 <p><em>What is the accuracy of your classification approach? Hint: This
 the proportion of the predictions that are correct.</em></p>
-<p><span class="math inline">\(\frac{791+18}{900}\approx0.899\)</span></p>
+<p><span class="math inline">\(\frac{791+17}{900}\approx0.898\)</span></p>
 </div>
 <div id="question-13" class="section level2">
 <h2>Question 13</h2>
 <p><em>Run kNN using k=3,7,9. State the sensitivity and specificity that
 you get using each choice if k.</em></p>
 <table>
-<caption>Table 2</caption>
+<caption>Table 2: Confusion Matrix of Spam/Not Spam Emails
+Prediction:(k=3)</caption>
 <thead>
 <tr class="header">
 <th align="left"></th>
@@ -508,10 +513,12 @@ you get using each choice if k.</em></p>
 </tr>
 </tbody>
 </table>
-<p><span class="math inline">\(Sensitivity=\frac{25}{67+25}\approx0.272\)</span></p>
+<p><span class="math inline">\(Sensitivity=\frac{24}{68+24}\approx0.261\)</span></p>
 <p><span class="math inline">\(Specificity=\frac{779}{779+29}\approx0.964\)</span></p>
+<p><span class="math inline">\(Accuracy=\frac{779+24}{900}\approx0.892\)</span></p>
 <table>
-<caption>Table 3</caption>
+<caption>Table 3: Confusion Matrix of Spam/Not Spam Emails
+Prediction:(k=7)</caption>
 <thead>
 <tr class="header">
 <th align="left"></th>
@@ -535,7 +542,8 @@ you get using each choice if k.</em></p>
 <p><span class="math inline">\(Sensitivity=\frac{17}{75+17}\approx0.185\)</span></p>
 <p><span class="math inline">\(Specificity=\frac{799}{799+9}\approx0.989\)</span></p>
 <table>
-<caption>Table 4</caption>
+<caption>Table 4: Confusion Matrix of Spam/Not Spam Emails
+Prediction:(k=9)</caption>
 <thead>
 <tr class="header">
 <th align="left"></th>
@@ -546,20 +554,31 @@ you get using each choice if k.</em></p>
 <tbody>
 <tr class="odd">
 <td align="left">notspam</td>
-<td align="right">798</td>
+<td align="right">797</td>
 <td align="right">75</td>
 </tr>
 <tr class="even">
 <td align="left">spam</td>
-<td align="right">10</td>
+<td align="right">11</td>
 <td align="right">17</td>
 </tr>
 </tbody>
 </table>
-<p><span class="math inline">\(Sensitivity=\frac{17}{17+75}\approx0.185\)</span></p>
-<p><span class="math inline">\(Specificity=\frac{798}{798+10}\approx0.988\)</span></p>
-<p>We noticed that as the k increase, the specificity increases and hit
-the plateau when k reaches 9.</p>
+<p><span class="math inline">\(Sensitivity=\frac{17}{17+75}\approx0.185=18.5%\)</span></p>
+<p><span class="math inline">\(Specificity=\frac{797}{797+11}\approx0.988=98.8%\)</span></p>
+</div>
+<div id="question-14" class="section level2">
+<h2>Question 14</h2>
+<p><em>What trend to you notice in the specificity as the k increases?
+Explain why you think this is happening as k increases.</em></p>
+<p>We noticed that as the k increase, the specificity increases from
+96.4% to 98.9% when k increases from 3 to 7, but decreased slightly when
+k increases from 7 to 9 (from 98.9% to 98.8%, in other words,
+specificity hit the plateau when k reaches 9).</p>
+<p>We believe is phenomenon happened because as k increases, there are
+more points included in the nearest-neighbor range, which increased the
+error of prediction, in other words, increased the chance of having spam
+email label as non_spam email.</p>
 </div>
 <div id="question-15" class="section level2">
 <h2>Question 15</h2>
@@ -618,6 +637,72 @@ predictions.</em></p>
 ## Prediction notspam spam
 ##          0     808   90
 ##          1       0    2</code></pre>
+</div>
+<div id="question-21" class="section level2">
+<h2>Question 21</h2>
+<p><em>What is the sensitivity of your classification approach?</em></p>
+<p><span class="math inline">\(Sensitivity=\frac{2}{90+2}\approx0.02\)</span></p>
+<p>The sensitivity of this classification approach is 0.02.</p>
+</div>
+<div id="question-22" class="section level2">
+<h2>Question 22</h2>
+<p><em>What is the specificity of your classification approach?</em></p>
+<p><span class="math inline">\(Specificity=\frac{808}{808}\approx1\)</span></p>
+<p>The specificity of this classification approach is 1.</p>
+</div>
+<div id="question-23" class="section level2">
+<h2>Question 23</h2>
+<p><em>What is the FPPR?</em></p>
+<p><span class="math inline">\(FPPR=\frac{0}{2}\approx0\)</span></p>
+<p>The FPPR of this classification approach is 0.</p>
+</div>
+<div id="question-24" class="section level2">
+<h2>Question 24</h2>
+<p><em>What is the FNPR?</em></p>
+<p><span class="math inline">\(FNPR=\frac{90}{808+90}\approx0.1\)</span></p>
+<p>The FNPR of this classification approach is 0.1</p>
+</div>
+<div id="question-25" class="section level2">
+<h2>Question 25</h2>
+<p><em>What is the accuracy of your classification approach?</em></p>
+<p><span class="math inline">\(\frac{2+808}{900}=0.9\)</span></p>
+<p>The accuracy of this classification approach is 0.9.</p>
+</div>
+<div id="question-26" class="section level2">
+<h2>Question 26</h2>
+<p><em>Compare the two classification approaches (kNN with your chosen k
+or logistic regression) in terms of (1) sensitivity, (2) specificity,
+and (3) accuracy.</em></p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th>KNN</th>
+<th>Logistic</th>
+<th>Winner</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sensitivity</td>
+<td>0.272</td>
+<td>0.02</td>
+<td>KNN</td>
+</tr>
+<tr class="even">
+<td>Specificity</td>
+<td>0.964</td>
+<td>1</td>
+<td>Logistic</td>
+</tr>
+<tr class="odd">
+<td>Accuracy</td>
+<td>0.893</td>
+<td>0.9</td>
+<td>Logistic</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 

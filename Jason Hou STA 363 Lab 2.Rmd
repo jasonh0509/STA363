@@ -47,6 +47,7 @@ There are 900 rows in the test data set and 3012 rows in the testing data set.
 
 *The test data set is smaller than the training data set. This is almost always the case in statistical learning applications. Explain why you think this is the case.*
 
+The test data set is smaller than the training data set because we would need more data points to train the model in order to obtain better model for better prediction/association.
 
 ## Question 3
 
@@ -81,7 +82,7 @@ Train_Scatter_withColor
 
 *Suppose an email has 175 characters and 3800 line breaks. Using the 3-nearest neighbors, what value $\hat{Y}$ would you predict for this email? Hint: You don’t need any code for this; look at the graph from Question 4.*
 
-Based on the graph from Question 4, we can locate this email near the top right corner of the graph, and I will predict  as not spam. 
+Based on the graph from Question 4, we can locate this email near the top right corner of the graph, and I will predict as not spam based on the status of the nearest three neighboring data points. 
 
 ## Question 6
 
@@ -112,9 +113,9 @@ knitr::kable(table(results, testing$spam), caption= "Table 1", col = c("True Not
 
 *What is the sensitivity of your classification method? Do we prefer methods with larger or smaller sensitivity?*
 
-$\frac{18}{74+18}\approx0.196$
+$\frac{17}{75+17}\approx0.185$
 
-The sensitivity of the classification method is 0.196. We prefer methods to have a larer sensitivity.
+The sensitivity of the classification method is 0.185. We prefer methods to have a larer sensitivity.
 
 ## Question 9
 
@@ -125,26 +126,25 @@ $\frac{791}{791+17}\approx0.979$
 The specificity of the classification method is about 0.979. We prefer method with higher specificity.
 
 
-
 ## Question 10
 
 *What is the false positive predictive rate (FPPR)? Do we prefer methods with larger or smaller FPPR?*
 
-$\frac{17}{17+18}\approx0.486$
+$\frac{17}{17+17}=0.5$
 
 ## Question 11
 
 *What is the false negative predictive rate (FNPR)? Do we prefer methods with larger or smaller FNPR?*
 
 
-$\frac{74}{791+74}\approx0.086$
+$\frac{75}{791+75}\approx0.087$
 
 
 ## Question 12
 
 *What is the accuracy of your classification approach? Hint: This the proportion of the predictions that are correct.*
 
-$\frac{791+18}{900}\approx0.899$
+$\frac{791+17}{900}\approx0.898$
 
 
 ## Question 13
@@ -154,17 +154,19 @@ $\frac{791+18}{900}\approx0.899$
 ```{r knn 3}
 knn3<-knn(train = training[,c(12,13)] , test=testing[,c(12,13)], cl = training$spam, k = 3 )
 
-knitr::kable(table(knn3, testing$spam), caption= "Table 2", col = c("True Not Spam", "True Spam"))
+knitr::kable(table(knn3, testing$spam), caption= "Table 2: Confusion Matrix of Spam/Not Spam Emails Prediction:(k=3) ", col = c("True Not Spam", "True Spam"))
 ```
 
-$Sensitivity=\frac{25}{67+25}\approx0.272$
+$Sensitivity=\frac{24}{68+24}\approx0.261$
 
 $Specificity=\frac{779}{779+29}\approx0.964$
+
+$Accuracy=\frac{779+24}{900}\approx0.892$
 
 ```{r knn7}
 knn7<-knn(train = training[,c(12,13)] , test=testing[,c(12,13)], cl = training$spam, k = 7 )
 
-knitr::kable(table(knn7, testing$spam), caption= "Table 3", col = c("True Not Spam", "True Spam"))
+knitr::kable(table(knn7, testing$spam), caption= "Table 3: Confusion Matrix of Spam/Not Spam Emails Prediction:(k=7)", col = c("True Not Spam", "True Spam"))
 ```
 
 $Sensitivity=\frac{17}{75+17}\approx0.185$
@@ -174,14 +176,21 @@ $Specificity=\frac{799}{799+9}\approx0.989$
 ```{r knn9}
 knn9<-knn(train = training[,c(12,13)] , test=testing[,c(12,13)], cl = training$spam, k = 9 )
 
-knitr::kable(table(knn9, testing$spam), caption= "Table 4", col = c("True Not Spam", "True Spam"))
+knitr::kable(table(knn9, testing$spam), caption= "Table 4: Confusion Matrix of Spam/Not Spam Emails Prediction:(k=9)", col = c("True Not Spam", "True Spam"))
 ```
 
-$Sensitivity=\frac{17}{17+75}\approx0.185$
+$Sensitivity=\frac{17}{17+75}\approx0.185=18.5%$
 
-$Specificity=\frac{798}{798+10}\approx0.988$
+$Specificity=\frac{797}{797+11}\approx0.988=98.8%$
 
-We noticed that as the k increase, the specificity increases and hit the plateau when k reaches 9.
+
+## Question 14
+
+*What trend to you notice in the specificity as the k increases? Explain why you think this is happening as k increases.*
+
+We noticed that as the k increase, the specificity increases from 96.4% to 98.9% when k increases from 3 to 7, but decreased slightly when k increases from 7 to 9 (from 98.9% to 98.8%, in other words, specificity hit the plateau when k reaches 9).
+
+We believe is phenomenon happened because as k increases, there are more points included in the nearest-neighbor range, which increased the error of prediction, in other words, increased the chance of having spam email label as non_spam email. 
 
 
 ## Question 15
@@ -321,14 +330,15 @@ training<-training%>%
 *Train your chosen logistic regression model. Write down the trained logistic regression line in log odds form. Hint: For a template for write out your model in Markdown, copy and paste the following into the white space (NOT a chunk), and adapt it to match your trained model:*
 
 
-
+$$log\left(\frac{\hat{\pi}_i}{1-\hat{\pi}_i}\right)=\beta_0 + \beta_1log(line\_breaks_i) + \beta_2log(num\_char_i)$$
 
 ```{r model 1}
 m1<-glm(formula=spam ~ log(line_breaks)+log(num_char),family = "binomial",data = training)
 summary(m1)$coefficient
 ```
 
-$$log\left(\frac{\hat{\pi}_i}{1-\hat{\pi}_i}\right) =1.09-0.87log(line\_breaks) + 0.18log(num\_char) $$
+Trained model:
+$$log\left(\frac{\hat{\pi}_i}{1-\hat{\pi}_i}\right) =1.09-0.87log(line\_breaks_i) + 0.18log(num\_char_i) $$
  
 ## Question 20
 *Use your trained model to make predictions $\hat{Y}$ for each email in the test data set. Show a confusion matrix comparing the true values of $\hat{Y}$ in the test data to your predictions.*
@@ -347,24 +357,46 @@ table("Prediction"= predict.Y,"Actual"=testing$spam)
 
 *What is the sensitivity of your classification approach?*
 
+
+The sensitivity of this classification approach is $Sensitivity=\frac{2}{90+2}\approx0.02=2\%$
+
+
 ## Question 22
 
 *What is the specificity of your classification approach?*
+
+$Specificity=\frac{808}{808}\approx1=100\%$
+
+The specificity of this classification approach is 1.
 
 ## Question 23
 
 *What is the FPPR?*
 
+
+The FPPR of this classification approach is $FPPR=\frac{0}{2}\approx0$
+
+
 ## Question 24
 
 *What is the FNPR?*
+
+The FNPR of this classification approach $FNPR=\frac{90}{808+90}\approx0.1=10\% $
+
 
 ## Question 25
 
 *What is the accuracy of your classification approach?*
 
+
+The accuracy of this classification approach is $\frac{2+808}{900}=0.9=90\%$.
+
 ## Question 26
 
 *Compare the two classification approaches (kNN with your chosen k or logistic regression) in terms of (1) sensitivity, (2) specificity, and (3) accuracy.*
 
-
+|             | KNN   | Logistic | Winner   |
+|-------------|-------|----------|----------|
+| Sensitivity | 0.272 | 0.02     | KNN      |
+| Specificity | 0.964 | 1        | Logistic |
+| Accuracy    | 0.893 | 0.9      | Logistic |
