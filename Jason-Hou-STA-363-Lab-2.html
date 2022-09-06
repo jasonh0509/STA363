@@ -504,12 +504,12 @@ Prediction:(k=3)</caption>
 <tr class="odd">
 <td align="left">notspam</td>
 <td align="right">779</td>
-<td align="right">67</td>
+<td align="right">68</td>
 </tr>
 <tr class="even">
 <td align="left">spam</td>
 <td align="right">29</td>
-<td align="right">25</td>
+<td align="right">24</td>
 </tr>
 </tbody>
 </table>
@@ -554,12 +554,12 @@ Prediction:(k=9)</caption>
 <tbody>
 <tr class="odd">
 <td align="left">notspam</td>
-<td align="right">797</td>
+<td align="right">798</td>
 <td align="right">75</td>
 </tr>
 <tr class="even">
 <td align="left">spam</td>
-<td align="right">11</td>
+<td align="right">10</td>
 <td align="right">17</td>
 </tr>
 </tbody>
@@ -621,12 +621,12 @@ trained logistic regression line in log odds form. Hint: For a template
 for write out your model in Markdown, copy and paste the following into
 the white space (NOT a chunk), and adapt it to match your trained
 model:</em></p>
-<p><span class="math display">\[log\left(\frac{\hat{\pi}_i}{1-\hat{\pi}_i}\right)=\beta_0
-+ \beta_1log(line\_breaks_i) + \beta_2log(num\_char_i)\]</span></p>
-<pre><code>##                    Estimate Std. Error   z value     Pr(&gt;|z|)
-## (Intercept)       1.0894335  0.4636458  2.349711 1.878800e-02
-## log(line_breaks) -0.8660798  0.1400187 -6.185459 6.192204e-10
-## log(num_char)     0.1761340  0.1176174  1.497517 1.342588e-01</code></pre>
+<pre><code>## # A tibble: 3 × 5
+##   term             estimate std.error statistic  p.value
+##   &lt;chr&gt;               &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;
+## 1 (Intercept)         1.09      0.464      2.35 1.88e- 2
+## 2 log(line_breaks)   -0.866     0.140     -6.19 6.19e-10
+## 3 log(num_char)       0.176     0.118      1.50 1.34e- 1</code></pre>
 <p>From the summary of model m1 we have:</p>
 <p><span class="math inline">\(\beta_0=1.09\)</span></p>
 <p><span class="math inline">\(\beta_1=-0.87\)</span></p>
@@ -640,10 +640,29 @@ model:</em></p>
 <p><em>Use your trained model to make predictions <span class="math inline">\(\hat{Y}\)</span> for each email in the test data
 set. Show a confusion matrix comparing the true values of <span class="math inline">\(\hat{Y}\)</span> in the test data to your
 predictions.</em></p>
-<pre><code>##           Actual
-## Prediction notspam spam
-##          0     808   90
-##          1       0    2</code></pre>
+<table>
+<caption>Table 4: Confusion Matrix of Spam/Not Spam Emails
+Prediction:(Logistic)</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">True Not Spam</th>
+<th align="right">True Spam</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">0</td>
+<td align="right">808</td>
+<td align="right">90</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="question-21" class="section level2">
 <h2>Question 21</h2>

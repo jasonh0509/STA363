@@ -202,7 +202,7 @@ I will choose k=3 since it has the highest sensitivity, in other words, the high
 ## Question 16
 
 
-```{r function empirical logit}
+```{r function empirical logit, include=FALSE}
 emplogitPlot <- function(x, y, binsize = NULL, ci = FALSE, probit = FALSE,
 prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
   # x         vector with values of the independent variable
@@ -330,12 +330,15 @@ training<-training%>%
 *Train your chosen logistic regression model. Write down the trained logistic regression line in log odds form. Hint: For a template for write out your model in Markdown, copy and paste the following into the white space (NOT a chunk), and adapt it to match your trained model:*
 
 
-$$log\left(\frac{\hat{\pi}_i}{1-\hat{\pi}_i}\right)=\beta_0 + \beta_1log(line\_breaks_i) + \beta_2log(num\_char_i)$$
-
-```{r model 1}
+```{r model 1, include=FALSE}
 m1<-glm(formula=spam ~ log(line_breaks)+log(num_char),family = "binomial",data = training)
-summary(m1)$coefficient
+#summary(m1)$coefficient
 ```
+
+```{r organized m1}
+tidy(m1)
+```
+
 
 From the summary of model m1 we have:
 
@@ -361,7 +364,8 @@ probabilities<-predict(m1,newdata = testing,type = "resp")
 
 ```{r confusion matrix for logistic}
 predict.Y<-ifelse(probabilities>0.5,1,0)
-table("Prediction"= predict.Y,"Actual"=testing$spam)
+
+knitr::kable(table(predict.Y, testing$spam), caption= "Table 4: Confusion Matrix of Spam/Not Spam Emails Prediction:(Logistic)", col = c("True Not Spam", "True Spam"))
 ```
 
 ## Question 21
