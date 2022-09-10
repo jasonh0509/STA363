@@ -1,0 +1,25 @@
+---
+title: "Jason Hou STA 363 Lab 3"
+author: "Jason Hou"
+date: '2022-09-09'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(palmerpenguins)
+library(tidyverse)
+library(broom)
+library(janitor)
+library(ggplot2)
+library(class)
+data("penguins")
+```
+
+```{r}
+penguins <- na.omit(penguins)
+```
+
