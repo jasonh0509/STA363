@@ -1,15 +1,15 @@
 ---
-title: "Jason Hou STA 363 Lab 3"
+title: "STA 363 Lab 3"
 author: "Jason Hou"
 date: '2022-09-09'
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r}
+```{r library load, include=FALSE}
 library(palmerpenguins)
 library(tidyverse)
 library(broom)
@@ -19,7 +19,58 @@ library(class)
 data("penguins")
 ```
 
-```{r}
+```{r remove NA}
 penguins <- na.omit(penguins)
 ```
 
+
+## Question 1
+
+*What problems occur when we split the training data set into two data sets, especially with a data set this small?*
+
+```{r}
+
+```
+
+
+```{r}
+set.seed(100)
+trainRows <- sample(1:333, 200)
+```
+
+
+## Question 2
+
+*Create a code chunk. Use the code sample(1:10, 2) to print out 2 random numbers between 1 and 10. Hit play on the chunk. What numbers do you get? Now, hit play again. What numbers do you have now?*
+
+
+```{r}
+
+```
+
+## Question 3
+
+*Now, add the line set.seed(435) to the beginning of your code chunk from the previous question (meaning this line needs to come before the sample command.) You will note that I used 435, but you can use literally any positive integer you want as your random seed. Hit play on the chunk. What numbers do you get? Now, hit play again. What numbers do you have now?*
+
+```{r}
+
+```
+
+
+## Question 4
+
+*Set a random seed of 367. Show the code you would need to sample 5 random numbers between 5 and 678.*
+
+```{r}
+
+```
+
+## Question 5
+
+*Set a random seed of 245. Show the code you would need to sample 5 random numbers between 5 and 200, and store the results as trainPractice. Which 5 random numbers did you select?*
+
+
+
+## Question 6
+
+*Using the rows indicated in the trainPractice vector you created in Question 4, create a data frame (data set) called trainPracticeData by selecting only the rows from the penguin data that are indicated in trainPractice. Print out the result by typing trainPracticeData in a chunk and pressing play.*
