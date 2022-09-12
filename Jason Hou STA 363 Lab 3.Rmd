@@ -33,7 +33,7 @@ penguins <- na.omit(penguins)
 ```
 
 
-```{r}
+```{r seed test}
 set.seed(100)
 trainRows <- sample(1:333, 200)
 ```
@@ -44,9 +44,11 @@ trainRows <- sample(1:333, 200)
 *Create a code chunk. Use the code sample(1:10, 2) to print out 2 random numbers between 1 and 10. Hit play on the chunk. What numbers do you get? Now, hit play again. What numbers do you have now?*
 
 
-```{r}
+```{r random sampling from 1 to 10}
 sample(1:10, 2)
 ```
+
+Every time when I run the code chunk above, the numbers I will get is different.
 
 ## Question 3
 
@@ -57,7 +59,7 @@ set.seed(435)
 sample(1:10, 2)
 ```
 
-After setting the seed before running the sample function, the number get from the sampling process become a constant pair, which is 6 and 10.
+After setting the seed before running the sample function, the number get from sampling become a constant pair, which is 6 and 10.
 
 ## Question 4
 
