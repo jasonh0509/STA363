@@ -45,7 +45,7 @@ trainRows <- sample(1:333, 200)
 
 
 ```{r}
-
+sample(1:10, 2)
 ```
 
 ## Question 3
@@ -53,22 +53,34 @@ trainRows <- sample(1:333, 200)
 *Now, add the line set.seed(435) to the beginning of your code chunk from the previous question (meaning this line needs to come before the sample command.) You will note that I used 435, but you can use literally any positive integer you want as your random seed. Hit play on the chunk. What numbers do you get? Now, hit play again. What numbers do you have now?*
 
 ```{r}
-
+set.seed(435)
+sample(1:10, 2)
 ```
 
+After setting the seed before running the sample function, the number get from the sampling process become a constant pair, which is 6 and 10.
 
 ## Question 4
 
 *Set a random seed of 367. Show the code you would need to sample 5 random numbers between 5 and 678.*
 
 ```{r}
-
+set.seed(367)
+sample(5:678,5)
 ```
 
 ## Question 5
 
 *Set a random seed of 245. Show the code you would need to sample 5 random numbers between 5 and 200, and store the results as trainPractice. Which 5 random numbers did you select?*
 
+```{r}
+set.seed(245)
+trainPractice<-sample(5:200,5)
+trainPractice
+```
+
+```{r}
+trainPenguins <- penguins[trainRows,]
+```
 
 
 ## Question 6
