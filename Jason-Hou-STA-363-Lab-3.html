@@ -374,13 +374,32 @@ pre code {
 <h2>Question 1</h2>
 <p><em>What problems occur when we split the training data set into two
 data sets, especially with a data set this small?</em></p>
+<p>One of the problem that could occur when we split the training data
+set into two data set is the sample size reduction, meaning that we have
+fewer amount of data we can utilize to train the model,which could lead
+to the reduction in accuracy in the trained model, when the data set is
+small, these issues can grow into a more severe extent.</p>
 </div>
 <div id="question-2" class="section level2">
 <h2>Question 2</h2>
 <p><em>Create a code chunk. Use the code sample(1:10, 2) to print out 2
 random numbers between 1 and 10. Hit play on the chunk. What numbers do
 you get? Now, hit play again. What numbers do you have now?</em></p>
-<pre><code>## [1] 7 9</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Two Numbers Selected From 1 to 10</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">7</td>
+</tr>
+<tr class="even">
+<td align="right">9</td>
+</tr>
+</tbody>
+</table>
 <p>Every time when I run the code chunk above, the numbers I will get is
 different.</p>
 </div>
@@ -392,7 +411,21 @@ the sample command.) You will note that I used 435, but you can use
 literally any positive integer you want as your random seed. Hit play on
 the chunk. What numbers do you get? Now, hit play again. What numbers do
 you have now?</em></p>
-<pre><code>## [1]  6 10</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Two Numbers Selected</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td align="right">10</td>
+</tr>
+</tbody>
+</table>
 <p>After setting the seed before running the sample function, the number
 get from sampling become a constant pair, which is 6 and 10.</p>
 </div>
@@ -400,14 +433,69 @@ get from sampling become a constant pair, which is 6 and 10.</p>
 <h2>Question 4</h2>
 <p><em>Set a random seed of 367. Show the code you would need to sample
 5 random numbers between 5 and 678.</em></p>
-<pre><code>## [1] 632 641 316 345  52</code></pre>
+<pre class="r"><code>set.seed(367)
+#sample(5:678,5)
+
+sample_num&lt;-sample(5:678,5)
+knitr::kable(sample_num,col.names = &quot;Sample Number Selected&quot;)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Sample Number Selected</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">632</td>
+</tr>
+<tr class="even">
+<td align="right">641</td>
+</tr>
+<tr class="odd">
+<td align="right">316</td>
+</tr>
+<tr class="even">
+<td align="right">345</td>
+</tr>
+<tr class="odd">
+<td align="right">52</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="question-5" class="section level2">
 <h2>Question 5</h2>
 <p><em>Set a random seed of 245. Show the code you would need to sample
 5 random numbers between 5 and 200, and store the results as
 trainPractice. Which 5 random numbers did you select?</em></p>
-<pre><code>## [1] 86 45 62 58 65</code></pre>
+<pre class="r"><code>set.seed(245)
+trainPractice&lt;-sample(5:200,5)
+knitr::kable(trainPractice,col.names = &quot;Number Selected&quot;)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Number Selected</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">86</td>
+</tr>
+<tr class="even">
+<td align="right">45</td>
+</tr>
+<tr class="odd">
+<td align="right">62</td>
+</tr>
+<tr class="even">
+<td align="right">58</td>
+</tr>
+<tr class="odd">
+<td align="right">65</td>
+</tr>
+</tbody>
+</table>
+<p>The 5 random numbers that are selected are 86,45,62,58,65.</p>
 </div>
 <div id="question-6" class="section level2">
 <h2>Question 6</h2>
@@ -416,15 +504,82 @@ in Question 4, create a data frame (data set) called trainPracticeData
 by selecting only the rows from the penguin data that are indicated in
 trainPractice. Print out the result by typing trainPracticeData in a
 chunk and pressing play.</em></p>
-<pre><code>## # A tibble: 5 × 8
-##   species island bill_length_mm bill_depth_mm flipper_length_… body_mass_g sex  
-##   &lt;fct&gt;   &lt;fct&gt;           &lt;dbl&gt;         &lt;dbl&gt;            &lt;int&gt;       &lt;int&gt; &lt;fct&gt;
-## 1 Adelie  Dream            41.1          18.1              205        4300 male 
-## 2 Adelie  Biscoe           39.6          17.7              186        3500 fema…
-## 3 Adelie  Biscoe           41.1          19.1              188        4100 male 
-## 4 Adelie  Biscoe           41.1          18.2              192        4050 male 
-## 5 Adelie  Torge…           33.5          19                190        3600 fema…
-## # … with 1 more variable: year &lt;int&gt;</code></pre>
+<table>
+<colgroup>
+<col width="8%" />
+<col width="11%" />
+<col width="16%" />
+<col width="15%" />
+<col width="20%" />
+<col width="13%" />
+<col width="7%" />
+<col width="5%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">species</th>
+<th align="left">island</th>
+<th align="right">bill_length_mm</th>
+<th align="right">bill_depth_mm</th>
+<th align="right">flipper_length_mm</th>
+<th align="right">body_mass_g</th>
+<th align="left">sex</th>
+<th align="right">year</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Dream</td>
+<td align="right">41.1</td>
+<td align="right">18.1</td>
+<td align="right">205</td>
+<td align="right">4300</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Biscoe</td>
+<td align="right">39.6</td>
+<td align="right">17.7</td>
+<td align="right">186</td>
+<td align="right">3500</td>
+<td align="left">female</td>
+<td align="right">2008</td>
+</tr>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Biscoe</td>
+<td align="right">41.1</td>
+<td align="right">19.1</td>
+<td align="right">188</td>
+<td align="right">4100</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Biscoe</td>
+<td align="right">41.1</td>
+<td align="right">18.2</td>
+<td align="right">192</td>
+<td align="right">4050</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">33.5</td>
+<td align="right">19.0</td>
+<td align="right">190</td>
+<td align="right">3600</td>
+<td align="left">female</td>
+<td align="right">2008</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 

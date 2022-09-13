@@ -28,6 +28,7 @@ penguins <- na.omit(penguins)
 
 *What problems occur when we split the training data set into two data sets, especially with a data set this small?*
 
+One of the problem that could occur when we split the training data set into two data set is the sample size reduction, meaning that we have fewer amount of data we can utilize to train the model,which could lead to the reduction in accuracy in the trained model, when the data set is small, these issues can grow into a more severe extent.
 
 ```{r seed test}
 set.seed(100)
@@ -41,7 +42,8 @@ trainRows <- sample(1:333, 200)
 
 
 ```{r random sampling from 1 to 10}
-sample(1:10, 2)
+sample_from_1_to_10<-sample(1:10, 2)
+knitr::kable(sample_from_1_to_10,col.names = "Two Numbers Selected From 1 to 10")
 ```
 
 Every time when I run the code chunk above, the numbers I will get is different.
@@ -52,7 +54,8 @@ Every time when I run the code chunk above, the numbers I will get is different.
 
 ```{r draw 2 from 10}
 set.seed(435)
-sample(1:10, 2)
+Two_numbers_selected<-sample(1:10, 2)
+knitr::kable(Two_numbers_selected,col.names = "Two Numbers Selected")
 ```
 
 After setting the seed before running the sample function, the number get from sampling become a constant pair, which is 6 and 10.
@@ -61,9 +64,12 @@ After setting the seed before running the sample function, the number get from s
 
 *Set a random seed of 367. Show the code you would need to sample 5 random numbers between 5 and 678.*
 
-```{r draw 5 numbers}
+```{r draw 5 numbers, echo=TRUE}
 set.seed(367)
-sample(5:678,5)
+#sample(5:678,5)
+
+sample_num<-sample(5:678,5)
+knitr::kable(sample_num,col.names = "Sample Number Selected")
 ```
 
 
@@ -76,12 +82,14 @@ trainRows <- sample(1:333, 200)
 
 *Set a random seed of 245. Show the code you would need to sample 5 random numbers between 5 and 200, and store the results as trainPractice. Which 5 random numbers did you select?*
 
-```{r draw 5 numbers from 200}
+```{r draw 5 numbers from 200, echo=TRUE}
 set.seed(245)
 trainPractice<-sample(5:200,5)
-trainPractice
+knitr::kable(trainPractice,col.names = "Number Selected")
+
 ```
 
+The 5 random numbers that are selected are 86,45,62,58,65.
 
 ## Question 6
 
@@ -94,7 +102,8 @@ trainPenguins <- penguins[trainRows,]
 
 ```{r}
 trainPracticeData <-penguins[trainPractice,]
-trainPracticeData
+knitr::kable(trainPracticeData)
+
 ```
 
 
