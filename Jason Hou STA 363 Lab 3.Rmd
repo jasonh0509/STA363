@@ -28,10 +28,6 @@ penguins <- na.omit(penguins)
 
 *What problems occur when we split the training data set into two data sets, especially with a data set this small?*
 
-```{r}
-
-```
-
 
 ```{r seed test}
 set.seed(100)
@@ -54,7 +50,7 @@ Every time when I run the code chunk above, the numbers I will get is different.
 
 *Now, add the line set.seed(435) to the beginning of your code chunk from the previous question (meaning this line needs to come before the sample command.) You will note that I used 435, but you can use literally any positive integer you want as your random seed. Hit play on the chunk. What numbers do you get? Now, hit play again. What numbers do you have now?*
 
-```{r}
+```{r draw 2 from 10}
 set.seed(435)
 sample(1:10, 2)
 ```
@@ -65,26 +61,48 @@ After setting the seed before running the sample function, the number get from s
 
 *Set a random seed of 367. Show the code you would need to sample 5 random numbers between 5 and 678.*
 
-```{r}
+```{r draw 5 numbers}
 set.seed(367)
 sample(5:678,5)
+```
+
+
+```{r trainRows}
+set.seed(100)
+trainRows <- sample(1:333, 200)
 ```
 
 ## Question 5
 
 *Set a random seed of 245. Show the code you would need to sample 5 random numbers between 5 and 200, and store the results as trainPractice. Which 5 random numbers did you select?*
 
-```{r}
+```{r draw 5 numbers from 200}
 set.seed(245)
 trainPractice<-sample(5:200,5)
 trainPractice
-```
-
-```{r}
-trainPenguins <- penguins[trainRows,]
 ```
 
 
 ## Question 6
 
 *Using the rows indicated in the trainPractice vector you created in Question 4, create a data frame (data set) called trainPracticeData by selecting only the rows from the penguin data that are indicated in trainPractice. Print out the result by typing trainPracticeData in a chunk and pressing play.*
+
+
+```{r trainPractice}
+trainPenguins <- penguins[trainRows,]
+```
+
+```{r}
+trainPracticeData <-penguins[trainPractice,]
+trainPracticeData
+```
+
+
+```{r test}
+testPenguins<-penguins[-trainRows,]
+```
+
+```{r remove data frame not needed}
+rm(trainRows,trainPractice,trainPracticeData)
+```
+

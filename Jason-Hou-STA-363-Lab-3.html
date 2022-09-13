@@ -381,6 +381,8 @@ data sets, especially with a data set this small?</em></p>
 random numbers between 1 and 10. Hit play on the chunk. What numbers do
 you get? Now, hit play again. What numbers do you have now?</em></p>
 <pre><code>## [1] 7 9</code></pre>
+<p>Every time when I run the code chunk above, the numbers I will get is
+different.</p>
 </div>
 <div id="question-3" class="section level2">
 <h2>Question 3</h2>
@@ -392,8 +394,7 @@ the chunk. What numbers do you get? Now, hit play again. What numbers do
 you have now?</em></p>
 <pre><code>## [1]  6 10</code></pre>
 <p>After setting the seed before running the sample function, the number
-get from the sampling process become a constant pair, which is 6 and
-10.</p>
+get from sampling become a constant pair, which is 6 and 10.</p>
 </div>
 <div id="question-4" class="section level2">
 <h2>Question 4</h2>
@@ -415,6 +416,15 @@ in Question 4, create a data frame (data set) called trainPracticeData
 by selecting only the rows from the penguin data that are indicated in
 trainPractice. Print out the result by typing trainPracticeData in a
 chunk and pressing play.</em></p>
+<pre><code>## # A tibble: 5 × 8
+##   species island bill_length_mm bill_depth_mm flipper_length_… body_mass_g sex  
+##   &lt;fct&gt;   &lt;fct&gt;           &lt;dbl&gt;         &lt;dbl&gt;            &lt;int&gt;       &lt;int&gt; &lt;fct&gt;
+## 1 Adelie  Dream            41.1          18.1              205        4300 male 
+## 2 Adelie  Biscoe           39.6          17.7              186        3500 fema…
+## 3 Adelie  Biscoe           41.1          19.1              188        4100 male 
+## 4 Adelie  Biscoe           41.1          18.2              192        4050 male 
+## 5 Adelie  Torge…           33.5          19                190        3600 fema…
+## # … with 1 more variable: year &lt;int&gt;</code></pre>
 </div>
 
 
