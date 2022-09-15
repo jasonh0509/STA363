@@ -1,0 +1,70 @@
+---
+title: "STA 363 Lab 4"
+author: "Jason Hou"
+date: '2022-09-15'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages}
+library(tidyverse)
+library()
+```
+
+
+```{r load data and cleaning}
+library(palmerpenguins)
+data("penguins")
+
+penguins <- na.omit(penguins)
+```
+
+
+## Question 1
+*How many rows should be in each fold for our penguins data? Will all the folds have exactly the same number of rows? Explain your reasoning.*
+
+```{r}
+nrow(penguins)
+```
+
+We should have 33 rows in fold of the penguins data. Some folds will not have exactly the same number of rows since 333 is not fully divisible by 10.
+
+## Question 2
+*Create a data set called penguinsSmall that contains the first 20 rows in the penguin data set. If we use 5-fold CV with this smaller data set, how many rows belong in each fold?*
+
+```{r small set}
+penguinsSmall<-penguins[1:20,]
+```
+
+If we use 5-fold CV with this small data set, there will be 4 rows belong in each fold.
+
+## Question 3
+
+*For our 5-fold CV with penguinsSmall, how many slips of paper in this box need to contain the number 4?*
+
+For the 5-fold CV with penguinSmall, there are 4 slips of paper in this box contain the number 4.
+
+```{r}
+papers <- rep(1:5, 4)
+```
+
+## Question 4
+
+*Suppose we have a data set with 500 rows, and we want to use 5-fold CV. What code would need to create the equivalent of the papers vector for this new data set?*
+
+```{r}
+#Row500<-rep(1:100,5)
+```
+
+
+```{r}
+set.seed(363663)
+foldsSmall <- sample(papers, 20, replace = FALSE)
+```
+
+## Question 5
+*Which fold is the 5th row in the data set assigned to? What about the 20th row?*
+
