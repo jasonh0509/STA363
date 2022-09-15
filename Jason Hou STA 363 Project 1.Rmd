@@ -9,3 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r load data}
+dengue<-read.csv("dengueData.csv")
+```
+
