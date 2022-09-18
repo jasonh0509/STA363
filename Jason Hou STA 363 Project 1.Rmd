@@ -5,11 +5,21 @@ date: '2022-09-12'
 output: html_document
 ---
 
+#Abstract
+
+
+
+#Section 1 Introduction and Data
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r load data}
 dengue<-read.csv("dengueData.csv")
+```
+
+```{r checking}
+sum(is.na(dengue))
 ```
 

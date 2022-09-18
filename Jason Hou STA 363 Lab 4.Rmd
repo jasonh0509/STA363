@@ -11,7 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r load packages}
 library(tidyverse)
-library()
+library(broom)
+library(dplyr)
+library(knitr)
 ```
 
 
@@ -27,7 +29,7 @@ penguins <- na.omit(penguins)
 *How many rows should be in each fold for our penguins data? Will all the folds have exactly the same number of rows? Explain your reasoning.*
 
 ```{r}
-nrow(penguins)
+knitr::kable(nrow(penguins),col.names = "Number of Rows in Penguin Data")
 ```
 
 We should have 33 rows in fold of the penguins data. Some folds will not have exactly the same number of rows since 333 is not fully divisible by 10.
@@ -47,7 +49,7 @@ If we use 5-fold CV with this small data set, there will be 4 rows belong in eac
 
 For the 5-fold CV with penguinSmall, there are 4 slips of paper in this box contain the number 4.
 
-```{r}
+```{r paper}
 papers <- rep(1:5, 4)
 ```
 
@@ -55,16 +57,40 @@ papers <- rep(1:5, 4)
 
 *Suppose we have a data set with 500 rows, and we want to use 5-fold CV. What code would need to create the equivalent of the papers vector for this new data set?*
 
-```{r}
-#Row500<-rep(1:100,5)
+```{r 500 rows, message=FALSE}
+Row500<-rep(1:100,5)
 ```
 
+The code Row500<-rep(1:100,5) could create the equivalent of papers vector for this new data set.
 
-```{r}
+```{r fold sampling }
 set.seed(363663)
 foldsSmall <- sample(papers, 20, replace = FALSE)
 ```
 
 ## Question 5
 *Which fold is the 5th row in the data set assigned to? What about the 20th row?*
+```{r view fold}
+knitr::kable(view(foldsSmall),col.names = "foldSmall")
+```
+
+The 5th row in the data set was assigned to fold 3.The 20th rows of the data is was assigned to fold 3.
+
+
+## Question 6
+*Use R to assign the 333 rows to 10 folds. Use the same seed as we did in the previous section (363663). Which fold is the 1st row in the penguins data set assigned to? What about the second row? Hint: Make sure you change the names of papers and foldSmall so you don’t replace these vectors with new ones. We will need the ones from the previous example in the next section!*
+
+
+```{r sampling from 333 data}
+set.seed(363663)
+boxes<-rep(1:10,34)
+foldPenguin<-sample(boxes,333,replace = FALSE)
+view(foldPenguin)
+
+```
+
+```{r view result, echo=FALSE}
+```
+
+The 1st row in the penguins data set was assigned to fold 2. The 2nd row in the penguins data set was assigned to fold 4.
 
