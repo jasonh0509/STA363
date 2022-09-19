@@ -14,6 +14,7 @@ library(tidyverse)
 library(broom)
 library(dplyr)
 library(knitr)
+library(class)
 ```
 
 
@@ -71,7 +72,14 @@ foldsSmall <- sample(papers, 20, replace = FALSE)
 ## Question 5
 *Which fold is the 5th row in the data set assigned to? What about the 20th row?*
 ```{r view fold}
-knitr::kable(view(foldsSmall),col.names = "foldSmall")
+Result20Row<-data.frame(foldsSmall)
+
+RowInfo<-data.frame("RowNumber" = rep(NA,2),"Fold_went_to"=rep(NA,2))
+RowInfo$RowNumber[1]<-"5"
+RowInfo$RowNumber[2]<-"20"
+RowInfo$Fold_went_to[1]<-Result20Row[5,]
+RowInfo$Fold_went_to[2]<-Result20Row[20,]
+knitr::kable(RowInfo)
 ```
 
 The 5th row in the data set was assigned to fold 3.The 20th rows of the data is was assigned to fold 3.
@@ -89,8 +97,131 @@ view(foldPenguin)
 
 ```
 
-```{r view result, echo=FALSE}
-```
-
 The 1st row in the penguins data set was assigned to fold 2. The 2nd row in the penguins data set was assigned to fold 4.
 
+## Question 7
+*Which rows in the penguinsSmall data set are in fold 1?*
+
+```{r rows assigned to fold 1 (penguinSmall Set)}
+knitr::kable(which(foldsSmall == 1),col.names = "Rows Assigned to Fold 1 in penguinSmall")
+```
+
+## Question 8
+*Which rows in the penguinsSmall data set are in fold 2?*
+
+```{r rows assigned to fold 2 (penguinSmall Set)}
+which(foldsSmall == 2)
+```
+
+Rows 2, 13, 15 and 19 in penguinSmall data set are assigned to fold 2. 
+
+```{r creating data set, include=FALSE}
+fold1 <- penguinsSmall[which(foldsSmall==1), ]
+fold1
+```
+
+
+## Question 9
+*Create fold 2 (meaning show the fold 2 data set) for penguinsSmall. Check to make sure the row numbers match what you have in Question 8!*
+
+```{r fold 2 data set}
+fold2<-penguinsSmall[(which(foldsSmall == 2)),]
+fold2
+```
+
+## Question 10
+*Create fold 10 (meaning show the fold 10 data set) for penguins.*
+
+```{r fold 10, include=FALSE}
+fold10<-penguins[which(foldPenguin == 10),]
+fold10
+```
+
+## Question 11
+*What are the dimensions of storageSmall? (This means how many rows and how many columns).*
+
+```{r dimensions of storageSmall}
+storageSmall <- data.frame("YHat" = rep(NA,20))
+view(storageSmall)
+```
+
+The dimension of storageSmall is 20*1(20 rows and 1 column).
+
+## Question 12
+*Code and run Step 1 - 4 above. Recall that our goal for today is to predict Y = the sex of the penguin based on the flipper length and bill length of that penguin. Print out the storageSmall vector when you have completed the steps. Which rows are currently filled in? Does it make sense that these rows are filled in? Explain.NOTE: When you store the predicted penguin sex, use as.character(Kpreds). Why? Because this time our response variable is recorded as words rather than numbers*
+
+```{r fold 1}
+f<-1
+newTrainF1<-penguinsSmall[-which(foldsSmall == f),]
+newTestF1<-penguinsSmall[which(foldsSmall == f),]
+
+K_predsFold1<-knn(newTrainF1[,c(3,5)],newTestF1[,c(3,5)],cl = newTrainF1$sex,k=5)
+
+storageSmall$YHat[f]<-as.character(K_predsFold1)
+print(storageSmall)
+```
+
+The first row is filled in. It is filled in because the number that f equals to(which is 1) is used to indicate the row that the result of prediction(k_preds) goes to when assigning predicted values to the storageSmall data set.
+
+## Question 13
+
+*Repeat this process but now move on to fold 2. Print out the storageSmall vector when you have completed the steps. Which rows are currently filled in? Does it make sense that these rows are filled in? Explain.*
+
+```{r fold 2 prediction}
+g<-2
+newTrainF2<-penguinsSmall[-which(foldsSmall == f),]
+newTestF2<-penguinsSmall[which(foldsSmall == f),]
+
+K_predsFold2<-knn(newTrainF2[,c(3,5)],newTestF2[,c(3,5)],cl = newTrainF2$sex,k=5)
+
+storageSmall$YHat[g]<-as.character(K_predsFold2)
+```
+
+Now, row 2 was filled. It is filled in because g's value(which is 2) is used to indicate the row that the result of prediction(k_preds) goes to when assigning predicted values to the storageSmall data set.
+
+
+## Question 14
+*Create a for loop to run 5-fold CV on the small data set. Print out the storageSmall vector when you have completed the loop.*
+
+```{r loop, echo=FALSE}
+i<-1
+for(i in 1:5){
+  infold<-which(foldsSmall == i)
+  newTrain_5F<-penguinsSmall[-infold,]
+  newTest_5F<-penguinsSmall[infold,]
+  
+  K_preds_5Fold<-knn(newTrain_5F[,c(3,5)],newTest_5F[,c(3,5)],cl = newTrain_5F$sex,k=5)
+  
+  storageSmall$YHat[infold]<-as.character(K_preds_5Fold)
+}
+
+knitr::kable(print(storageSmall))
+
+```
+
+## Question 15
+*Create a for loop to run 10-fold CV on the penguins data set. Create a confusion matrix when you finish the loop.*
+
+```{r}
+storagePenguin<-data.frame("Yhat"=rep(NA,333))
+```
+
+
+```{r 333 10 folds}
+p<-1
+for(p in 1:10){
+  infoldFull_set<-which(foldPenguin == p)
+  penguinTrain<-penguins[-infoldFull_set,]
+  penguinTest<-penguins[infoldFull_set,]
+  
+  K_preds_penguin<-knn(penguinTrain[,c(3,5)],penguinTest[,c(3,5)],cl = penguinTrain$sex,k=5)
+  
+  storagePenguin$YHat[infoldFull_set]<-as.character(K_preds_penguin)
+}
+
+knitr::kable(print(storagePenguin))
+```
+
+
+## Question 16
+*What is the geometric mean of sensitivity (Y = 1 = male) and specificity (Y = 0 = female) for 10-fold CV with 5 nearest neighbors? Show your work.*

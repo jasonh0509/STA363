@@ -381,7 +381,8 @@ pre code {
 ## ✖ dplyr::lag()    masks stats::lag()</code></pre>
 <pre class="r"><code>library(broom)
 library(dplyr)
-library(knitr)</code></pre>
+library(knitr)
+library(class)</code></pre>
 <pre class="r"><code>library(palmerpenguins)
 data(&quot;penguins&quot;)
 
@@ -527,6 +528,216 @@ foldPenguin&lt;-sample(boxes,333,replace = FALSE)
 view(foldPenguin)</code></pre>
 <p>The 1st row in the penguins data set was assigned to fold 2. The 2nd
 row in the penguins data set was assigned to fold 4.</p>
+</div>
+<div id="question-7" class="section level2">
+<h2>Question 7</h2>
+<p><em>Which rows in the penguinsSmall data set are in fold 1?</em></p>
+<pre class="r"><code>knitr::kable(which(foldsSmall == 1),col.names = &quot;Rows Assigned to Fold 1 in penguinSmall&quot;)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">Rows Assigned to Fold 1 in penguinSmall</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="right">12</td>
+</tr>
+<tr class="even">
+<td align="right">14</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="question-8" class="section level2">
+<h2>Question 8</h2>
+<p><em>Which rows in the penguinsSmall data set are in fold 2?</em></p>
+<pre class="r"><code>which(foldsSmall == 2)</code></pre>
+<pre><code>## [1]  2 13 15 19</code></pre>
+<p>Rows 2, 13, 15 and 19 in penguinSmall data set are assigned to fold
+2.</p>
+</div>
+<div id="question-9" class="section level2">
+<h2>Question 9</h2>
+<p><em>Create fold 2 (meaning show the fold 2 data set) for
+penguinsSmall. Check to make sure the row numbers match what you have in
+Question 8!</em></p>
+<pre class="r"><code>fold2&lt;-penguinsSmall[(which(foldsSmall == 2)),]
+fold2</code></pre>
+<pre><code>## # A tibble: 4 × 8
+##   species island bill_length_mm bill_depth_mm flipper_length_… body_mass_g sex  
+##   &lt;fct&gt;   &lt;fct&gt;           &lt;dbl&gt;         &lt;dbl&gt;            &lt;int&gt;       &lt;int&gt; &lt;fct&gt;
+## 1 Adelie  Torge…           39.5          17.4              186        3800 fema…
+## 2 Adelie  Torge…           42.5          20.7              197        4500 male 
+## 3 Adelie  Torge…           46            21.5              194        4200 male 
+## 4 Adelie  Biscoe           38.2          18.1              185        3950 male 
+## # … with 1 more variable: year &lt;int&gt;</code></pre>
+</div>
+<div id="question-10" class="section level2">
+<h2>Question 10</h2>
+<p><em>Create fold 10 (meaning show the fold 10 data set) for
+penguins.</em></p>
+</div>
+<div id="question-11" class="section level2">
+<h2>Question 11</h2>
+<p><em>What are the dimensions of storageSmall? (This means how many
+rows and how many columns).</em></p>
+<pre class="r"><code>storageSmall &lt;- data.frame(&quot;YHat&quot; = rep(NA,20))
+view(storageSmall)</code></pre>
+<p>The dimension of storageSmall is 20*1(20 rows and 1 column).</p>
+</div>
+<div id="question-12" class="section level2">
+<h2>Question 12</h2>
+<p><em>Code and run Step 1 - 4 above. Recall that our goal for today is
+to predict Y = the sex of the penguin based on the flipper length and
+bill length of that penguin. Print out the storageSmall vector when you
+have completed the steps. Which rows are currently filled in? Does it
+make sense that these rows are filled in? Explain.NOTE: When you store
+the predicted penguin sex, use as.character(Kpreds). Why? Because this
+time our response variable is recorded as words rather than
+numbers</em></p>
+<pre class="r"><code>f&lt;-1
+newTrainF1&lt;-penguinsSmall[-which(foldsSmall == f),]
+newTestF1&lt;-penguinsSmall[which(foldsSmall == f),]
+
+K_preds&lt;-knn(newTrainF1[,c(3,5)],newTestF1[,c(3,5)],cl = newTrainF1$sex,k=5)
+
+storageSmall$YHat[f]&lt;-as.character(K_preds)</code></pre>
+<pre><code>## Warning in storageSmall$YHat[f] &lt;- as.character(K_preds): number of items to
+## replace is not a multiple of replacement length</code></pre>
+<p>The first row is filled in. It is filled in because the first
+fold</p>
+<p>##Question 13</p>
+<p><em>Repeat this process but now move on to fold 2. Print out the
+storageSmall vector when you have completed the steps. Which rows are
+currently filled in? Does it make sense that these rows are filled in?
+Explain.</em></p>
+<pre class="r"><code>g&lt;-2
+newTrainF2&lt;-penguinsSmall[-which(foldsSmall == f),]
+newTestF2&lt;-penguinsSmall[which(foldsSmall == f),]
+
+K_preds&lt;-knn(newTrainF2[,c(3,5)],newTestF2[,c(3,5)],cl = newTrainF2$sex,k=5)
+
+storageSmall$YHat[g]&lt;-as.character(K_preds)</code></pre>
+<pre><code>## Warning in storageSmall$YHat[g] &lt;- as.character(K_preds): number of items to
+## replace is not a multiple of replacement length</code></pre>
+<p>Now, row 2 was filled. It is because</p>
+<p>##Question 14 <em>Create a for loop to run 5-fold CV on the small
+data set. Print out the storageSmall vector when you have completed the
+loop.</em></p>
+<pre class="r"><code>i&lt;-1
+for(i in 1:5){
+  infold&lt;-which(foldsSmall == i)
+  newTrain&lt;-penguinsSmall[-infold,]
+  newTest&lt;-penguinsSmall[infold,]
+  
+  K_preds&lt;-knn(newTrain[,c(3,5)],newTest[,c(3,5)],cl = newTrain$sex,k=5)
+  
+  storageSmall$YHat[infold]&lt;-as.character(K_preds)
+}
+
+knitr::kable(print(storageSmall))</code></pre>
+<pre><code>##      YHat
+## 1    male
+## 2  female
+## 3    male
+## 4  female
+## 5  female
+## 6    male
+## 7    male
+## 8    male
+## 9  female
+## 10   male
+## 11 female
+## 12   male
+## 13 female
+## 14 female
+## 15   male
+## 16   male
+## 17   male
+## 18   male
+## 19 female
+## 20   male</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">YHat</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">male</td>
+</tr>
+<tr class="even">
+<td align="left">female</td>
+</tr>
+<tr class="odd">
+<td align="left">male</td>
+</tr>
+<tr class="even">
+<td align="left">female</td>
+</tr>
+<tr class="odd">
+<td align="left">female</td>
+</tr>
+<tr class="even">
+<td align="left">male</td>
+</tr>
+<tr class="odd">
+<td align="left">male</td>
+</tr>
+<tr class="even">
+<td align="left">male</td>
+</tr>
+<tr class="odd">
+<td align="left">female</td>
+</tr>
+<tr class="even">
+<td align="left">male</td>
+</tr>
+<tr class="odd">
+<td align="left">female</td>
+</tr>
+<tr class="even">
+<td align="left">male</td>
+</tr>
+<tr class="odd">
+<td align="left">female</td>
+</tr>
+<tr class="even">
+<td align="left">female</td>
+</tr>
+<tr class="odd">
+<td align="left">male</td>
+</tr>
+<tr class="even">
+<td align="left">male</td>
+</tr>
+<tr class="odd">
+<td align="left">male</td>
+</tr>
+<tr class="even">
+<td align="left">male</td>
+</tr>
+<tr class="odd">
+<td align="left">female</td>
+</tr>
+<tr class="even">
+<td align="left">male</td>
+</tr>
+</tbody>
+</table>
+<p>##Question 15 <em>Create a for loop to run 10-fold CV on the penguins
+data set. Create a confusion matrix when you finish the loop.</em></p>
+<p>##Question 16 <em>What is the geometric mean of sensitivity (Y = 1 =
+male) and specificity (Y = 0 = female) for 10-fold CV with 5 nearest
+neighbors? Show your work.</em></p>
 </div>
 
 
