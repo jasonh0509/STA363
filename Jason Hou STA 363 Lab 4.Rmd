@@ -208,7 +208,6 @@ storagePenguin<-data.frame("Yhat"=rep(NA,333))
 
 
 ```{r 333 10 folds}
-p<-1
 for(p in 1:10){
   infoldFull_set<-which(foldPenguin == p)
   penguinTrain<-penguins[-infoldFull_set,]
@@ -216,10 +215,9 @@ for(p in 1:10){
   
   K_preds_penguin<-knn(penguinTrain[,c(3,5)],penguinTest[,c(3,5)],cl = penguinTrain$sex,k=5)
   
-  storagePenguin$YHat[infoldFull_set]<-as.character(K_preds_penguin)
+  storagePenguin$Yhat[infoldFull_set]<-as.character(K_preds_penguin)
 }
-
-knitr::kable(print(storagePenguin))
+knitr::kable(print(storagePenguin$Yhat))
 ```
 
 
