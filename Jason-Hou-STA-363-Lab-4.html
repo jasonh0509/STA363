@@ -965,8 +965,7 @@ knitr::kable(fold10,caption = &quot;Fold10 Rows&quot;)</code></pre>
 <h2>Question 11</h2>
 <p><em>What are the dimensions of storageSmall? (This means how many
 rows and how many columns).</em></p>
-<pre class="r"><code>storageSmall &lt;- data.frame(&quot;YHat&quot; = rep(NA,20))
-#view(storageSmall)</code></pre>
+<pre class="r"><code>storageSmall &lt;- data.frame(&quot;YHat&quot; = rep(NA,20))</code></pre>
 <p>The dimension of storageSmall is 20*1(20 rows and 1 column).</p>
 </div>
 <div id="question-12" class="section level2">
@@ -1154,7 +1153,6 @@ Create a confusion matrix when you finish the loop.</em></p>
   storagePenguin$Yhat[infoldFull_set]&lt;-as.character(K_preds_penguin)
   
 }
-#knitr::kable(print(storagePenguin$Yhat))
 
 knitr::kable(table(storagePenguin$Yhat, penguins$sex), caption= &quot;Table 1: Confusion Matrix of Male/Female Penguin Prediction(k=5)&quot;, col = c(&quot;True Female&quot;, &quot;True Male&quot;))</code></pre>
 <table>

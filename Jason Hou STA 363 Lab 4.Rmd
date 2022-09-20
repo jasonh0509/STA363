@@ -143,7 +143,6 @@ knitr::kable(fold10,caption = "Fold10 Rows")
 
 ```{r dimensions of storageSmall}
 storageSmall <- data.frame("YHat" = rep(NA,20))
-#view(storageSmall)
 ```
 
 The dimension of storageSmall is 20*1(20 rows and 1 column).
@@ -232,7 +231,6 @@ for(p in 1:10){
   storagePenguin$Yhat[infoldFull_set]<-as.character(K_preds_penguin)
   
 }
-#knitr::kable(print(storagePenguin$Yhat))
 
 knitr::kable(table(storagePenguin$Yhat, penguins$sex), caption= "Table 1: Confusion Matrix of Male/Female Penguin Prediction(k=5)", col = c("True Female", "True Male"))
 ```
