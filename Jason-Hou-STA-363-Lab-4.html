@@ -370,16 +370,8 @@ pre code {
 </div>
 
 
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
-<pre><code>## ✔ ggplot2 3.3.6     ✔ purrr   0.3.4
-## ✔ tibble  3.1.7     ✔ dplyr   1.0.9
-## ✔ tidyr   1.2.0     ✔ stringr 1.4.0
-## ✔ readr   2.1.2     ✔ forcats 0.5.1</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::filter() masks stats::filter()
-## ✖ dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>library(broom)
+<pre class="r"><code>library(tidyverse)
+library(broom)
 library(dplyr)
 library(knitr)
 library(class)</code></pre>
@@ -405,7 +397,7 @@ reasoning.</em></p>
 </tr>
 </tbody>
 </table>
-<p>We should have 33 rows in fold of the penguins data. Some folds will
+<p>We should have 34 rows in fold of the penguins data. Some folds will
 not have exactly the same number of rows since 333 is not fully
 divisible by 10.</p>
 </div>
@@ -422,9 +414,9 @@ belong in each fold.</p>
 <h2>Question 3</h2>
 <p><em>For our 5-fold CV with penguinsSmall, how many slips of paper in
 this box need to contain the number 4?</em></p>
+<pre class="r"><code>papers &lt;- rep(1:5, 4)</code></pre>
 <p>For the 5-fold CV with penguinSmall, there are 4 slips of paper in
 this box contain the number 4.</p>
-<pre class="r"><code>papers &lt;- rep(1:5, 4)</code></pre>
 </div>
 <div id="question-4" class="section level2">
 <h2>Question 4</h2>
@@ -434,79 +426,35 @@ vector for this new data set?</em></p>
 <pre class="r"><code>Row500&lt;-rep(1:100,5)</code></pre>
 <p>The code Row500&lt;-rep(1:100,5) could create the equivalent of
 papers vector for this new data set.</p>
-<pre class="r"><code>set.seed(363663)
-foldsSmall &lt;- sample(papers, 20, replace = FALSE)</code></pre>
 </div>
 <div id="question-5" class="section level2">
 <h2>Question 5</h2>
 <p><em>Which fold is the 5th row in the data set assigned to? What about
 the 20th row?</em></p>
-<pre class="r"><code>knitr::kable(view(foldsSmall),col.names = &quot;foldSmall&quot;)</code></pre>
+<pre class="r"><code>set.seed(363663)
+foldsSmall &lt;- sample(papers, 20, replace = FALSE)</code></pre>
+<pre class="r"><code>Result20Row&lt;-data.frame(foldsSmall)
+
+RowInfo&lt;-data.frame(&quot;RowNumber&quot; = rep(NA,2),&quot;Fold_went_to&quot;=rep(NA,2))
+RowInfo$RowNumber[1]&lt;-&quot;5&quot;
+RowInfo$RowNumber[2]&lt;-&quot;20&quot;
+RowInfo$Fold_went_to[1]&lt;-Result20Row[5,]
+RowInfo$Fold_went_to[2]&lt;-Result20Row[20,]
+knitr::kable(RowInfo)</code></pre>
 <table>
 <thead>
 <tr class="header">
-<th align="right">foldSmall</th>
+<th align="left">RowNumber</th>
+<th align="right">Fold_went_to</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="right">1</td>
-</tr>
-<tr class="even">
-<td align="right">2</td>
-</tr>
-<tr class="odd">
-<td align="right">5</td>
-</tr>
-<tr class="even">
-<td align="right">4</td>
-</tr>
-<tr class="odd">
+<td align="left">5</td>
 <td align="right">3</td>
 </tr>
 <tr class="even">
-<td align="right">3</td>
-</tr>
-<tr class="odd">
-<td align="right">1</td>
-</tr>
-<tr class="even">
-<td align="right">4</td>
-</tr>
-<tr class="odd">
-<td align="right">4</td>
-</tr>
-<tr class="even">
-<td align="right">5</td>
-</tr>
-<tr class="odd">
-<td align="right">4</td>
-</tr>
-<tr class="even">
-<td align="right">1</td>
-</tr>
-<tr class="odd">
-<td align="right">2</td>
-</tr>
-<tr class="even">
-<td align="right">1</td>
-</tr>
-<tr class="odd">
-<td align="right">2</td>
-</tr>
-<tr class="even">
-<td align="right">3</td>
-</tr>
-<tr class="odd">
-<td align="right">5</td>
-</tr>
-<tr class="even">
-<td align="right">5</td>
-</tr>
-<tr class="odd">
-<td align="right">2</td>
-</tr>
-<tr class="even">
+<td align="left">20</td>
 <td align="right">3</td>
 </tr>
 </tbody>
@@ -558,8 +506,29 @@ row in the penguins data set was assigned to fold 4.</p>
 <div id="question-8" class="section level2">
 <h2>Question 8</h2>
 <p><em>Which rows in the penguinsSmall data set are in fold 2?</em></p>
-<pre class="r"><code>which(foldsSmall == 2)</code></pre>
-<pre><code>## [1]  2 13 15 19</code></pre>
+<pre class="r"><code>knitr::kable(which(foldsSmall == 2),caption = &quot;Rows Went to Fold2&quot;)</code></pre>
+<table>
+<caption>Rows Went to Fold2</caption>
+<thead>
+<tr class="header">
+<th align="right">x</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">13</td>
+</tr>
+<tr class="odd">
+<td align="right">15</td>
+</tr>
+<tr class="even">
+<td align="right">19</td>
+</tr>
+</tbody>
+</table>
 <p>Rows 2, 13, 15 and 19 in penguinSmall data set are assigned to fold
 2.</p>
 </div>
@@ -569,27 +538,435 @@ row in the penguins data set was assigned to fold 4.</p>
 penguinsSmall. Check to make sure the row numbers match what you have in
 Question 8!</em></p>
 <pre class="r"><code>fold2&lt;-penguinsSmall[(which(foldsSmall == 2)),]
-fold2</code></pre>
-<pre><code>## # A tibble: 4 × 8
-##   species island bill_length_mm bill_depth_mm flipper_length_… body_mass_g sex  
-##   &lt;fct&gt;   &lt;fct&gt;           &lt;dbl&gt;         &lt;dbl&gt;            &lt;int&gt;       &lt;int&gt; &lt;fct&gt;
-## 1 Adelie  Torge…           39.5          17.4              186        3800 fema…
-## 2 Adelie  Torge…           42.5          20.7              197        4500 male 
-## 3 Adelie  Torge…           46            21.5              194        4200 male 
-## 4 Adelie  Biscoe           38.2          18.1              185        3950 male 
-## # … with 1 more variable: year &lt;int&gt;</code></pre>
+knitr::kable(fold2,caption = &quot;Fold2 Rows&quot;)</code></pre>
+<table>
+<caption>Fold2 Rows</caption>
+<colgroup>
+<col width="8%" />
+<col width="11%" />
+<col width="16%" />
+<col width="15%" />
+<col width="20%" />
+<col width="13%" />
+<col width="7%" />
+<col width="5%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">species</th>
+<th align="left">island</th>
+<th align="right">bill_length_mm</th>
+<th align="right">bill_depth_mm</th>
+<th align="right">flipper_length_mm</th>
+<th align="right">body_mass_g</th>
+<th align="left">sex</th>
+<th align="right">year</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">39.5</td>
+<td align="right">17.4</td>
+<td align="right">186</td>
+<td align="right">3800</td>
+<td align="left">female</td>
+<td align="right">2007</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">42.5</td>
+<td align="right">20.7</td>
+<td align="right">197</td>
+<td align="right">4500</td>
+<td align="left">male</td>
+<td align="right">2007</td>
+</tr>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">46.0</td>
+<td align="right">21.5</td>
+<td align="right">194</td>
+<td align="right">4200</td>
+<td align="left">male</td>
+<td align="right">2007</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Biscoe</td>
+<td align="right">38.2</td>
+<td align="right">18.1</td>
+<td align="right">185</td>
+<td align="right">3950</td>
+<td align="left">male</td>
+<td align="right">2007</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="question-10" class="section level2">
 <h2>Question 10</h2>
 <p><em>Create fold 10 (meaning show the fold 10 data set) for
 penguins.</em></p>
+<pre class="r"><code>fold10&lt;-penguins[which(foldPenguin == 10),]
+knitr::kable(fold10,caption = &quot;Fold10 Rows&quot;)</code></pre>
+<table>
+<caption>Fold10 Rows</caption>
+<colgroup>
+<col width="10%" />
+<col width="10%" />
+<col width="16%" />
+<col width="15%" />
+<col width="19%" />
+<col width="13%" />
+<col width="7%" />
+<col width="5%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">species</th>
+<th align="left">island</th>
+<th align="right">bill_length_mm</th>
+<th align="right">bill_depth_mm</th>
+<th align="right">flipper_length_mm</th>
+<th align="right">body_mass_g</th>
+<th align="left">sex</th>
+<th align="right">year</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">38.6</td>
+<td align="right">21.2</td>
+<td align="right">191</td>
+<td align="right">3800</td>
+<td align="left">male</td>
+<td align="right">2007</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Biscoe</td>
+<td align="right">35.0</td>
+<td align="right">17.9</td>
+<td align="right">190</td>
+<td align="right">3450</td>
+<td align="left">female</td>
+<td align="right">2008</td>
+</tr>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Biscoe</td>
+<td align="right">42.0</td>
+<td align="right">19.5</td>
+<td align="right">200</td>
+<td align="right">4050</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Biscoe</td>
+<td align="right">34.5</td>
+<td align="right">18.1</td>
+<td align="right">187</td>
+<td align="right">2900</td>
+<td align="left">female</td>
+<td align="right">2008</td>
+</tr>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Biscoe</td>
+<td align="right">41.1</td>
+<td align="right">19.1</td>
+<td align="right">188</td>
+<td align="right">4100</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">41.8</td>
+<td align="right">19.4</td>
+<td align="right">198</td>
+<td align="right">4450</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">42.8</td>
+<td align="right">18.5</td>
+<td align="right">195</td>
+<td align="right">4250</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">36.2</td>
+<td align="right">16.1</td>
+<td align="right">187</td>
+<td align="right">3550</td>
+<td align="left">female</td>
+<td align="right">2008</td>
+</tr>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">36.7</td>
+<td align="right">18.8</td>
+<td align="right">187</td>
+<td align="right">3800</td>
+<td align="left">female</td>
+<td align="right">2008</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Dream</td>
+<td align="right">38.3</td>
+<td align="right">19.2</td>
+<td align="right">189</td>
+<td align="right">3950</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Dream</td>
+<td align="right">40.3</td>
+<td align="right">18.5</td>
+<td align="right">196</td>
+<td align="right">4350</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Biscoe</td>
+<td align="right">37.8</td>
+<td align="right">20.0</td>
+<td align="right">190</td>
+<td align="right">4250</td>
+<td align="left">male</td>
+<td align="right">2009</td>
+</tr>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Biscoe</td>
+<td align="right">42.7</td>
+<td align="right">18.3</td>
+<td align="right">196</td>
+<td align="right">4075</td>
+<td align="left">male</td>
+<td align="right">2009</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">35.7</td>
+<td align="right">17.0</td>
+<td align="right">189</td>
+<td align="right">3350</td>
+<td align="left">female</td>
+<td align="right">2009</td>
+</tr>
+<tr class="odd">
+<td align="left">Adelie</td>
+<td align="left">Torgersen</td>
+<td align="right">38.8</td>
+<td align="right">17.6</td>
+<td align="right">191</td>
+<td align="right">3275</td>
+<td align="left">female</td>
+<td align="right">2009</td>
+</tr>
+<tr class="even">
+<td align="left">Adelie</td>
+<td align="left">Dream</td>
+<td align="right">37.5</td>
+<td align="right">18.5</td>
+<td align="right">199</td>
+<td align="right">4475</td>
+<td align="left">male</td>
+<td align="right">2009</td>
+</tr>
+<tr class="odd">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">46.7</td>
+<td align="right">15.3</td>
+<td align="right">219</td>
+<td align="right">5200</td>
+<td align="left">male</td>
+<td align="right">2007</td>
+</tr>
+<tr class="even">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">45.1</td>
+<td align="right">14.5</td>
+<td align="right">215</td>
+<td align="right">5000</td>
+<td align="left">female</td>
+<td align="right">2007</td>
+</tr>
+<tr class="odd">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">46.5</td>
+<td align="right">14.5</td>
+<td align="right">213</td>
+<td align="right">4400</td>
+<td align="left">female</td>
+<td align="right">2007</td>
+</tr>
+<tr class="even">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">45.2</td>
+<td align="right">15.8</td>
+<td align="right">215</td>
+<td align="right">5300</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="odd">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">48.2</td>
+<td align="right">15.6</td>
+<td align="right">221</td>
+<td align="right">5100</td>
+<td align="left">male</td>
+<td align="right">2008</td>
+</tr>
+<tr class="even">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">47.5</td>
+<td align="right">15.0</td>
+<td align="right">218</td>
+<td align="right">4950</td>
+<td align="left">female</td>
+<td align="right">2009</td>
+</tr>
+<tr class="odd">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">44.5</td>
+<td align="right">14.7</td>
+<td align="right">214</td>
+<td align="right">4850</td>
+<td align="left">female</td>
+<td align="right">2009</td>
+</tr>
+<tr class="even">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">50.5</td>
+<td align="right">15.2</td>
+<td align="right">216</td>
+<td align="right">5000</td>
+<td align="left">female</td>
+<td align="right">2009</td>
+</tr>
+<tr class="odd">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">55.1</td>
+<td align="right">16.0</td>
+<td align="right">230</td>
+<td align="right">5850</td>
+<td align="left">male</td>
+<td align="right">2009</td>
+</tr>
+<tr class="even">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">46.8</td>
+<td align="right">14.3</td>
+<td align="right">215</td>
+<td align="right">4850</td>
+<td align="left">female</td>
+<td align="right">2009</td>
+</tr>
+<tr class="odd">
+<td align="left">Gentoo</td>
+<td align="left">Biscoe</td>
+<td align="right">50.4</td>
+<td align="right">15.7</td>
+<td align="right">222</td>
+<td align="right">5750</td>
+<td align="left">male</td>
+<td align="right">2009</td>
+</tr>
+<tr class="even">
+<td align="left">Chinstrap</td>
+<td align="left">Dream</td>
+<td align="right">46.1</td>
+<td align="right">18.2</td>
+<td align="right">178</td>
+<td align="right">3250</td>
+<td align="left">female</td>
+<td align="right">2007</td>
+</tr>
+<tr class="odd">
+<td align="left">Chinstrap</td>
+<td align="left">Dream</td>
+<td align="right">46.6</td>
+<td align="right">17.8</td>
+<td align="right">193</td>
+<td align="right">3800</td>
+<td align="left">female</td>
+<td align="right">2007</td>
+</tr>
+<tr class="even">
+<td align="left">Chinstrap</td>
+<td align="left">Dream</td>
+<td align="right">47.0</td>
+<td align="right">17.3</td>
+<td align="right">185</td>
+<td align="right">3700</td>
+<td align="left">female</td>
+<td align="right">2007</td>
+</tr>
+<tr class="odd">
+<td align="left">Chinstrap</td>
+<td align="left">Dream</td>
+<td align="right">49.2</td>
+<td align="right">18.2</td>
+<td align="right">195</td>
+<td align="right">4400</td>
+<td align="left">male</td>
+<td align="right">2007</td>
+</tr>
+<tr class="even">
+<td align="left">Chinstrap</td>
+<td align="left">Dream</td>
+<td align="right">40.9</td>
+<td align="right">16.6</td>
+<td align="right">187</td>
+<td align="right">3200</td>
+<td align="left">female</td>
+<td align="right">2008</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="question-11" class="section level2">
 <h2>Question 11</h2>
 <p><em>What are the dimensions of storageSmall? (This means how many
 rows and how many columns).</em></p>
 <pre class="r"><code>storageSmall &lt;- data.frame(&quot;YHat&quot; = rep(NA,20))
-view(storageSmall)</code></pre>
+#view(storageSmall)</code></pre>
 <p>The dimension of storageSmall is 20*1(20 rows and 1 column).</p>
 </div>
 <div id="question-12" class="section level2">
@@ -603,46 +980,143 @@ the predicted penguin sex, use as.character(Kpreds). Why? Because this
 time our response variable is recorded as words rather than
 numbers</em></p>
 <pre class="r"><code>f&lt;-1
-newTrainF1&lt;-penguinsSmall[-which(foldsSmall == f),]
-newTestF1&lt;-penguinsSmall[which(foldsSmall == f),]
+infold1&lt;-which(foldsSmall==1)
+knitr::kable(infold1,caption = &quot;Rows Went to Fold1&quot;)</code></pre>
+<table>
+<caption>Rows Went to Fold1</caption>
+<thead>
+<tr class="header">
+<th align="right">x</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="right">12</td>
+</tr>
+<tr class="even">
+<td align="right">14</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>newTrainF1&lt;-penguinsSmall[-which(foldsSmall == 1),]
+newTestF1&lt;-penguinsSmall[which(foldsSmall == 1),]
 
-K_preds&lt;-knn(newTrainF1[,c(3,5)],newTestF1[,c(3,5)],cl = newTrainF1$sex,k=5)
+K_predsFold1&lt;-knn(newTrainF1[,c(3,5)],newTestF1[,c(3,5)],cl = newTrainF1$sex,k=5)
 
-storageSmall$YHat[f]&lt;-as.character(K_preds)</code></pre>
-<pre><code>## Warning in storageSmall$YHat[f] &lt;- as.character(K_preds): number of items to
-## replace is not a multiple of replacement length</code></pre>
-<p>The first row is filled in. It is filled in because the first
-fold</p>
-<p>##Question 13</p>
+storageSmall$YHat[infold1]&lt;-as.character(K_predsFold1)
+print(storageSmall)</code></pre>
+<pre><code>##      YHat
+## 1    male
+## 2    &lt;NA&gt;
+## 3    &lt;NA&gt;
+## 4    &lt;NA&gt;
+## 5    &lt;NA&gt;
+## 6    &lt;NA&gt;
+## 7    male
+## 8    &lt;NA&gt;
+## 9    &lt;NA&gt;
+## 10   &lt;NA&gt;
+## 11   &lt;NA&gt;
+## 12   male
+## 13   &lt;NA&gt;
+## 14 female
+## 15   &lt;NA&gt;
+## 16   &lt;NA&gt;
+## 17   &lt;NA&gt;
+## 18   &lt;NA&gt;
+## 19   &lt;NA&gt;
+## 20   &lt;NA&gt;</code></pre>
+<p>Row 1,7, 12 and 14 are filled in. They are filled in because they are
+the rows assigned to fold1 during the sampling process. When we use fold
+1 as testing data set, the sex of penguins recorded in these rows were
+predicted and filled in.</p>
+</div>
+<div id="question-13" class="section level2">
+<h2>Question 13</h2>
 <p><em>Repeat this process but now move on to fold 2. Print out the
 storageSmall vector when you have completed the steps. Which rows are
 currently filled in? Does it make sense that these rows are filled in?
 Explain.</em></p>
 <pre class="r"><code>g&lt;-2
-newTrainF2&lt;-penguinsSmall[-which(foldsSmall == f),]
+infold2&lt;-which(foldsSmall == 2)
+knitr::kable(infold2,caption = &quot;Rows Went to Fold2&quot;)</code></pre>
+<table>
+<caption>Rows Went to Fold2</caption>
+<thead>
+<tr class="header">
+<th align="right">x</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="right">13</td>
+</tr>
+<tr class="odd">
+<td align="right">15</td>
+</tr>
+<tr class="even">
+<td align="right">19</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>newTrainF2&lt;-penguinsSmall[-which(foldsSmall == f),]
 newTestF2&lt;-penguinsSmall[which(foldsSmall == f),]
 
-K_preds&lt;-knn(newTrainF2[,c(3,5)],newTestF2[,c(3,5)],cl = newTrainF2$sex,k=5)
+K_predsFold2&lt;-knn(newTrainF2[,c(3,5)],newTestF2[,c(3,5)],cl = newTrainF2$sex,k=5)
 
-storageSmall$YHat[g]&lt;-as.character(K_preds)</code></pre>
-<pre><code>## Warning in storageSmall$YHat[g] &lt;- as.character(K_preds): number of items to
-## replace is not a multiple of replacement length</code></pre>
-<p>Now, row 2 was filled. It is because</p>
-<p>##Question 14 <em>Create a for loop to run 5-fold CV on the small
-data set. Print out the storageSmall vector when you have completed the
-loop.</em></p>
+storageSmall$YHat[infold2]&lt;-as.character(K_predsFold2)
+print(storageSmall)</code></pre>
+<pre><code>##      YHat
+## 1    male
+## 2    male
+## 3    &lt;NA&gt;
+## 4    &lt;NA&gt;
+## 5    &lt;NA&gt;
+## 6    &lt;NA&gt;
+## 7    male
+## 8    &lt;NA&gt;
+## 9    &lt;NA&gt;
+## 10   &lt;NA&gt;
+## 11   &lt;NA&gt;
+## 12   male
+## 13   male
+## 14 female
+## 15   male
+## 16   &lt;NA&gt;
+## 17   &lt;NA&gt;
+## 18   &lt;NA&gt;
+## 19 female
+## 20   &lt;NA&gt;</code></pre>
+<p>Row 2, 13,15,19 are filled. It is filled in because they are assigned
+to fold 2 during the sampling process. When we use fold2 as the testing
+data set,the sex of penguin recorded in these rows were predicted and
+filled in.</p>
+</div>
+<div id="question-14" class="section level2">
+<h2>Question 14</h2>
+<p><em>Create a for loop to run 5-fold CV on the small data set. Print
+out the storageSmall vector when you have completed the loop.</em></p>
 <pre class="r"><code>i&lt;-1
 for(i in 1:5){
   infold&lt;-which(foldsSmall == i)
-  newTrain&lt;-penguinsSmall[-infold,]
-  newTest&lt;-penguinsSmall[infold,]
+  newTrain_5F&lt;-penguinsSmall[-infold,]
+  newTest_5F&lt;-penguinsSmall[infold,]
   
-  K_preds&lt;-knn(newTrain[,c(3,5)],newTest[,c(3,5)],cl = newTrain$sex,k=5)
+  K_preds_5Fold&lt;-knn(newTrain_5F[,c(3,5)],newTest_5F[,c(3,5)],cl = newTrain_5F$sex,k=5)
   
-  storageSmall$YHat[infold]&lt;-as.character(K_preds)
+  storageSmall$YHat[infold]&lt;-as.character(K_preds_5Fold)
 }
 
-knitr::kable(print(storageSmall))</code></pre>
+print(storageSmall)</code></pre>
 <pre><code>##      YHat
 ## 1    male
 ## 2  female
@@ -664,80 +1138,62 @@ knitr::kable(print(storageSmall))</code></pre>
 ## 18   male
 ## 19 female
 ## 20   male</code></pre>
+</div>
+<div id="question-15" class="section level2">
+<h2>Question 15</h2>
+<p><em>Create a for loop to run 10-fold CV on the penguins data set.
+Create a confusion matrix when you finish the loop.</em></p>
+<pre class="r"><code>storagePenguin&lt;-data.frame(&quot;Yhat&quot;=rep(NA,333))</code></pre>
+<pre class="r"><code>for(p in 1:10){
+  infoldFull_set&lt;-which(foldPenguin == p)
+  penguinTrain&lt;-penguins[-infoldFull_set,]
+  penguinTest&lt;-penguins[infoldFull_set,]
+  
+  K_preds_penguin&lt;-knn(penguinTrain[,c(3,5)],penguinTest[,c(3,5)],cl = penguinTrain$sex,k=5)
+  
+  storagePenguin$Yhat[infoldFull_set]&lt;-as.character(K_preds_penguin)
+  
+}
+#knitr::kable(print(storagePenguin$Yhat))
+
+knitr::kable(table(storagePenguin$Yhat, penguins$sex), caption= &quot;Table 1: Confusion Matrix of Male/Female Penguin Prediction(k=5)&quot;, col = c(&quot;True Female&quot;, &quot;True Male&quot;))</code></pre>
 <table>
+<caption>Table 1: Confusion Matrix of Male/Female Penguin
+Prediction(k=5)</caption>
 <thead>
 <tr class="header">
-<th align="left">YHat</th>
+<th align="left"></th>
+<th align="right">True Female</th>
+<th align="right">True Male</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">male</td>
-</tr>
-<tr class="even">
 <td align="left">female</td>
-</tr>
-<tr class="odd">
-<td align="left">male</td>
-</tr>
-<tr class="even">
-<td align="left">female</td>
-</tr>
-<tr class="odd">
-<td align="left">female</td>
+<td align="right">118</td>
+<td align="right">40</td>
 </tr>
 <tr class="even">
 <td align="left">male</td>
-</tr>
-<tr class="odd">
-<td align="left">male</td>
-</tr>
-<tr class="even">
-<td align="left">male</td>
-</tr>
-<tr class="odd">
-<td align="left">female</td>
-</tr>
-<tr class="even">
-<td align="left">male</td>
-</tr>
-<tr class="odd">
-<td align="left">female</td>
-</tr>
-<tr class="even">
-<td align="left">male</td>
-</tr>
-<tr class="odd">
-<td align="left">female</td>
-</tr>
-<tr class="even">
-<td align="left">female</td>
-</tr>
-<tr class="odd">
-<td align="left">male</td>
-</tr>
-<tr class="even">
-<td align="left">male</td>
-</tr>
-<tr class="odd">
-<td align="left">male</td>
-</tr>
-<tr class="even">
-<td align="left">male</td>
-</tr>
-<tr class="odd">
-<td align="left">female</td>
-</tr>
-<tr class="even">
-<td align="left">male</td>
+<td align="right">47</td>
+<td align="right">128</td>
 </tr>
 </tbody>
 </table>
-<p>##Question 15 <em>Create a for loop to run 10-fold CV on the penguins
-data set. Create a confusion matrix when you finish the loop.</em></p>
-<p>##Question 16 <em>What is the geometric mean of sensitivity (Y = 1 =
-male) and specificity (Y = 0 = female) for 10-fold CV with 5 nearest
-neighbors? Show your work.</em></p>
+</div>
+<div id="question-16" class="section level2">
+<h2>Question 16</h2>
+<p><em>What is the geometric mean of sensitivity (Y = 1 = male) and
+specificity (Y = 0 = female) for 10-fold CV with 5 nearest neighbors?
+Show your work.</em></p>
+<p><span class="math display">\[Sensitivity=\frac{129}{39+129}\approx0.768\]</span></p>
+<p><span class="math display">\[Specificity=\frac{118}{118+47}\approx0.715\]</span></p>
+<p><span class="math display">\[Geometric
+Mean=\sqrt{Sensitivity*Specificity}=\sqrt{0.768*0.715}\approx0.740\]</span></p>
+<p>From the confusion matrix, we calculated that the sensitivity of the
+prediction is about 0.768, while the specificity is 0.715. The geometric
+mean of sensitivity and specificity for 10-fold CV with 5 nearest
+neighborhood is 0.740.</p>
 </div>
 
 
