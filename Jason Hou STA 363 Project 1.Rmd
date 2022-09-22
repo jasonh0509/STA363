@@ -11,6 +11,16 @@ output: html_document
 
 #Section 1 Introduction and Data
 
+
+```{r load packages}
+library(ggplot2)
+library(broom)
+library(gridExtra)
+library(dplyr)
+library(class)
+library(tidyverse)
+```
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -21,5 +31,42 @@ dengue<-read.csv("dengueData.csv")
 
 ```{r checking}
 sum(is.na(dengue))
+na.omit(dengue)
 ```
+
+```{r look}
+glimpse(dengue)
+```
+
+#Section 2 KNN
+## KNN Example
+
+```{r data set for demo}
+knnDemo<-data.frame("dengue_status"= dengue$Y,"Age"= dengue$Age, "Height"= dengue$Height)
+```
+
+```{r}
+n<-nrow(knnDemo)
+set.seed(363663)
+demoSelectRow<-sample(1:n,n*0.9,replace = "FALSE")
+demoTrain<-knnDemo[demoSelectRow,]
+demoTest<-knnDemo[-demoSelectRow,]
+
+true1<-which(demoTest$dengue_status == 1)
+true0<-which(demoTest$dengue_status == 0)
+
+ntrue1<-length(true1)
+ntrue0<-length(true0)
+
+storeK<-data.frame("K"=rep(NA,50),"GMean"=rep(NA,50))
+for(i in 1:50){
+  storeK$K[i]<-i
+  Kpreds<-knn(demoTrain[,c(2,3)],demoTest[,c(2,3)],k=i,cl=demoTrain$dengue_status)
+  sensitivity<-sum(Kpreds[true1] == 1)/ntrue1
+  specificity<-sum(Kpreds[true0] == 0)/ntrue0
+  storeK$GMean[i]<-sqrt(sensitivity*specificity)
+  
+}
+```
+
 
