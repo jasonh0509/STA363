@@ -246,3 +246,14 @@ $$Specificity=\frac{118}{118+47}\approx0.715$$
 $$Geometric Mean=\sqrt{Sensitivity*Specificity}=\sqrt{0.768*0.715}\approx0.740$$
 
 From the confusion matrix, we calculated that the sensitivity of the prediction is about 0.768, while the specificity is 0.715. The geometric mean of sensitivity and specificity for 10-fold CV with 5 nearest neighborhood is 0.740.
+
+
+
+```{r}
+storage<-data.frame("k"=rep(NA,10),"GMean"=rep(NA,10))
+
+true1<-which(penguinTest$sex=="male")
+  
+
+```
+
