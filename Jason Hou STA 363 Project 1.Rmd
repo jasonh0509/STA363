@@ -45,7 +45,7 @@ glimpse(dengue)
 knnDemo<-data.frame("dengue_status"= dengue$Y,"Age"= dengue$Age, "Height"= dengue$Height)
 ```
 
-```{r}
+```{r knn demo loop}
 n<-nrow(knnDemo)
 set.seed(363663)
 demoSelectRow<-sample(1:n,n*0.9,replace = "FALSE")
@@ -59,14 +59,120 @@ ntrue1<-length(true1)
 ntrue0<-length(true0)
 
 storeK<-data.frame("K"=rep(NA,50),"GMean"=rep(NA,50))
+
 for(i in 1:50){
   storeK$K[i]<-i
   Kpreds<-knn(demoTrain[,c(2,3)],demoTest[,c(2,3)],k=i,cl=demoTrain$dengue_status)
   sensitivity<-sum(Kpreds[true1] == 1)/ntrue1
   specificity<-sum(Kpreds[true0] == 0)/ntrue0
   storeK$GMean[i]<-sqrt(sensitivity*specificity)
+}
+
+knnDemoPlot<-ggplot(storeK,aes(K,GMean))+
+  geom_line()+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storeK$GMean)),title = "Figure 1",y = " ")+
+  geom_vline(xintercept = which.max(storeK$GMean),lty = 2,col="red")
+knnDemoPlot
+
+```
+
+
+
+
+
+```{r create example sets}
+numb<-nrow(knnDemo)
+DemoSubsetRow<-sample(1:numb,numb*0.01,replace = FALSE)
+SetForDemo<-knnDemo[DemoSubsetRow,]  
+
+demoNum<-nrow(SetForDemo)
+SelectIn_Demo<-sample(1:demoNum,demoNum*0.7,replace = FALSE)
+demoTrain<-SetForDemo[SelectIn_Demo,]
+demoTest<-SetForDemo[-SelectIn_Demo,]
+```
+
+
+```{r knn true demo}
+demoTrain<-demoTrain%>%
+  mutate(dengue_status=as.character(dengue_status))
+demoTest<-demoTest%>%
+  mutate(dengue_status_test=as.character(dengue_status))
+ggplot()+
+  geom_point(data = demoTrain,aes(x=Age,y=Height,col=dengue_status),size=2,alpha=0.9,shape=19)+
+  geom_point(data =demoTest,aes(x=Age,y=Height),size=2,alpha=0.9,shape=4)
+  
+  
+```
+
+```{r knn prediction example}
+example_data<-data.frame("Age"= rep(NA,1),"Height"=rep(NA,1))
+example_data$Age[1]<-8
+example_data$Height[1]<-100
+
+
+#Kpreds_sample<-knn(demoTrain[,c(2,3)],example_data[,c(1,2)],k=i,cl=demoTrain$dengue_status)
+
+for(j in 1:20){
+  Kpreds_sample<-knn(demoTrain[,c(2,3)],example_data[,c(1,2)],k=j,cl=demoTrain$dengue_status)
   
 }
 ```
+
+
+
+```{r creating actual KNN set and mutate logical var}
+knnActual<-dengue
+knnActual<-knnActual%>%
+  mutate(Flush=as.character(Flush),
+        Hepatomegaly=as.character(Hepatomegaly),
+        Rash=as.character(Rash))
+knnActual<-knnActual%>%
+  mutate(Flush = recode(Flush,"TRUE" = "1",
+         "FALSE" = "0"),
+         Hepatomegaly = recode(Hepatomegaly,"TRUE" = "1",
+                               "FALSE" = "0"),
+         Rash = recode(Rash,"TRUE" = "1",
+                      "FALSE" = "0"))
+```
+
+```{r k fold}
+dengueNum<-nrow(knnActual)
+set.seed(363663)
+pool<-rep(1:10,573)
+
+foldDengue<-sample(pool,5730,replace = FALSE)
+
+storeK<-data.frame("K"=rep(NA,50),"GMean"=rep(NA,50))
+
+
+#demoSelectRow<-sample(1:dengueNum,n*0.9,replace = "FALSE")
+#demoTrain<-knnDemo[demoSelectRow,]
+#demoTest<-knnDemo[-demoSelectRow,]
+
+true1<-which(demoTest$dengue_status == 1)
+true0<-which(demoTest$dengue_status == 0)
+
+ntrue1<-length(true1)
+ntrue0<-length(true0)
+
+
+for(i in 1:50){
+  storeK$K[i]<-i
+  Kpreds<-knn(demoTrain[,c(2,3)],demoTest[,c(2,3)],k=i,cl=demoTrain$dengue_status)
+  sensitivity<-sum(Kpreds[true1] == 1)/ntrue1
+  specificity<-sum(Kpreds[true0] == 0)/ntrue0
+  storeK$GMean[i]<-sqrt(sensitivity*specificity)
+}
+
+#knnDemoPlot<-ggplot(storeK,aes(K,GMean))+
+ # geom_line()+
+  #labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storeK$GMean)),title = "Figure 1",y = " ")+
+  #geom_vline(xintercept = which.max(storeK$GMean),lty = 2,col="red")
+#knnDemoPlot
+
+
+```
+
+         
 
 
