@@ -140,35 +140,36 @@ dengueNum<-nrow(knnActual)
 set.seed(363663)
 pool<-rep(1:10,573)
 
-foldDengue<-sample(pool,5730,replace = FALSE)
+foldDengue<-sample(pool,5726,replace = FALSE)
 
-storeK<-data.frame("K"=rep(NA,50),"GMean"=rep(NA,50))
-
-
-#demoSelectRow<-sample(1:dengueNum,n*0.9,replace = "FALSE")
-#demoTrain<-knnDemo[demoSelectRow,]
-#demoTest<-knnDemo[-demoSelectRow,]
-
-true1<-which(demoTest$dengue_status == 1)
-true0<-which(demoTest$dengue_status == 0)
-
-ntrue1<-length(true1)
-ntrue0<-length(true0)
+storeK<-data.frame("K"=rep(NA,50))
 
 
-for(i in 1:50){
-  storeK$K[i]<-i
-  Kpreds<-knn(demoTrain[,c(2,3)],demoTest[,c(2,3)],k=i,cl=demoTrain$dengue_status)
-  sensitivity<-sum(Kpreds[true1] == 1)/ntrue1
-  specificity<-sum(Kpreds[true0] == 0)/ntrue0
-  storeK$GMean[i]<-sqrt(sensitivity*specificity)
+for (K in 1:50) {
+  #Store k
+  storeK$K[K]<-K
+  #Store predictions from inner
+  store_inner<-data.frame("Yhat"= rep(NA,5726))
+  #store_inner<-store_inner%>%
+    #mutate(YHat=as.character(YHat))
+
+
+  
+  for(p in 1:10){
+    infold<-which(foldDengue == p)
+    dengueTrain<-knnActual[-infold,]
+    dengueTest<-knnActual[infold,]
+    
+    k_preds_dengue<-knn(dengueTrain[,c(1:11)],dengueTest[,c(1:11)],cl=dengueTrain$Y,k=K)
+    
+    store_inner$YHat[infold]<-as.numeric(as.character(k_preds_dengue))
+    
+  }
+
+  
+  
+  
 }
-
-#knnDemoPlot<-ggplot(storeK,aes(K,GMean))+
- # geom_line()+
-  #labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storeK$GMean)),title = "Figure 1",y = " ")+
-  #geom_vline(xintercept = which.max(storeK$GMean),lty = 2,col="red")
-#knnDemoPlot
 
 
 ```
