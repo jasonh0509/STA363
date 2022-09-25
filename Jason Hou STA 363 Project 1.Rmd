@@ -140,8 +140,11 @@ n<-nrow(knnActual)
 nk<-50
 storage<-data.frame("K"=rep(NA,nk),
                     "Sensitivity" = rep(NA,nk),
-                    "Specificity" = rep(NA,nk))
-pool<-rep(1:10,530)
+                    "Specificity" = rep(NA,nk),
+                    "GeoMean" = rep(NA,nk))
+pool<-rep(1:10,573)
+set.seed(363663)
+fold<-sample(pool,5726,replace = FALSE)
 
 
 for(k in 1:nk){
@@ -149,10 +152,19 @@ for(k in 1:nk){
   
   storage_inner<-data.frame("YHat" = rep(NA,n))
   
-  for(i in 1:n){
-    Train_Dengue<-knnActual[]
+  for(i in 1:10){
+    infold<-which(fold == i)
+    Train_Dengue<-knnActual[-infold,]
+    Test_Dengue<-knnActual[infold,]
+    
+    k_preds<-knn(Train_Dengue[,c(1:11)],Test_Dengue[,c(1:11)],k=k,cl=Train_Dengue$Y)
+    
+    storage_inner$YHat[infold]<-as.numeric(as.character(k_preds))
+    
+    
     
   }
+  
   
 }
 ```
