@@ -148,7 +148,7 @@ fold<-sample(pool,5726,replace = FALSE)
 
 
 for(k in 1:nk){
-  storage$K<-k
+  storage$K[k]<-k
   
   storage_inner<-data.frame("YHat" = rep(NA,n))
   
@@ -162,11 +162,51 @@ for(k in 1:nk){
     storage_inner$YHat[infold]<-as.numeric(as.character(k_preds))
     
     
+    true1<-which(Test_Dengue$Y == 1)
+    true0<-which(Test_Dengue$Y == 0)
+    ntrue1<-length(true1)
+    ntrue0<-length(true0)
+    sensitivity<-sum(k_preds[true1] == 1)/ntrue1
+    storage$Sensitivity[k]=sensitivity
+    specificity<-sum(k_preds[true0] == 0)/ntrue0
+    storage$Specificity[k]=specificity
+    storage$GeoMean[k]<-sqrt(sensitivity*specificity)
     
   }
   
-  
 }
+
+```
+
+```{r find best k}
+knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
+  geom_line()+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 1",y = " ")+
+  geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
+knnActualPlot
+```
+```{r}
+knitr::kable(table(storage_inner$YHat, dengue$Y), caption= "Table 1: Confusion Matrix ", col = c("True Not", "True Dengue"))
+```
+
+```{r using best k to do a knn again}
+storage_inner_trial<-data.frame("pred"=rep(NA,5726))
+ for(i in 1:10){
+    infold<-which(fold == i)
+    Train_Dengue<-knnActual[-infold,]
+    Test_Dengue<-knnActual[infold,]
+    
+    k_preds<-knn(Train_Dengue[,c(1:11)],Test_Dengue[,c(1:11)],k=10,cl=Train_Dengue$Y)
+    
+    storage_inner_trial$pred[infold]<-as.numeric(as.character(k_preds))
+    
+    
+ }
+
+sensitivity<-sum(k_preds[true1] == 1)/ntrue1
+specificity<-sum(k_preds[true0] == 0)/ntrue0
+
+knitr::kable(table(storage_inner_trial$pred, dengue$Y), caption= "Table 1: Confusion Matrix ", col = c("True Not", "True Dengue"))  
 ```
 
          
