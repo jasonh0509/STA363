@@ -73,7 +73,7 @@ knnDemoPlot<-ggplot(storeK,aes(K,GMean))+
   labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storeK$GMean)),title = "Figure 1",y = " ")+
   geom_vline(xintercept = which.max(storeK$GMean),lty = 2,col="red")
 knnDemoPlot
-
+#
 ```
 
 
