@@ -45,7 +45,7 @@ glimpse(dengue)
 knnDemo<-data.frame("dengue_status"= dengue$Y,"Age"= dengue$Age, "Height"= dengue$Height)
 ```
 
-```{r knn demo loop}
+```{r knn demo loop, eval=FALSE, include=FALSE}
 n<-nrow(knnDemo)
 set.seed(363663)
 demoSelectRow<-sample(1:n,n*0.9,replace = "FALSE")
@@ -136,42 +136,25 @@ knnActual<-knnActual%>%
 ```
 
 ```{r k fold}
-dengueNum<-nrow(knnActual)
-set.seed(363663)
-pool<-rep(1:10,573)
-
-foldDengue<-sample(pool,5726,replace = FALSE)
-
-storeK<-data.frame("K"=rep(NA,50))
-
-
-for (K in 1:50) {
-  #Store k
-  storeK$K[K]<-K
-  #Store predictions from inner
-  store_inner<-data.frame("Yhat"= rep(NA,5726))
-  #store_inner<-store_inner%>%
-    #mutate(YHat=as.character(YHat))
+n<-nrow(knnActual)
+nk<-50
+storage<-data.frame("K"=rep(NA,nk),
+                    "Sensitivity" = rep(NA,nk),
+                    "Specificity" = rep(NA,nk))
+pool<-rep(1:10,530)
 
 
+for(k in 1:nk){
+  storage$K<-k
   
-  for(p in 1:10){
-    infold<-which(foldDengue == p)
-    dengueTrain<-knnActual[-infold,]
-    dengueTest<-knnActual[infold,]
-    
-    k_preds_dengue<-knn(dengueTrain[,c(1:11)],dengueTest[,c(1:11)],cl=dengueTrain$Y,k=K)
-    
-    store_inner$YHat[infold]<-as.numeric(as.character(k_preds_dengue))
+  storage_inner<-data.frame("YHat" = rep(NA,n))
+  
+  for(i in 1:n){
+    Train_Dengue<-knnActual[]
     
   }
-
-  
-  
   
 }
-
-
 ```
 
          
