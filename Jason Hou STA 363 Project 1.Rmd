@@ -185,6 +185,7 @@ knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
   geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
 knnActualPlot
 ```
+
 ```{r}
 knitr::kable(table(storage_inner$YHat, dengue$Y), caption= "Table 1: Confusion Matrix ", col = c("True Not", "True Dengue"))
 ```
