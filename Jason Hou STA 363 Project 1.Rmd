@@ -144,26 +144,29 @@ set.seed(363663)
 manually_select<-sample(1:q,q*0.8,replace = "FALSE")
 manual_train<-dengue[manually_select,]
 manual_test<-dengue[-manually_select,]
-storage_split<-data.frame("K"= rep(NA,50),"Sensitivity" = rep(NA,50),"Specificity" = rep(NA,50),"GeoMean"= rep(NA,50))
-
-for(t in 1:50){
-  storage_split$K[t]<-t
-  k_preds_split<-knn(manual_train[,c(2,3,8,9)],manual_test[,c(2,3,8,9)],k=t,cl=manual_train$Y)
-  
-  
-  #Find rows with positive and negative result
+#Find rows with positive and negative result
     true1_split<-which(manual_test$Y == 1)
     true0_split<-which(manual_test$Y == 0)
     
     #Compute the amount of rows corresponding to each result
     ntrue1_split<-length(true1_split)
     ntrue0_split<-length(true0_split)
+    
+storage_split<-data.frame("K"= rep(NA,50),"GeoMean"= rep(NA,50))
+
+for(t in 1:50){
+  storage_split$K[t]<-t
+  k_preds_split<-knn(manual_train[,c(2,3,8,9)],manual_test[,c(2,3,8,9)],k=t,cl=manual_train$Y)
+  
+  
+  
   
   sensitivity_split<-sum(k_preds_split[true1_split] == 1)/ntrue1_split
-  storage_split$Sensitivity[t]<-sensitivity
-  specificity_split<-sum(k_preds[ntrue0_split] == 0)/ntrue0_split
-  storage_split$specificity_split[t]<-specificity
-  storage_split$GeoMean[t]<-sqrt(sensitivity*specificity)
+  #print(sensitivity_split)
+  specificity_split<-sum(k_preds_split[true0_split] == 0)/ntrue0_split
+  print(specificity_split)
+  storage_split$GeoMean[t]<-sqrt(sensitivity_split*specificity_split)
+  #print(storage_split$GeoMean)
 }
 
 ```
@@ -176,6 +179,13 @@ knnSplit<-ggplot(storage_split,aes(K,GeoMean))+
   labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage_split$GeoMean)),title = "Figure 1",y = " ")+
   geom_vline(xintercept = which.max(storage_split$GeoMean),lty = 2,col="red")
 knnSplit
+```
+
+```{r 8020 again with k=46}
+split8020<-data.frame("Predictions"=rep(NA,5726))
+k_preds_split_best<-knn(manual_train[,c(2,3,8,9)],manual_test[,c(2,3,8,9)],k=46,cl=manual_train$Y)
+split8020$Predictions<-as.numeric(as.character(k_preds_split_best))
+knitr::kable(table(k_preds_split_best, dengue$Y), caption= "Table 1: Confusion Matrix ", col = c("True Not", "True Dengue"))
 ```
 
 
