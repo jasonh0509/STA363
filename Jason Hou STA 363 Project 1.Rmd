@@ -407,6 +407,13 @@ temp_abdo
 
 ```
 
+```{r temp and Skin}
+dengue%>%
+  mutate(Skin_condition=as.factor(dengue$Skin))%>%
+  logodds_plot(100, "equal_size", x = "Temp", y = "Y",reg_formula = y ~ x, grouping = "Skin_condition")
+```
+
+
 
 ```{r try model}
 glm(data=dengue, family = binomial, Y~Sex+Vomiting)
