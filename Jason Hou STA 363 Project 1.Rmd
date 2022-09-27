@@ -358,9 +358,57 @@ logodds_plot <- function(data, num_bins, bin_method,
 }
 ```
 
+#EDA Checking interaction
+```{r }
+dengue%>%
+  mutate(DayDisease=dengue$DayDisease,
+         Skin_condition=as.factor(dengue$Skin))%>%
+  logodds_plot(100, "equal_size", x = "DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Skin_condition")
 
-```{r EDA Checking interaction, eval=FALSE, include=FALSE}
-log_odd_sex_age<-logodds_plot(num_bins=50,bin_method = "equal_size", x = "BMI", y = "Age",reg_formula = y ~ x, grouping = "Y",data=dengue)
-log_odd_sex_age
+```
+
+```{r converting type}
+dengueForCheck<-dengue
+dengueForCheck$Y=as.factor(dengueForCheck$Y)
+dengueForCheck$Sex=as.factor(dengueForCheck$Sex)
+
+dengueForCheck$Abdo=as.factor(dengueForCheck$Abdo)
+dengueForCheck$Muco=as.factor(dengueForCheck$Muco)
+dengueForCheck$Skin=as.factor(dengueForCheck$Skin)
+
+```
+
+
+
+```{r Vomit and DayDisease}
+dengueForCheck%>%
+  mutate(Vomiting=as.factor(dengueForCheck$Vomiting))%>%
+logodds_plot(100,"equal_size", x ="DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Vomiting")
+```
+
+```{r DayDisease Abdominal Pain}
+dengueForCheck<-dengueForCheck%>%
+  mutate(Abdo=as.factor(dengueForCheck$Abdo))
+day_abdo<-logodds_plot(100,"equal_size", x ="DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Abdo",data = dengueForCheck)
+day_abdo
+```
+
+```{r day and Muco}
+dengueForCheck<-dengueForCheck%>%
+  mutate(Muco=as.factor(dengueForCheck$Muco))
+day_Muco<-logodds_plot(100,"equal_size", x ="DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Muco",data = dengueForCheck)
+day_Muco
+```
+```{r Temp abdo}
+dengueForCheck<-dengueForCheck%>%
+  mutate(Abdo=as.factor(dengueForCheck$Abdo))
+temp_abdo<-logodds_plot(100,"equal_size", x ="Temp", y = "Y",reg_formula = y ~ x, grouping = "Abdo",data = dengueForCheck)
+temp_abdo
+
+```
+
+
+```{r try model}
+glm(data=dengue, family = binomial, Y~Sex+Vomiting)
 ```
 
