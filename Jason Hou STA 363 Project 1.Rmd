@@ -422,13 +422,8 @@ dengue%>%
 ```
 
 ```{r converting type}
+#Create a data set dedicated for checking condition and EDA
 dengueForCheck<-dengue
-dengueForCheck$Y=as.factor(dengueForCheck$Y)
-dengueForCheck$Sex=as.factor(dengueForCheck$Sex)
-
-dengueForCheck$Abdo=as.factor(dengueForCheck$Abdo)
-dengueForCheck$Muco=as.factor(dengueForCheck$Muco)
-dengueForCheck$Skin=as.factor(dengueForCheck$Skin)
 
 ```
 
@@ -462,7 +457,9 @@ temp_abdo
 ```
 
 ```{r}
+#Display 4 graphs together
 par(mfrow=c(2,2))
+#Checking li
 logit_DayDisease<-emplogitPlot(x=dengueForCheck$DayDisease,y=dengueForCheck$Y,xlab = "Day Diseases",ylab = "Log Odds of Dengue",main = "Figure 3.1 Empirical Logit Plot Day Disease")
 
 logit_Temp<-emplogitPlot(x=dengueForCheck$Temp,y=dengueForCheck$Y,xlab = "Temperature",ylab = "Log Odds of Dengue",main = "Figure 3.2 Empirical Logit Plot Temperature")
@@ -473,8 +470,8 @@ logit_BMI<-emplogitPlot(x=dengueForCheck$BMI,y=dengueForCheck$Y,xlab = "BMI",yla
 
 ```
 
-```{r exxploring correlation}
-correlation<-cor(dengue[,c(2,8:11)])
+```{r exploring correlation}
+correlation<-cor(dengueForCheck[,c(2,8:11)])
 correlation_tr<-round(correlation,3)
 knitr::kable(correlation_tr)
 ```
