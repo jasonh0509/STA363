@@ -416,6 +416,6 @@ dengue%>%
 
 
 ```{r try model}
-glm(data=dengue, family = binomial, Y~Sex+Vomiting)
+glm(data=dengue, family = binomial, Y~Sex+Vomiting+Temp)
 ```
 
