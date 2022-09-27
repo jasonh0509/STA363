@@ -19,6 +19,7 @@ library(gridExtra)
 library(dplyr)
 library(class)
 library(tidyverse)
+library(gridExtra)
 ```
 
 ```{r setup, include=FALSE}
@@ -117,19 +118,13 @@ for(j in 1:20){
 
 
 
-```{r creating actual KNN set and mutate logical var, eval=FALSE, include=FALSE}
+```{r creating actual KNN set and mutate logical var, include=FALSE}
 knnActual<-dengue
 knnActual<-knnActual%>%
   mutate(Flush=as.character(Flush),
         Hepatomegaly=as.character(Hepatomegaly),
         Rash=as.character(Rash))
-knnActual<-knnActual%>%
-  mutate(Flush = recode(Flush,"TRUE" = "1",
-         "FALSE" = "0"),
-         Hepatomegaly = recode(Hepatomegaly,"TRUE" = "1",
-                               "FALSE" = "0"),
-         Rash = recode(Rash,"TRUE" = "1",
-                      "FALSE" = "0"))
+
 ```
 
 
@@ -250,7 +245,7 @@ knnActualPlot
 ```
 
 
-```{r using best k to do a knn again k = 35}
+```{r k35}
 set.seed(363663)
 #create storage for prediction result
 storage_inner_trial<-data.frame("pred"=rep(NA,5726))
@@ -285,7 +280,7 @@ Age, Daydisease, temperature and BMI are the only four included in the predictio
 
 ## Section 3 Logistic Regression 
 
-```{r funcrion for log odd,echo=FALSE}
+```{r funcrion for log odd, include=FALSE}
 logodds_plot <- function(data, num_bins, bin_method,
                          x, y, grouping = NULL, reg_formula = y ~ x){
   
@@ -358,6 +353,65 @@ logodds_plot <- function(data, num_bins, bin_method,
 }
 ```
 
+```{r empirical logit function, include=FALSE}
+emplogitPlot <- function(x, y, binsize = NULL, ci = FALSE, probit = FALSE,
+prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
+  
+  if(class(y) =="character"){
+   y <- as.numeric(as.factor(y))-1
+   }
+  
+  if (length(x) != length(y))
+    stop("x and y lengths differ")
+  if (any(y < 0 | y > 1))
+    stop("y not between 0 and 1")
+  if (length(x) < 100 & is.null(binsize))
+    stop("Less than 100 observations: specify binsize manually")
+  
+  if (is.null(binsize)) binsize = min(round(length(x)/10), 50)
+  
+  if (probit){
+    link = qnorm
+    if (is.null(main)) main = "Empirical probits"
+  } else {
+    link = function(x) log(x/(1-x))
+    if (is.null(main)) main = "Empirical logits"
+  }
+  
+  sort = order(x)
+  x = x[sort]
+  y = y[sort]
+  a = seq(1, length(x), by=binsize)
+  b = c(a[-1] - 1, length(x))
+  
+  prob = xmean = ns = rep(0, length(a)) # ns is for CIs
+  for (i in 1:length(a)){
+    range = (a[i]):(b[i])
+    prob[i] = mean(y[range])
+    xmean[i] = mean(x[range])
+    ns[i] = b[i] - a[i] + 1 # for CI 
+  }
+  
+  extreme = (prob == 1 | prob == 0)
+  prob[prob == 0] = min(prob[!extreme])
+  prob[prob == 1] = max(prob[!extreme])
+  
+  g = link(prob) # logits (or probits if probit == TRUE)
+  
+  linear.fit = lm(g[!extreme] ~ xmean[!extreme])
+  b0 = linear.fit$coef[1]
+  b1 = linear.fit$coef[2]
+  
+  loess.fit = loess(g[!extreme] ~ xmean[!extreme])
+  
+  plot(xmean, g, main=main, xlab=xlab, ylab=ylab)
+  abline(b0,b1)
+  if(lowess.in ==TRUE){
+  lines(loess.fit$x, loess.fit$fitted, lwd=2, lty=2)
+  }
+}
+```
+
 #EDA Checking interaction
 ```{r }
 dengue%>%
@@ -380,26 +434,26 @@ dengueForCheck$Skin=as.factor(dengueForCheck$Skin)
 
 
 
-```{r Vomit and DayDisease}
+```{r Vomit and DayDisease, eval=FALSE, include=FALSE}
 dengueForCheck%>%
   mutate(Vomiting=as.factor(dengueForCheck$Vomiting))%>%
 logodds_plot(100,"equal_size", x ="DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Vomiting")
 ```
 
-```{r DayDisease Abdominal Pain}
+```{r DayDisease Abdominal Pain, eval=FALSE, include=FALSE}
 dengueForCheck<-dengueForCheck%>%
   mutate(Abdo=as.factor(dengueForCheck$Abdo))
 day_abdo<-logodds_plot(100,"equal_size", x ="DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Abdo",data = dengueForCheck)
 day_abdo
 ```
 
-```{r day and Muco}
+```{r day and Muco, eval=FALSE, include=FALSE}
 dengueForCheck<-dengueForCheck%>%
   mutate(Muco=as.factor(dengueForCheck$Muco))
 day_Muco<-logodds_plot(100,"equal_size", x ="DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Muco",data = dengueForCheck)
 day_Muco
 ```
-```{r Temp abdo}
+```{r Temp abdo, eval=FALSE, include=FALSE}
 dengueForCheck<-dengueForCheck%>%
   mutate(Abdo=as.factor(dengueForCheck$Abdo))
 temp_abdo<-logodds_plot(100,"equal_size", x ="Temp", y = "Y",reg_formula = y ~ x, grouping = "Abdo",data = dengueForCheck)
@@ -407,10 +461,22 @@ temp_abdo
 
 ```
 
-```{r temp and Skin}
-dengue%>%
-  mutate(Skin_condition=as.factor(dengue$Skin))%>%
-  logodds_plot(100, "equal_size", x = "Temp", y = "Y",reg_formula = y ~ x, grouping = "Skin_condition")
+```{r}
+par(mfrow=c(2,2))
+logit_DayDisease<-emplogitPlot(x=dengueForCheck$DayDisease,y=dengueForCheck$Y,xlab = "Day Diseases",ylab = "Log Odds of Dengue",main = "Figure 3.1 Empirical Logit Plot Day Disease")
+
+logit_Temp<-emplogitPlot(x=dengueForCheck$Temp,y=dengueForCheck$Y,xlab = "Temperature",ylab = "Log Odds of Dengue",main = "Figure 3.2 Empirical Logit Plot Temperature")
+
+logit_Age<-emplogitPlot(x=dengueForCheck$Age,y=dengueForCheck$Y,xlab = "Age",ylab = "Log Odds of Dengue",main = "Figure 3.3 Empirical Logit Plot Age")
+
+logit_BMI<-emplogitPlot(x=dengueForCheck$BMI,y=dengueForCheck$Y,xlab = "BMI",ylab = "Log Odds of Dengue",main = "Figure 3.4 Empirical Logit Plot BMI")
+
+```
+
+```{r exxploring correlation}
+correlation<-cor(dengue[,c(2,8:11)])
+correlation_tr<-round(correlation,3)
+knitr::kable(correlation_tr)
 ```
 
 
