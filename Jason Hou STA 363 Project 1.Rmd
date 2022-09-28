@@ -79,9 +79,8 @@ knnDemoPlot<-ggplot(storeK,aes(K,GMean))+
   labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storeK$GMean)),title = "Figure 1",y = " ")+
   geom_vline(xintercept = which.max(storeK$GMean),lty = 2,col="red")
 knnDemoPlot
-#
-```
 
+```
 
 
 
@@ -90,6 +89,7 @@ knnDemoPlot
 numb<-nrow(knnDemo)
 #Set a seed for sampling
 set.seed(363663)
+#Grab a small portion of the full data set for demonstration purpose 
 DemoSubsetRow<-sample(1:numb,numb*0.05,replace = FALSE)
 SetForDemo<-knnDemo[DemoSubsetRow,]  
 ```
@@ -163,11 +163,9 @@ for(t in 1:50){
   
   
   sensitivity_split<-sum(k_preds_split[true1_split] == 1)/ntrue1_split
-  #print(sensitivity_split)
+  
   specificity_split<-sum(k_preds_split[true0_split] == 0)/ntrue0_split
-  #print(specificity_split)
   storage_split$GeoMean[t]<-sqrt(sensitivity_split*specificity_split)
-  #print(storage_split$GeoMean)
 }
 knitr::kable(table(storage8020$Predictions, manual_test$Y), caption= "Table 1: Confusion Matrix(80% Training & 20% Testing ) ", col = c("Not Dengue", "Dengue"))
 ```
@@ -424,7 +422,32 @@ prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
 }
 ```
 
-#EDA Checking interaction
+#EDA 
+
+```{r dedicated set for EDA}
+ForEDA<-dengue
+
+```
+
+```{r}
+AgeBMIDengue<-ggplot(data = dengue,aes(x=BMI,y=Age))+
+  geom_point()
+AgeBMIDengue
+```
+
+
+```{r box plot sex and temperature}
+ForEDA<-dengue
+ForEDA$Sex=as.character(ForEDA$Sex)
+BoxDengue<-ggplot(data=dengue,aes(x=knnActual$Sex,y=knnActual$Temp,fill=Temp))+
+  theme_bw()+
+  geom_boxplot()
+BoxDengue
+```
+
+No siginificant difference on body temperature across sex was found
+
+##Checking interaction
 ```{r }
 dengue%>%
   mutate(DayDisease=dengue$DayDisease,
@@ -436,13 +459,12 @@ dengue%>%
 ```{r creating dedicated data set}
 #Create a data set dedicated for checking condition and EDA
 dengueForCheck<-dengue
-
 ```
 
 
 ```{r empirical logit plot}
 #Display 4 graphs together
-par(mfrow=c(2,2))
+op<-par(mfrow=c(2,2))
 
 #Checking linear relationship between log odds that Y=1 and four numeric Xi
 logit_DayDisease<-emplogitPlot(x=dengueForCheck$DayDisease,y=dengueForCheck$Y,xlab = "Day Diseases",ylab = "Log Odds of Dengue",main = "Figure 3.1 Empirical Logit Plot Day Disease")
@@ -455,13 +477,14 @@ logit_BMI<-emplogitPlot(x=dengueForCheck$BMI,y=dengueForCheck$Y,xlab = "BMI",yla
 
 ```
 
-
+do side by side box plot usually treat numeric 
 ```{r exploring correlation}
 #Checking correlations between variable to determine multicolinearity
 correlation<-cor(dengueForCheck[,c(2,8:11)])
 correlation_tr<-round(correlation,3)
 knitr::kable(correlation_tr)
 ```
+
 We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. Thus, age, BMI,weight and temperature will be numeric features selected for the logistic regression model.
 
 
@@ -492,14 +515,20 @@ for(i in 1:10){
   storage_logistic$Predicted[inlogistic]<-as.numeric(as.character(predicted.Y))
   
 }
+```
+
 
 #Formatted Confusion Matrix of Prediction with logistic regression
+```{r}
 knitr::kable(table(storage_logistic$Predicted, knnActual$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
 ```
+
 
 $$Sensitivity = \frac{3137}{761+3137}\approx 0.805$$
 
 $$Specificity = \frac{937}{761+937}\approx 0.5518$$
+
+## Section 4 Discussion
 
 
 
