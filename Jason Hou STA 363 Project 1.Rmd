@@ -453,7 +453,7 @@ knitr::kable(correlation_tr)
 We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. Thus, age, BMI,weight and temperature will be numeric features selected for the logistic regression model.
 
 
-```{r train logistic with k-fold}
+```{r train logistic with 10-fold CV}
 set.seed(363663)
 n<-nrow(knnActual)
 storage_logistic<-data.frame("Predicted" = rep(NA,5726))
@@ -477,22 +477,14 @@ for(i in 1:10){
   storage_logistic$Predicted[inlogistic]<-as.numeric(as.character(predicted.Y))
   
 }
-knitr::kable(table(storage_logistic$Predicted, dengue$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
+knitr::kable(table(storage_logistic$Predicted, knnActual$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
 ```
 
+$$Sensitivity = \frac{3137}{761+3137}\approx 0.805$$
+$$Specificity = \frac{937}{761+937}\approx 0.5518$$
 
 
 
 
 
-```{r}
-model3<-glm(formula = Y ~ Sex + Vomiting + Temp + Age*Weight + BMI, family = binomial, 
-    data = dengue)
-model3
-```
-
-```{r}
-modelT<-glm(data=logisticTrain,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Hepatomegaly+Flush)
-modelT
-```
 
