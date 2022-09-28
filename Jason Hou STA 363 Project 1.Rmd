@@ -271,6 +271,7 @@ sensitivity2<-sum(k_preds[true1] == 1)/ntrue1
 knitr::kable(sensitivity)
 specificity2<-sum(k_preds[true0] == 0)/ntrue0
 
+
 #Create confusion Matrix for the prediction with full dengue set
 
 knitr::kable(table(storage_inner_trial$pred, dengue$Y), caption= "Table 2: Confusion Matrix of Predicting Dengue Status (10 Fold CV & KNN with K = 35)  ", col = c("Not Dengue", "Dengue"))  
