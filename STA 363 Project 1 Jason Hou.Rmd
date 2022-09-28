@@ -1,0 +1,537 @@
+---
+title: "STA 363 Project 1"
+author: "Jason Hou"
+date: '2022-09-12'
+output: html_document
+---
+
+# Abstract
+
+
+
+# Section 1 Introduction and Data
+
+```{r load packages}
+#Load all required packages
+library(ggplot2)
+library(broom)
+library(gridExtra)
+library(dplyr)
+library(class)
+library(tidyverse)
+library(gridExtra)
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load data}
+#Load dengue data
+dengue<-read.csv("dengueData.csv")
+```
+
+```{r checking}
+#Checking if NA exists in data set
+sum(is.na(dengue))
+```
+
+```{r look, include=FALSE}
+#Take a look on data type and what the data looks like
+glimpse(dengue)
+```
+
+#Section 2 KNN
+
+## KNN Example
+
+```{r data set for demo}
+#Create a data set for demo
+knnDemo<-data.frame("dengue_status"= dengue$Y,"Age"= dengue$Age, "Height"= dengue$Height)
+```
+
+```{r knn demo loop, eval=FALSE, include=FALSE}
+#Number of rows in demo
+n<-nrow(knnDemo)
+#Set a seed for sampling
+set.seed(363663)
+demoSelectRow<-sample(1:n,n*0.9,replace = "FALSE")
+demoTrain<-knnDemo[demoSelectRow,]
+demoTest<-knnDemo[-demoSelectRow,]
+
+true1<-which(demoTest$dengue_status == 1)
+true0<-which(demoTest$dengue_status == 0)
+
+ntrue1<-length(true1)
+ntrue0<-length(true0)
+
+storeK<-data.frame("K"=rep(NA,50),"GMean"=rep(NA,50))
+
+for(i in 1:50){
+  storeK$K[i]<-i
+  Kpreds<-knn(demoTrain[,c(2,3)],demoTest[,c(2,3)],k=i,cl=demoTrain$dengue_status)
+  sensitivity<-sum(Kpreds[true1] == 1)/ntrue1
+  specificity<-sum(Kpreds[true0] == 0)/ntrue0
+  storeK$GMean[i]<-sqrt(sensitivity*specificity)
+}
+
+knnDemoPlot<-ggplot(storeK,aes(K,GMean))+
+  geom_line()+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storeK$GMean)),title = "Figure 1",y = " ")+
+  geom_vline(xintercept = which.max(storeK$GMean),lty = 2,col="red")
+knnDemoPlot
+
+```
+
+
+
+
+```{r create example sets, include=FALSE}
+numb<-nrow(knnDemo)
+#Set a seed for sampling
+set.seed(363663)
+#Grab a small portion of the full data set for demonstration purpose 
+DemoSubsetRow<-sample(1:numb,numb*0.05,replace = FALSE)
+SetForDemo<-knnDemo[DemoSubsetRow,]  
+```
+
+
+```{r knn true demo visuals}
+example_data<-data.frame("Age"= rep(NA,1),"Height"=rep(NA,1))
+example_data$Age[1]<-8
+example_data$Height[1]<-100
+
+SetForDemo<-SetForDemo%>%
+  mutate(dengue_status=as.character(dengue_status))
+#demoTest<-example_data%>%
+ # mutate(dengue_status_test=as.character(dengue_status))
+ggplot()+
+  geom_point(data = SetForDemo,aes(x=Age,y=Height,col=dengue_status),size=2,alpha=0.9,shape=19)+
+  geom_point(data =example_data,aes(x=Age,y=Height),size=2,alpha=0.9,shape=4)
+  
+  
+```
+Here we have a data point (a boy iwht height of 100cm and age of 8 year old). We look for the dengue status of the 3 nearest data point respect to this data point on the graph and check their dengue status, then we assign the dengue status that the majority of these 3 data points have as the predicted dengue status of this 8 year-old, 100cm boy. 
+
+
+##Demo KNN
+
+```{r knn prediction example, eval=FALSE, include=FALSE}
+
+for(j in 1:20){
+  Kpreds_sample<-knn(SetForDemo[,c(2,3)],example_data[,c(1,2)],k=j,cl=SetForDemo$dengue_status)
+  
+}
+```
+
+
+
+```{r creating actual KNN set and mutate logical var, include=FALSE}
+knnActual<-dengue
+knnActual<-knnActual%>%
+  mutate(Flush=as.character(Flush),
+        Hepatomegaly=as.character(Hepatomegaly),
+        Rash=as.character(Rash))
+
+```
+
+
+### Split data in to 20% testing and 80% training 
+
+```{r 20-80 split}
+q<-nrow(dengue)
+#Set a seed for sampling
+set.seed(363663)
+manually_select<-sample(1:q,q*0.8,replace = "FALSE")
+manual_train<-dengue[manually_select,]
+manual_test<-dengue[-manually_select,]
+storage8020<-data.frame("Predictions" = rep(NA,1146))
+#Find rows with positive and negative result
+    true1_split<-which(manual_test$Y == 1)
+    true0_split<-which(manual_test$Y == 0)
+    
+#Compute the amount of rows corresponding to each result
+    ntrue1_split<-length(true1_split)
+    ntrue0_split<-length(true0_split)
+    
+storage_split<-data.frame("K"= rep(NA,50),"GeoMean"= rep(NA,50))
+
+for(t in 1:50){
+  storage_split$K[t]<-t
+  k_preds_split<-knn(manual_train[,c(2,3,8,9)],manual_test[,c(2,3,8,9)],k=t,cl=manual_train$Y)
+  storage8020$Predictions<-as.numeric(as.character(k_preds_split))
+  
+  
+  
+  sensitivity_split<-sum(k_preds_split[true1_split] == 1)/ntrue1_split
+  
+  specificity_split<-sum(k_preds_split[true0_split] == 0)/ntrue0_split
+  storage_split$GeoMean[t]<-sqrt(sensitivity_split*specificity_split)
+}
+knitr::kable(table(storage8020$Predictions, manual_test$Y), caption= "Table 1: Confusion Matrix(80% Training & 20% Testing ) ", col = c("Not Dengue", "Dengue"))
+```
+
+
+
+```{r 80-20 plot}
+#Create plot to find the best k for KNN 
+knnSplit<-ggplot(storage_split,aes(K,GeoMean))+
+  geom_line()+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage_split$GeoMean)),title = "Figure 1",y = " ")+
+  geom_vline(xintercept = which.max(storage_split$GeoMean),lty = 2,col="red")
+knnSplit
+```
+
+
+
+
+
+```{r 10 fold CV determine best k }
+n<-nrow(knnActual)
+nk<-50
+storage<-data.frame("K"=rep(NA,nk),
+                    "Sensitivity" = rep(NA,nk),
+                    "Specificity" = rep(NA,nk),
+                    "GeoMean" = rep(NA,nk))
+
+#Set a seed for sampling and create a pool and set fold for K fold CV
+set.seed(363663)
+pool<-rep(1:10,573)
+
+fold<-sample(pool,5726,replace = FALSE)
+
+#Outer loop for incrementing k 
+for(k in 1:nk){
+  storage$K[k]<-k
+  
+  storage_inner<-data.frame("YHat" = rep(NA,n))
+  #Inner loop for 10 fold cv
+  for(i in 1:10){
+    #Find data in each fold
+    infold<-which(fold == i)
+    
+    #Create training and testing sets
+    Train_Dengue<-knnActual[-infold,]
+    Test_Dengue<-knnActual[infold,]
+    
+    #Run Knn
+    k_preds<-knn(Train_Dengue[,c(2,3,8,9)],Test_Dengue[,c(2,3,8,9)],k=k,cl=Train_Dengue$Y)
+    
+    #store results
+    storage_inner$YHat[infold]<-as.numeric(as.character(k_preds))
+    
+    #Find rows with positive and negative result
+    true1<-which(Test_Dengue$Y == 1)
+    true0<-which(Test_Dengue$Y == 0)
+    
+    #Compute the amount of rows corresponding to each result
+    ntrue1<-length(true1)
+    ntrue0<-length(true0)
+#Compute sensitivity and specificity, as well as GeoMean for determining the best value for k
+sensitivity<-sum(k_preds[true1] == 1)/ntrue1
+storage$Sensitivity[k]<-sensitivity
+specificity<-sum(k_preds[true0] == 0)/ntrue0
+storage$Specificity[k]<-specificity
+storage$GeoMean[k]<-sqrt(sensitivity*specificity)
+    
+  }
+  
+}
+
+```
+
+```{r find best k}
+#Create plot to find the best k for KNN 
+knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
+  geom_line()+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 1",y = " ")+
+  geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
+#Show Plot
+knnActualPlot
+```
+
+
+```{r k equals 35}
+#Set a seed for sampling
+set.seed(363663)
+#create storage for prediction result
+storage_inner_trial<-data.frame("pred"=rep(NA,5726))
+#run 10 fold knn with best k value = 35
+ for(i in 1:10){
+   
+   #Find data in each fold
+    infold<-which(fold == i)
+    
+    #Creating Training and testing set
+    Train_Dengue<-knnActual[-infold,]
+    Test_Dengue<-knnActual[infold,]
+    #Run knn
+    k_preds_best<-knn(Train_Dengue[,c(2,3,8,9)],Test_Dengue[,c(2,3,8,9)],k=35,cl=Train_Dengue$Y)
+    #store result
+    storage_inner_trial$pred[infold]<-as.numeric(as.character(k_preds))
+    
+    
+ }
+#Compute sensitivity and specificity,formating them
+sensitivity2<-sum(k_preds[true1] == 1)/ntrue1
+knitr::kable(sensitivity)
+specificity2<-sum(k_preds[true0] == 0)/ntrue0
+
+
+#Create confusion Matrix for the prediction with full dengue set
+
+knitr::kable(table(storage_inner_trial$pred, dengue$Y), caption= "Table 2: Confusion Matrix of Predicting Dengue Status (10 Fold CV & KNN with K = 35)  ", col = c("Not Dengue", "Dengue"))  
+```
+
+Age, Daydisease, temperature and BMI are the only four included in the prediction. Body height and weight was dropped from prediction since they are highly correlated with BMI(according to BMI formula)and  would create multicolinearity in the prediction.
+         
+
+## Section 3 Logistic Regression 
+
+```{r funcrion for log odd, include=FALSE}
+#Load functions for log odd plot
+logodds_plot <- function(data, num_bins, bin_method,
+                         x, y, grouping = NULL, reg_formula = y ~ x){
+  
+  if(is.null(grouping)){
+    dat <- data.frame(x = data[,x], 
+                      y = data[,y],
+                      group = 1)
+  } else {
+    dat <- data.frame(x = data[,x], 
+                      y = data[,y],
+                      group = data[,grouping])
+  }
+  
+  if(bin_method == "equal_size"){
+    logodds_table <- dat %>%
+      drop_na() %>%
+      arrange(group, x) %>%
+      group_by(group) %>%
+      mutate(obs = y,
+             bin = rep(1:num_bins,
+                       each=ceiling(n()/num_bins))[1:n()]) %>%
+      group_by(bin, group) %>%
+      summarize(mean_x = mean(x),
+                prop = mean(c(obs, 0.5)),
+                num_obs = n()) %>%
+      ungroup() %>%
+      mutate(logodds = log(prop/(1 - prop)))
+  } else {
+    logodds_table <- dat %>%
+      drop_na() %>%
+      group_by(group) %>%
+      mutate(obs = y,
+             bin = cut(x, 
+                       breaks = num_bins,
+                       labels = F)) %>%
+      group_by(bin, group) %>%
+      summarize(mean_x = mean(x),
+                prop = mean(c(obs, 0.5)),
+                num_obs = n()) %>%
+      ungroup() %>%
+      mutate(logodds = log(prop/(1 - prop)))
+  }
+  
+  if(is.null(grouping)){
+    logodds_table %>%
+      ggplot(aes(x = mean_x,
+                 y = logodds)) +
+      geom_point(size=2.5) +
+      geom_smooth(se=F, method="lm", formula = reg_formula) +
+      theme_bw() +
+      labs(x = x,
+           y = "Empirical log odds") +
+      theme(text = element_text(size=25))
+  } else {
+    logodds_table %>%
+      ggplot(aes(x = mean_x,
+                 y = logodds,
+                 color = group,
+                 shape = group)) +
+      geom_point(size=2.5) +
+      geom_smooth(se=F, method="lm", formula = reg_formula) +
+      theme_bw() +
+      labs(x = x,
+           y = "Empirical log odds",
+           color = grouping,
+           shape = grouping) +
+      theme(text = element_text(size=25))
+  }
+  
+}
+```
+
+```{r empirical logit function, include=FALSE}
+#Load function for empirical logit plot
+emplogitPlot <- function(x, y, binsize = NULL, ci = FALSE, probit = FALSE,
+prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
+  
+  if(class(y) =="character"){
+   y <- as.numeric(as.factor(y))-1
+   }
+  
+  if (length(x) != length(y))
+    stop("x and y lengths differ")
+  if (any(y < 0 | y > 1))
+    stop("y not between 0 and 1")
+  if (length(x) < 100 & is.null(binsize))
+    stop("Less than 100 observations: specify binsize manually")
+  
+  if (is.null(binsize)) binsize = min(round(length(x)/10), 50)
+  
+  if (probit){
+    link = qnorm
+    if (is.null(main)) main = "Empirical probits"
+  } else {
+    link = function(x) log(x/(1-x))
+    if (is.null(main)) main = "Empirical logits"
+  }
+  
+  sort = order(x)
+  x = x[sort]
+  y = y[sort]
+  a = seq(1, length(x), by=binsize)
+  b = c(a[-1] - 1, length(x))
+  
+  prob = xmean = ns = rep(0, length(a)) # ns is for CIs
+  for (i in 1:length(a)){
+    range = (a[i]):(b[i])
+    prob[i] = mean(y[range])
+    xmean[i] = mean(x[range])
+    ns[i] = b[i] - a[i] + 1 # for CI 
+  }
+  
+  extreme = (prob == 1 | prob == 0)
+  prob[prob == 0] = min(prob[!extreme])
+  prob[prob == 1] = max(prob[!extreme])
+  
+  g = link(prob) # logits (or probits if probit == TRUE)
+  
+  linear.fit = lm(g[!extreme] ~ xmean[!extreme])
+  b0 = linear.fit$coef[1]
+  b1 = linear.fit$coef[2]
+  
+  loess.fit = loess(g[!extreme] ~ xmean[!extreme])
+  
+  plot(xmean, g, main=main, xlab=xlab, ylab=ylab)
+  abline(b0,b1)
+  if(lowess.in ==TRUE){
+  lines(loess.fit$x, loess.fit$fitted, lwd=2, lty=2)
+  }
+}
+```
+
+#EDA 
+
+```{r dedicated set for EDA}
+ForEDA<-dengue
+
+```
+
+```{r}
+AgeBMIDengue<-ggplot(data = dengue,aes(x=BMI,y=Age))+
+  geom_point()
+AgeBMIDengue
+```
+
+
+```{r box plot sex and temperature}
+ForEDA<-dengue
+ForEDA$Sex=as.character(ForEDA$Sex)
+BoxDengue<-ggplot(data=dengue,aes(x=knnActual$Sex,y=knnActual$Temp,fill=Temp))+
+  theme_bw()+
+  geom_boxplot()
+BoxDengue
+```
+
+No siginificant difference on body temperature across sex was found
+
+##Checking interaction
+```{r }
+dengue%>%
+  mutate(DayDisease=dengue$DayDisease,
+         Skin_condition=as.factor(dengue$Skin))%>%
+  logodds_plot(100, "equal_size", x = "DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Skin_condition")
+
+```
+
+```{r creating dedicated data set}
+#Create a data set dedicated for checking condition and EDA
+dengueForCheck<-dengue
+```
+
+
+```{r empirical logit plot}
+#Display 4 graphs together
+op<-par(mfrow=c(2,2))
+
+#Checking linear relationship between log odds that Y=1 and four numeric Xi
+logit_DayDisease<-emplogitPlot(x=dengueForCheck$DayDisease,y=dengueForCheck$Y,xlab = "Day Diseases",ylab = "Log Odds of Dengue",main = "Figure 3.1 Empirical Logit Plot Day Disease")
+
+logit_Temp<-emplogitPlot(x=dengueForCheck$Temp,y=dengueForCheck$Y,xlab = "Temperature",ylab = "Log Odds of Dengue",main = "Figure 3.2 Empirical Logit Plot Temperature")
+
+logit_Age<-emplogitPlot(x=dengueForCheck$Age,y=dengueForCheck$Y,xlab = "Age",ylab = "Log Odds of Dengue",main = "Figure 3.3 Empirical Logit Plot Age")
+
+logit_BMI<-emplogitPlot(x=dengueForCheck$BMI,y=dengueForCheck$Y,xlab = "BMI",ylab = "Log Odds of Dengue",main = "Figure 3.4 Empirical Logit Plot BMI")
+
+```
+
+do side by side box plot usually treat numeric 
+```{r exploring correlation}
+#Checking correlations between variable to determine multicolinearity
+correlation<-cor(dengueForCheck[,c(2,8:11)])
+correlation_tr<-round(correlation,3)
+knitr::kable(correlation_tr)
+```
+
+We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. Thus, age, BMI,weight and temperature will be numeric features selected for the logistic regression model.
+
+
+```{r train logistic with 10-fold CV}
+#Set seed for sampling
+set.seed(363663)
+n<-nrow(knnActual)
+storage_logistic<-data.frame("Predicted" = rep(NA,5726))
+
+#Creating pools and set fold for K fold CV
+logisticpool<-rep(1:10,573)
+
+#Sampling for the pool, assign rows with fold number 
+logisticfold<-sample(logisticpool,5726,replace = FALSE)
+
+#Subset a data set for training logistic model
+logisticTotal<-knnActual[,c(1,2,4,8,9,11,12,13,14,15)]
+
+#Create for loop to train the model 
+for(i in 1:10){
+  inlogistic<-which(logisticfold==i)
+  logisticTrain<-logisticTotal[-inlogistic,]
+  logisticTest<-logisticTotal[inlogistic,]
+  
+  modelTrained<-glm(data=logisticTrain,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Hepatomegaly)
+  probabilities<-predict(modelTrained,newdata=logisticTest)
+  predicted.Y<-ifelse(probabilities>0.5,"1","0")
+  storage_logistic$Predicted[inlogistic]<-as.numeric(as.character(predicted.Y))
+  
+}
+```
+
+
+#Formatted Confusion Matrix of Prediction with logistic regression
+```{r}
+knitr::kable(table(storage_logistic$Predicted, knnActual$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
+```
+
+
+$$Sensitivity = \frac{3137}{761+3137}\approx 0.805$$
+
+$$Specificity = \frac{937}{761+937}\approx 0.5518$$
+
+## Section 4 Discussion
+
+
+
+
+
+
