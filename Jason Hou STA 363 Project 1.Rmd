@@ -108,6 +108,7 @@ Here we have a data point (a boy iwht height of 100cm and age of 8 year old). We
 
 
 ##Demo KNN
+
 ```{r knn prediction example, eval=FALSE, include=FALSE}
 
 for(j in 1:20){
@@ -141,7 +142,7 @@ storage8020<-data.frame("Predictions" = rep(NA,1146))
     true1_split<-which(manual_test$Y == 1)
     true0_split<-which(manual_test$Y == 0)
     
-    #Compute the amount of rows corresponding to each result
+#Compute the amount of rows corresponding to each result
     ntrue1_split<-length(true1_split)
     ntrue0_split<-length(true0_split)
     
@@ -421,45 +422,18 @@ dengue%>%
 
 ```
 
-```{r converting type}
+```{r creating dedicated data set}
 #Create a data set dedicated for checking condition and EDA
 dengueForCheck<-dengue
 
 ```
 
 
-
-```{r Vomit and DayDisease, eval=FALSE, include=FALSE}
-dengueForCheck%>%
-  mutate(Vomiting=as.factor(dengueForCheck$Vomiting))%>%
-logodds_plot(100,"equal_size", x ="DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Vomiting")
-```
-
-```{r DayDisease Abdominal Pain, eval=FALSE, include=FALSE}
-dengueForCheck<-dengueForCheck%>%
-  mutate(Abdo=as.factor(dengueForCheck$Abdo))
-day_abdo<-logodds_plot(100,"equal_size", x ="DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Abdo",data = dengueForCheck)
-day_abdo
-```
-
-```{r day and Muco, eval=FALSE, include=FALSE}
-dengueForCheck<-dengueForCheck%>%
-  mutate(Muco=as.factor(dengueForCheck$Muco))
-day_Muco<-logodds_plot(100,"equal_size", x ="DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Muco",data = dengueForCheck)
-day_Muco
-```
-```{r Temp abdo, eval=FALSE, include=FALSE}
-dengueForCheck<-dengueForCheck%>%
-  mutate(Abdo=as.factor(dengueForCheck$Abdo))
-temp_abdo<-logodds_plot(100,"equal_size", x ="Temp", y = "Y",reg_formula = y ~ x, grouping = "Abdo",data = dengueForCheck)
-temp_abdo
-
-```
-
-```{r}
+```{r empirical logit plot}
 #Display 4 graphs together
 par(mfrow=c(2,2))
-#Checking li
+
+#Checking linear relationship between log odds that Y=1 and four numeric Xi
 logit_DayDisease<-emplogitPlot(x=dengueForCheck$DayDisease,y=dengueForCheck$Y,xlab = "Day Diseases",ylab = "Log Odds of Dengue",main = "Figure 3.1 Empirical Logit Plot Day Disease")
 
 logit_Temp<-emplogitPlot(x=dengueForCheck$Temp,y=dengueForCheck$Y,xlab = "Temperature",ylab = "Log Odds of Dengue",main = "Figure 3.2 Empirical Logit Plot Temperature")
@@ -470,15 +444,55 @@ logit_BMI<-emplogitPlot(x=dengueForCheck$BMI,y=dengueForCheck$Y,xlab = "BMI",yla
 
 ```
 
+
 ```{r exploring correlation}
 correlation<-cor(dengueForCheck[,c(2,8:11)])
 correlation_tr<-round(correlation,3)
 knitr::kable(correlation_tr)
 ```
+We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. Thus, age, BMI,weight and temperature will be numeric features selected for the logistic regression model.
+
+
+```{r train logistic with k-fold}
+set.seed(363663)
+n<-nrow(knnActual)
+storage_logistic<-data.frame("Predicted" = rep(NA,5726))
+
+#Creating pools and set fold for K fold CV
+
+logisticpool<-rep(1:10,573)
+
+logisticfold<-sample(logisticpool,5726,replace = FALSE)
+
+logisticTotal<-knnActual[,c(1,2,4,8,9,11,12,13,14,15)]
+
+for(i in 1:10){
+  inlogistic<-which(logisticfold==i)
+  logisticTrain<-logisticTotal[-inlogistic,]
+  logisticTest<-logisticTotal[inlogistic,]
+  
+  modelTrained<-glm(data=logisticTrain,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Hepatomegaly)
+  probabilities<-predict(modelTrained,newdata=logisticTest)
+  predicted.Y<-ifelse(probabilities>0.5,"1","0")
+  storage_logistic$Predicted[inlogistic]<-as.numeric(as.character(predicted.Y))
+  
+}
+knitr::kable(table(storage_logistic$Predicted, dengue$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
+```
 
 
 
-```{r try model}
-glm(data=dengue, family = binomial, Y~Sex+Vomiting+Temp)
+
+
+
+```{r}
+model3<-glm(formula = Y ~ Sex + Vomiting + Temp + Age*Weight + BMI, family = binomial, 
+    data = dengue)
+model3
+```
+
+```{r}
+modelT<-glm(data=logisticTrain,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Hepatomegaly+Flush)
+modelT
 ```
 
