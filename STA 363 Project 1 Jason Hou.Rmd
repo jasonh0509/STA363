@@ -11,6 +11,8 @@ output: html_document
 
 # Section 1 Introduction and Data
 
+We are working on the data set that records 5726 children in Vietnam who were suffered from dengue fever. The data set contains the  
+
 ```{r load packages}
 #Load all required packages
 library(ggplot2)
@@ -90,7 +92,7 @@ knnDemoPlot
 numb<-nrow(knnDemo)
 #Set a seed for sampling
 set.seed(363663)
-#Grab a small portion of the full data set for demonstration purpose 
+#Subset a small portion of the full data set for demonstration purpose 
 DemoSubsetRow<-sample(1:numb,numb*0.05,replace = FALSE)
 SetForDemo<-knnDemo[DemoSubsetRow,]  
 ```
@@ -111,7 +113,7 @@ ggplot()+
   
   
 ```
-Here we have a data point (a boy iwht height of 100cm and age of 8 year old). We look for the dengue status of the 3 nearest data point respect to this data point on the graph and check their dengue status, then we assign the dengue status that the majority of these 3 data points have as the predicted dengue status of this 8 year-old, 100cm boy. 
+Here we have a data point (a boy with height of 100cm and age of 8 year old), and we set our K for k-nearst neighbor equals to 3. Then, We look for the dengue status of the 3 nearest data point respect to this data point on the graph and check their dengue status, then we assign the dengue status that the majority of these 3 data points have as the predicted dengue status of this 8 year-old, 100cm boy. 
 
 
 ##Demo KNN
