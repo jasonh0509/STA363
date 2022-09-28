@@ -11,8 +11,8 @@ output: html_document
 
 #Section 1 Introduction and Data
 
-
 ```{r load packages}
+#Load all required packages
 library(ggplot2)
 library(broom)
 library(gridExtra)
@@ -27,15 +27,17 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r load data}
+#Load dengue data
 dengue<-read.csv("dengueData.csv")
 ```
 
 ```{r checking}
+#Checking if NA exists in data set
 sum(is.na(dengue))
-na.omit(dengue)
 ```
 
 ```{r look, include=FALSE}
+#Take a look on data type and what the data looks like
 glimpse(dengue)
 ```
 
@@ -43,11 +45,14 @@ glimpse(dengue)
 ## KNN Example
 
 ```{r data set for demo}
+#Create a data set for demo
 knnDemo<-data.frame("dengue_status"= dengue$Y,"Age"= dengue$Age, "Height"= dengue$Height)
 ```
 
 ```{r knn demo loop, eval=FALSE, include=FALSE}
+#Number of rows in demo
 n<-nrow(knnDemo)
+#Set a seed for sampling
 set.seed(363663)
 demoSelectRow<-sample(1:n,n*0.9,replace = "FALSE")
 demoTrain<-knnDemo[demoSelectRow,]
@@ -83,6 +88,7 @@ knnDemoPlot
 
 ```{r create example sets, include=FALSE}
 numb<-nrow(knnDemo)
+#Set a seed for sampling
 set.seed(363663)
 DemoSubsetRow<-sample(1:numb,numb*0.05,replace = FALSE)
 SetForDemo<-knnDemo[DemoSubsetRow,]  
@@ -133,6 +139,7 @@ knnActual<-knnActual%>%
 
 ```{r 20-80 split}
 q<-nrow(dengue)
+#Set a seed for sampling
 set.seed(363663)
 manually_select<-sample(1:q,q*0.8,replace = "FALSE")
 manual_train<-dengue[manually_select,]
@@ -189,7 +196,7 @@ storage<-data.frame("K"=rep(NA,nk),
                     "Specificity" = rep(NA,nk),
                     "GeoMean" = rep(NA,nk))
 
-#Creating pools and set fold for K fold CV
+#Set a seed for sampling and create a pool and set fold for K fold CV
 set.seed(363663)
 pool<-rep(1:10,573)
 
@@ -222,13 +229,12 @@ for(k in 1:nk){
     #Compute the amount of rows corresponding to each result
     ntrue1<-length(true1)
     ntrue0<-length(true0)
-    #Compute sensitivity and specificity, as well as GeoMean for determining the best value for k
-
-    sensitivity<-sum(k_preds[true1] == 1)/ntrue1
-    storage$Sensitivity[k]<-sensitivity
-    specificity<-sum(k_preds[true0] == 0)/ntrue0
-    storage$Specificity[k]<-specificity
-    storage$GeoMean[k]<-sqrt(sensitivity*specificity)
+#Compute sensitivity and specificity, as well as GeoMean for determining the best value for k
+sensitivity<-sum(k_preds[true1] == 1)/ntrue1
+storage$Sensitivity[k]<-sensitivity
+specificity<-sum(k_preds[true0] == 0)/ntrue0
+storage$Specificity[k]<-specificity
+storage$GeoMean[k]<-sqrt(sensitivity*specificity)
     
   }
   
@@ -242,11 +248,13 @@ knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
   geom_line()+
   labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 1",y = " ")+
   geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
+#Show Plot
 knnActualPlot
 ```
 
 
-```{r k35}
+```{r k equals 35}
+#Set a seed for sampling
 set.seed(363663)
 #create storage for prediction result
 storage_inner_trial<-data.frame("pred"=rep(NA,5726))
@@ -283,6 +291,7 @@ Age, Daydisease, temperature and BMI are the only four included in the predictio
 ## Section 3 Logistic Regression 
 
 ```{r funcrion for log odd, include=FALSE}
+#Load functions for log odd plot
 logodds_plot <- function(data, num_bins, bin_method,
                          x, y, grouping = NULL, reg_formula = y ~ x){
   
@@ -356,6 +365,7 @@ logodds_plot <- function(data, num_bins, bin_method,
 ```
 
 ```{r empirical logit function, include=FALSE}
+#Load function for empirical logit plot
 emplogitPlot <- function(x, y, binsize = NULL, ci = FALSE, probit = FALSE,
 prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
   
@@ -447,6 +457,7 @@ logit_BMI<-emplogitPlot(x=dengueForCheck$BMI,y=dengueForCheck$Y,xlab = "BMI",yla
 
 
 ```{r exploring correlation}
+#Checking correlations between variable to determine multicolinearity
 correlation<-cor(dengueForCheck[,c(2,8:11)])
 correlation_tr<-round(correlation,3)
 knitr::kable(correlation_tr)
@@ -455,18 +466,21 @@ We suspected that multicolinearity exist between height and weight, as well as A
 
 
 ```{r train logistic with 10-fold CV}
+#Set seed for sampling
 set.seed(363663)
 n<-nrow(knnActual)
 storage_logistic<-data.frame("Predicted" = rep(NA,5726))
 
 #Creating pools and set fold for K fold CV
-
 logisticpool<-rep(1:10,573)
 
+#Sampling for the pool, assign rows with fold number 
 logisticfold<-sample(logisticpool,5726,replace = FALSE)
 
+#Subset a data set for training logistic model
 logisticTotal<-knnActual[,c(1,2,4,8,9,11,12,13,14,15)]
 
+#Create for loop to train the model 
 for(i in 1:10){
   inlogistic<-which(logisticfold==i)
   logisticTrain<-logisticTotal[-inlogistic,]
@@ -478,10 +492,13 @@ for(i in 1:10){
   storage_logistic$Predicted[inlogistic]<-as.numeric(as.character(predicted.Y))
   
 }
+
+#Formatted Confusion Matrix of Prediction with logistic regression
 knitr::kable(table(storage_logistic$Predicted, knnActual$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
 ```
 
 $$Sensitivity = \frac{3137}{761+3137}\approx 0.805$$
+
 $$Specificity = \frac{937}{761+937}\approx 0.5518$$
 
 
