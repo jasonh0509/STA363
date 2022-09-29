@@ -451,7 +451,7 @@ correlation_tr<-round(correlation,3)
 knitr::kable(correlation_tr)
 ```
 
-We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. Additionally, vomiting and rash are two of the common symptoms of dengue fever.Thus, age, BMI,weight, temperature will be numeric features selected for the logistic regression model.Sex, Rash and Vomiting will be the categorical features selected for the logistic regression. 
+We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. An interaction term between age and weight will be added to deal with the multicolinearity Additionally, vomiting and rash are two of the common symptoms of dengue fever.Thus, age, BMI,weight, temperature will be numeric features selected for the logistic regression model.Sex, Rash and Vomiting will be the categorical features selected for the logistic regression. 
 
 
 ```{r train logistic with 10-fold CV}
@@ -475,26 +475,26 @@ for(i in 1:10){
   logisticTrain<-logisticTotal[-inlogistic,]
   logisticTest<-logisticTotal[inlogistic,]
   
-  modelTrained<-glm(data=logisticTrain,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash)
+  modelTrained<-glm(data=logisticTrain,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Age+Weight)
   probabilities<-predict(modelTrained,newdata=logisticTest)
   predicted.Y<-ifelse(probabilities>0.5,"1","0")
   storage_logistic$Predicted[inlogistic]<-as.numeric(as.character(predicted.Y))
   
 }
 
-modelTotal<-glm(data=dengue,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash)
+modelTotal<-glm(data=dengue,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Age+Weight)
 storage_modelTotal<-data.frame("Prediction"= rep(NA,5726))
 ModelTotalprobabilities<-predict(modelTotal,newdata=dengue)
 predicted.YTotal<-ifelse(ModelTotalprobabilities>0.5,"1","0")
 storage_modelTotal$Prediction<-as.numeric(as.character(predicted.YTotal))
-knitr::kable(table(storage_modelTotal$Prediction, dengue$Y), caption= "Table x: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold CV) ", col = c("Not Dengue", "Dengue"))  
+knitr::kable(table(storage_logistic$Predicted, dengue$Y), caption= "Table x: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold CV) ", col = c("Not Dengue", "Dengue"))  
 ```
 
-$$Sensitivity = \frac{3139}{752+3139}\approx 0.807$$
+$$Sensitivity = \frac{3138}{890+3138}\approx 0.779$$
 
-$$Specificity = \frac{946}{752+946}\approx 0.557$$
+$$Specificity = \frac{939}{759+939}\approx 0.553 $$
 
-
+$$Accuracy = \frac{939+3138}{5726} \approx 0.712$$
 
 # Formatted Confusion Matrix of Prediction with logistic regression
 
@@ -524,7 +524,11 @@ knitr::kable(table(storageLogi8020$Prediction, dengue$Y), caption= "Table x: Con
 
 ## Section 4 Discussion
 
-
+|             | KNN   | Logistic | Winner   |   |
+|-------------|-------|----------|----------|---|
+| Sensitivity | 0.272 | 0.02     | KNN      |   |
+| Specificity | 0.964 | 1        | Logistic |   |
+| Accuracy    | 0.893 | 0.9      | Logistic |   |
 
 
 

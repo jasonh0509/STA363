@@ -642,22 +642,12 @@ CV &amp; KNN with K = 35)</caption>
 \frac{544}{554+1154}\approx 0.320\]</span></p>
 <p><span class="math display">\[Accuracy = \frac{544+3608}{5726}\approx
 0.725\]</span></p>
-<p><span class="math display">\[Sensitivity =
-\frac{3592}{3592+436}\approx 0.891\]</span></p>
-<p><span class="math display">\[Sensitivity = \frac{711}{711+87}\approx
-0.891\]</span></p>
-<p><span class="math display">\[Sensitivity = \frac{711}{711+87}\approx
-0.891\]</span></p>
-<p>Age, Daydisease, temperature and BMI are the only four included in
-the prediction. Body height and weight was dropped from prediction since
-they are highly correlated with BMI(according to BMI formula)and would
-create multicolinearity in the prediction.</p>
 </div>
 </div>
 <div id="section-3-logistic-regression" class="section level2">
 <h2>Section 3 Logistic Regression</h2>
 <p>#EDA</p>
-<p>##Checking Conditions</p>
+<p>##Checking Conditions and Interactions</p>
 <pre class="r"><code>#Create a data set dedicated for checking condition and EDA
 dengueForCheck&lt;-knnActual</code></pre>
 <pre class="r"><code>#Display 4 graphs together
@@ -748,11 +738,12 @@ knitr::kable(correlation_tr)</code></pre>
 <p>We suspected that multicolinearity exist between height and weight,
 as well as Age and height/weight. We also suspect multicolinearity
 appear between BMI and Height/Weight, since BMI was calculated from
-these two features. Additionally, vomiting and rash are two of the
-common symptoms of dengue fever.Thus, age, BMI,weight, temperature will
-be numeric features selected for the logistic regression model.Sex, Rash
-and Vomiting will be the categorical features selected for the logistic
-regression.</p>
+these two features. An interaction term between age and weight will be
+added to deal with the multicolinearity Additionally, vomiting and rash
+are two of the common symptoms of dengue fever.Thus, age, BMI,weight,
+temperature will be numeric features selected for the logistic
+regression model.Sex, Rash and Vomiting will be the categorical features
+selected for the logistic regression.</p>
 <pre class="r"><code>#Set seed for sampling
 set.seed(363663)
 n&lt;-nrow(knnActual)
@@ -773,19 +764,19 @@ for(i in 1:10){
   logisticTrain&lt;-logisticTotal[-inlogistic,]
   logisticTest&lt;-logisticTotal[inlogistic,]
   
-  modelTrained&lt;-glm(data=logisticTrain,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash)
+  modelTrained&lt;-glm(data=logisticTrain,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Age+Weight)
   probabilities&lt;-predict(modelTrained,newdata=logisticTest)
   predicted.Y&lt;-ifelse(probabilities&gt;0.5,&quot;1&quot;,&quot;0&quot;)
   storage_logistic$Predicted[inlogistic]&lt;-as.numeric(as.character(predicted.Y))
   
 }
 
-modelTotal&lt;-glm(data=dengue,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash)
+modelTotal&lt;-glm(data=dengue,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Age+Weight)
 storage_modelTotal&lt;-data.frame(&quot;Prediction&quot;= rep(NA,5726))
 ModelTotalprobabilities&lt;-predict(modelTotal,newdata=dengue)
 predicted.YTotal&lt;-ifelse(ModelTotalprobabilities&gt;0.5,&quot;1&quot;,&quot;0&quot;)
 storage_modelTotal$Prediction&lt;-as.numeric(as.character(predicted.YTotal))
-knitr::kable(table(storage_modelTotal$Prediction, dengue$Y), caption= &quot;Table x: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion &amp; 10 Fold CV) &quot;, col = c(&quot;Not Dengue&quot;, &quot;Dengue&quot;))  </code></pre>
+knitr::kable(table(storage_logistic$Predicted, dengue$Y), caption= &quot;Table x: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion &amp; 10 Fold CV) &quot;, col = c(&quot;Not Dengue&quot;, &quot;Dengue&quot;))  </code></pre>
 <table>
 <caption>Table x: Confusion Matrix of Predicting Dengue Status (Logistic
 Regerssion &amp; 10 Fold CV)</caption>
@@ -799,22 +790,27 @@ Regerssion &amp; 10 Fold CV)</caption>
 <tbody>
 <tr class="odd">
 <td align="left">0</td>
-<td align="right">946</td>
-<td align="right">889</td>
+<td align="right">939</td>
+<td align="right">890</td>
 </tr>
 <tr class="even">
 <td align="left">1</td>
-<td align="right">752</td>
-<td align="right">3139</td>
+<td align="right">759</td>
+<td align="right">3138</td>
 </tr>
 </tbody>
 </table>
 <p><span class="math display">\[Sensitivity =
-\frac{3139}{752+3139}\approx 0.807\]</span></p>
-<p><span class="math display">\[Specificity = \frac{946}{752+946}\approx
-0.557\]</span></p>
-<p>#Formatted Confusion Matrix of Prediction with logistic
-regression</p>
+\frac{3138}{890+3138}\approx 0.779\]</span></p>
+<p><span class="math display">\[Specificity = \frac{939}{759+939}\approx
+0.553 \]</span></p>
+<p><span class="math display">\[Accuracy = \frac{939+3138}{5726} \approx
+0.712\]</span></p>
+</div>
+</div>
+<div id="formatted-confusion-matrix-of-prediction-with-logistic-regression" class="section level1">
+<h1>Formatted Confusion Matrix of Prediction with logistic
+regression</h1>
 <pre class="r"><code>knitr::kable(table(storage_logistic$Predicted, knnActual$Y), caption= &quot;Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion &amp; 10 Fold cv)  &quot;, col = c(&quot;Not Dengue&quot;, &quot;Dengue&quot;))  </code></pre>
 <table>
 <caption>Table 3: Confusion Matrix of Predicting Dengue Status (Logistic
@@ -843,9 +839,42 @@ Regerssion &amp; 10 Fold cv)</caption>
 \frac{3138}{759+3138}\approx 0.805\]</span></p>
 <p><span class="math display">\[Specificity = \frac{939}{759+939}\approx
 0.553\]</span></p>
-</div>
 <div id="section-4-discussion" class="section level2">
 <h2>Section 4 Discussion</h2>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th>KNN</th>
+<th>Logistic</th>
+<th>Winner</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Sensitivity</td>
+<td>0.272</td>
+<td>0.02</td>
+<td>KNN</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Specificity</td>
+<td>0.964</td>
+<td>1</td>
+<td>Logistic</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Accuracy</td>
+<td>0.893</td>
+<td>0.9</td>
+<td>Logistic</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="bibliography" class="section level2">
 <h2>Bibliography</h2>
