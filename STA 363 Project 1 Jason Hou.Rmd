@@ -11,7 +11,7 @@ output: html_document
 
 # Section 1 Introduction and Data
 
-We are working on the data set that records 5726 children in Vietnam who were suffered from dengue fever. The data set contains the  
+We are working on the data set that records 5726 children with potential dengue fever, which is a disease that is difficult to diagnose. The data set contains the basic information and measures of the children, including age, sex, BMI(Body Mass Index), height and weight, and 9 features about potential symptoms of dengue fever.The goal of our client is to use this data to establish a efficacious tool as an alternative to predict the dengue fever in children who lacks the access to standard diagnosis test for dengue fever.    
 
 ```{r load packages}
 #Load all required packages
@@ -35,13 +35,17 @@ dengue<-read.csv("dengueData.csv")
 
 ```{r checking}
 #Checking if NA exists in data set
-sum(is.na(dengue))
+knitr::kable(sum(is.na(dengue)),col.names = "Missing Value")
 ```
+
+No missing value was detected from the data set.
+
 
 ```{r look, include=FALSE}
 #Take a look on data type and what the data looks like
 glimpse(dengue)
 ```
+
 
 #Section 2 KNN
 
@@ -86,7 +90,7 @@ knnDemoPlot
 ```
 
 
-
+##Demo KNN
 
 ```{r create example sets, include=FALSE}
 numb<-nrow(knnDemo)
@@ -96,7 +100,6 @@ set.seed(363663)
 DemoSubsetRow<-sample(1:numb,numb*0.05,replace = FALSE)
 SetForDemo<-knnDemo[DemoSubsetRow,]  
 ```
-
 
 ```{r knn true demo visuals}
 example_data<-data.frame("Age"= rep(NA,1),"Height"=rep(NA,1))
@@ -109,39 +112,34 @@ SetForDemo<-SetForDemo%>%
  # mutate(dengue_status_test=as.character(dengue_status))
 ggplot()+
   geom_point(data = SetForDemo,aes(x=Age,y=Height,col=dengue_status),size=2,alpha=0.9,shape=19)+
-  geom_point(data =example_data,aes(x=Age,y=Height),size=2,alpha=0.9,shape=4)
+  geom_point(data =example_data,aes(x=Age,y=Height),size=2,alpha=0.9,shape=19)+
+  geom_segment(aes(x=8,xend=8,
+                   y=100,yend=112.5))+
+  geom_segment(aes(x=8,xend=7,
+                   y=100,yend=112.5))+
+  geom_segment(aes(x=8,xend=7,
+                   y=100,yend=114))+
+  geom_segment(aes(x=8,xend=9,
+                   y=100,yend=117))+
+  
+  ggtitle("Figure 1: How KNN Works")
   
   
 ```
-Here we have a data point (a boy with height of 100cm and age of 8 year old), and we set our K for k-nearst neighbor equals to 3. Then, We look for the dengue status of the 3 nearest data point respect to this data point on the graph and check their dengue status, then we assign the dengue status that the majority of these 3 data points have as the predicted dengue status of this 8 year-old, 100cm boy. 
 
-
-##Demo KNN
-
-```{r knn prediction example, eval=FALSE, include=FALSE}
-
-for(j in 1:20){
-  Kpreds_sample<-knn(SetForDemo[,c(2,3)],example_data[,c(1,2)],k=j,cl=SetForDemo$dengue_status)
-  
-}
-```
+Here we have a data point (a boy with height of 100cm and age of 8 year old, shown as the black dot on the graph above).For instance, if we set our K for k-Nearest Neighbor Algorithm(KNN) equals to 4, the KNN Algorithm finds the dengue status of the 3 nearest data point respect to this data point on the graph(as shown in graph with black lines connect to the boy's data point) and check the dengue status of these 4 data points.The KNN then assigns the dengue status of the majority of these 4 data points as the predicted status of the boy. In this case, the dengue status of 3 out of 4 nearest data point to this boy's data point were shown as "1", indicating these three patients has dengue fever, therefore the boy was predicted to have dengue fever.
 
 
 
 ```{r creating actual KNN set and mutate logical var, include=FALSE}
 knnActual<-dengue
-knnActual<-knnActual%>%
-  mutate(Flush=as.character(Flush),
-        Hepatomegaly=as.character(Hepatomegaly),
-        Rash=as.character(Rash))
-
 ```
 
 
 ### Split data in to 20% testing and 80% training 
 
-```{r 20-80 split}
-q<-nrow(dengue)
+```{r 80-20 split}
+q<-nrow(knnActual)
 #Set a seed for sampling
 set.seed(363663)
 manually_select<-sample(1:q,q*0.8,replace = "FALSE")
@@ -163,29 +161,41 @@ for(t in 1:50){
   k_preds_split<-knn(manual_train[,c(2,3,8,9)],manual_test[,c(2,3,8,9)],k=t,cl=manual_train$Y)
   storage8020$Predictions<-as.numeric(as.character(k_preds_split))
   
-  
-  
   sensitivity_split<-sum(k_preds_split[true1_split] == 1)/ntrue1_split
-  
+
   specificity_split<-sum(k_preds_split[true0_split] == 0)/ntrue0_split
   storage_split$GeoMean[t]<-sqrt(sensitivity_split*specificity_split)
+
+  
+
 }
-knitr::kable(table(storage8020$Predictions, manual_test$Y), caption= "Table 1: Confusion Matrix(80% Training & 20% Testing ) ", col = c("Not Dengue", "Dengue"))
+  
 ```
 
 
+We utilized two approaches to predict the dengue status through KNN: (1) Creating a 20% test, 80% training split of the data and use it to for the KNN.(2)Using LOOCV or k-fold Cross Validation. For the first approach, 80% of the 5726 data entries were used for training purpose, and 20% of the data set were used to test the efficacy of the prediction. For the second approach, k-fold Cross Validation was selected, since the relative large size of the data set would lead to a executing time of the prediction. Only Age, DayDisease, Temp and BMI were kept for KNN since KNN can not accept categorical features. Height and Weight were excluded since BMI was calculated from them.
 
-```{r 80-20 plot}
+
+```{r 80-20 plot, echo=FALSE}
 #Create plot to find the best k for KNN 
 knnSplit<-ggplot(storage_split,aes(K,GeoMean))+
   geom_line()+
-  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage_split$GeoMean)),title = "Figure 1",y = " ")+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage_split$GeoMean)),title = "Figure 2: GeoMean Graph of KNN with Best k Shown
+  (80% Training Data and 20% Testing Data)",y = " ")+
   geom_vline(xintercept = which.max(storage_split$GeoMean),lty = 2,col="red")
 knnSplit
 ```
 
+For the first approach, we determined the best k value for KNN through running KNN with k from 1-50 and calculating the geometric mean of the sensitivity and specificity of prediction under each k value. We found k=46 to be the best k value since the prediction under k=46 provide the most balanced sensitivity(true positive rate) and specificity(true negative rate) in the prediction of dengue fever status.
 
+```{r}
+knitr::kable(table(storage8020$Predictions, manual_test$Y), caption= "Table 1: Confusion Matrix of Dengue Status Prediction(80% Training & 20% Testing ) ", col = c("Not Dengue", "Dengue"))
+```
 
+From the 80% training, 20% testing approach, we have:
+$$Sensitivity = \frac{711}{711+87}\approx 0.891$$
+$$Specificity = \frac{122}{122+226}\approx 0.351$$
+$$Accuracy = \frac{122+711}{122+711+226+87}\approx 0.727$$
 
 
 ```{r 10 fold CV determine best k }
@@ -202,12 +212,12 @@ pool<-rep(1:10,573)
 
 fold<-sample(pool,5726,replace = FALSE)
 
-#Outer loop for incrementing k 
+#Outer loop for increment k 
 for(k in 1:nk){
   storage$K[k]<-k
   
   storage_inner<-data.frame("YHat" = rep(NA,n))
-  #Inner loop for 10 fold cv
+  #Inner loop for 10 fold CV
   for(i in 1:10){
     #Find data in each fold
     infold<-which(fold == i)
@@ -223,146 +233,107 @@ for(k in 1:nk){
     storage_inner$YHat[infold]<-as.numeric(as.character(k_preds))
     
     #Find rows with positive and negative result
-    true1<-which(Test_Dengue$Y == 1)
-    true0<-which(Test_Dengue$Y == 0)
+    true1K<-which(Test_Dengue$Y == 1)
+    true0K<-which(Test_Dengue$Y == 0)
     
     #Compute the amount of rows corresponding to each result
-    ntrue1<-length(true1)
-    ntrue0<-length(true0)
-#Compute sensitivity and specificity, as well as GeoMean for determining the best value for k
-sensitivity<-sum(k_preds[true1] == 1)/ntrue1
+    ntrue1K<-length(true1K)
+    ntrue0K<-length(true0K)
+#Compute sensitivity and specificity, as well as GeoMetric Mean for determining the best value for k
+sensitivity<-sum(k_preds[true1K] == 1)/ntrue1K
 storage$Sensitivity[k]<-sensitivity
-specificity<-sum(k_preds[true0] == 0)/ntrue0
+specificity<-sum(k_preds[true0K] == 0)/ntrue0K
 storage$Specificity[k]<-specificity
 storage$GeoMean[k]<-sqrt(sensitivity*specificity)
-    
   }
-  
 }
 
+
+
+
 ```
+
+$$Sensitivity = \frac{3608}{3608+420}\approx 0.895$$
+
+$$Specificity = \frac{544}{554+1154}\approx 0.320$$
+
+$$Accuracy = \frac{544+3608}{5726}\approx 0.725$$
+
+
 
 ```{r find best k}
 #Create plot to find the best k for KNN 
 knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
   geom_line()+
-  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 1",y = " ")+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 3: GeoMean Graph of KNN with Best k Shown
+  (10 Fold Cross Validation)",y = " ")+
   geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
 #Show Plot
 knnActualPlot
 ```
 
+For the k fold Cross Validation, we found k=35 to be the best k value for 10-fold Cross Validation because it provides the largest geometric mean among k values from 1-50, indicating the most ideal balance between the sensitivity and specificity of the prediction.
 
-```{r k equals 35}
+```{r}
+knitr::kable(table(storage_inner$YHat, dengue$Y), caption= "Table 2: Confusion Matrix of Predicting Dengue Status (10 Fold CV & KNN with K = 35)  ", col = c("Not Dengue", "Dengue"))  
+```
+
+We have
+$$Sensitivity = \frac{3608}{3608+420}\approx 0.895$$
+
+$$Specificity = \frac{544}{554+1154}\approx 0.320$$
+
+$$Accuracy = \frac{544+3608}{5726}\approx 0.725$$
+
+```{r k equals 35, eval=FALSE, include=FALSE}
 #Set a seed for sampling
 set.seed(363663)
 #create storage for prediction result
 storage_inner_trial<-data.frame("pred"=rep(NA,5726))
+fold35<-sample(pool,5726,replace = FALSE)
+
 #run 10 fold knn with best k value = 35
  for(i in 1:10){
    
    #Find data in each fold
-    infold<-which(fold == i)
+    infold2<-which(fold35 == i)
     
     #Creating Training and testing set
-    Train_Dengue<-knnActual[-infold,]
-    Test_Dengue<-knnActual[infold,]
+    Train_Dengue<-knnActual[-infold2,]
+    Test_Dengue<-knnActual[infold2,]
     #Run knn
     k_preds_best<-knn(Train_Dengue[,c(2,3,8,9)],Test_Dengue[,c(2,3,8,9)],k=35,cl=Train_Dengue$Y)
-    #store result
-    storage_inner_trial$pred[infold]<-as.numeric(as.character(k_preds))
+    trueBestk1<-which(Test_Dengue$Y==1)
+    trueBestk0<-which(Test_Dengue$Y==0)
     
+    ntrueBest1<-length(trueBestk1)
+    ntrueBest0<-length(trueBestk0)
+    
+    #Compute sensitivity and specificity,formating them
+    sensitivity35<-sum(k_preds_best[trueBestk1] == 1)/ntrueBest1
+    print(ntrueBest1)
+    specificit35<-sum(k_preds_best[trueBestk0] == 0)/ntrueBest0
+
+    #store result
+    storage_inner_trial$pred[infold2]<-as.numeric(as.character(k_preds_best))
+    
+    
+
     
  }
-#Compute sensitivity and specificity,formating them
-sensitivity2<-sum(k_preds[true1] == 1)/ntrue1
-knitr::kable(sensitivity)
-specificity2<-sum(k_preds[true0] == 0)/ntrue0
+
 
 
 #Create confusion Matrix for the prediction with full dengue set
 
-knitr::kable(table(storage_inner_trial$pred, dengue$Y), caption= "Table 2: Confusion Matrix of Predicting Dengue Status (10 Fold CV & KNN with K = 35)  ", col = c("Not Dengue", "Dengue"))  
 ```
 
-Age, Daydisease, temperature and BMI are the only four included in the prediction. Body height and weight was dropped from prediction since they are highly correlated with BMI(according to BMI formula)and  would create multicolinearity in the prediction.
-         
+
+
+
+
 
 ## Section 3 Logistic Regression 
-
-```{r funcrion for log odd, include=FALSE}
-#Load functions for log odd plot
-logodds_plot <- function(data, num_bins, bin_method,
-                         x, y, grouping = NULL, reg_formula = y ~ x){
-  
-  if(is.null(grouping)){
-    dat <- data.frame(x = data[,x], 
-                      y = data[,y],
-                      group = 1)
-  } else {
-    dat <- data.frame(x = data[,x], 
-                      y = data[,y],
-                      group = data[,grouping])
-  }
-  
-  if(bin_method == "equal_size"){
-    logodds_table <- dat %>%
-      drop_na() %>%
-      arrange(group, x) %>%
-      group_by(group) %>%
-      mutate(obs = y,
-             bin = rep(1:num_bins,
-                       each=ceiling(n()/num_bins))[1:n()]) %>%
-      group_by(bin, group) %>%
-      summarize(mean_x = mean(x),
-                prop = mean(c(obs, 0.5)),
-                num_obs = n()) %>%
-      ungroup() %>%
-      mutate(logodds = log(prop/(1 - prop)))
-  } else {
-    logodds_table <- dat %>%
-      drop_na() %>%
-      group_by(group) %>%
-      mutate(obs = y,
-             bin = cut(x, 
-                       breaks = num_bins,
-                       labels = F)) %>%
-      group_by(bin, group) %>%
-      summarize(mean_x = mean(x),
-                prop = mean(c(obs, 0.5)),
-                num_obs = n()) %>%
-      ungroup() %>%
-      mutate(logodds = log(prop/(1 - prop)))
-  }
-  
-  if(is.null(grouping)){
-    logodds_table %>%
-      ggplot(aes(x = mean_x,
-                 y = logodds)) +
-      geom_point(size=2.5) +
-      geom_smooth(se=F, method="lm", formula = reg_formula) +
-      theme_bw() +
-      labs(x = x,
-           y = "Empirical log odds") +
-      theme(text = element_text(size=25))
-  } else {
-    logodds_table %>%
-      ggplot(aes(x = mean_x,
-                 y = logodds,
-                 color = group,
-                 shape = group)) +
-      geom_point(size=2.5) +
-      geom_smooth(se=F, method="lm", formula = reg_formula) +
-      theme_bw() +
-      labs(x = x,
-           y = "Empirical log odds",
-           color = grouping,
-           shape = grouping) +
-      theme(text = element_text(size=25))
-  }
-  
-}
-```
 
 ```{r empirical logit function, include=FALSE}
 #Load function for empirical logit plot
@@ -426,41 +397,13 @@ prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
 
 #EDA 
 
-```{r dedicated set for EDA}
-ForEDA<-dengue
 
-```
+##Checking Conditions and Interactions
 
-```{r}
-AgeBMIDengue<-ggplot(data = dengue,aes(x=BMI,y=Age))+
-  geom_point()
-AgeBMIDengue
-```
-
-
-```{r box plot sex and temperature}
-ForEDA<-dengue
-ForEDA$Sex=as.character(ForEDA$Sex)
-BoxDengue<-ggplot(data=dengue,aes(x=knnActual$Sex,y=knnActual$Temp,fill=Temp))+
-  theme_bw()+
-  geom_boxplot()
-BoxDengue
-```
-
-No siginificant difference on body temperature across sex was found
-
-##Checking interaction
-```{r }
-dengue%>%
-  mutate(DayDisease=dengue$DayDisease,
-         Skin_condition=as.factor(dengue$Skin))%>%
-  logodds_plot(100, "equal_size", x = "DayDisease", y = "Y",reg_formula = y ~ x, grouping = "Skin_condition")
-
-```
 
 ```{r creating dedicated data set}
 #Create a data set dedicated for checking condition and EDA
-dengueForCheck<-dengue
+dengueForCheck<-knnActual
 ```
 
 
@@ -479,7 +422,28 @@ logit_BMI<-emplogitPlot(x=dengueForCheck$BMI,y=dengueForCheck$Y,xlab = "BMI",yla
 
 ```
 
-do side by side box plot usually treat numeric 
+
+
+```{r box plot sex and temperature}
+#Convert sex from a numeric feature to categorical
+dengueForCheck$Sex=as.factor(dengueForCheck$Sex)
+BoxDengue<-ggplot(data=dengueForCheck,aes(x=Sex,y=Temp,fill=Temp))+
+  theme_bw()+
+  geom_boxplot()
+BoxDengue
+```
+
+No significant difference on body temperature across sex was found. 
+
+```{r scatter plot to see relationship between age and dengue status}
+knnActual%>%
+  mutate(dengue_status=as.factor(Y))%>%
+  ggplot(aes(x=Age,y=Height,color=dengue_status))+
+  geom_point()+
+  ggtitle("Figure 3.6: Age vs Height Plot Respect to Dengue Status")
+```
+
+
 ```{r exploring correlation}
 #Checking correlations between variable to determine multicolinearity
 correlation<-cor(dengueForCheck[,c(2,8:11)])
@@ -487,7 +451,7 @@ correlation_tr<-round(correlation,3)
 knitr::kable(correlation_tr)
 ```
 
-We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. Thus, age, BMI,weight and temperature will be numeric features selected for the logistic regression model.
+We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. Additionally, vomiting and rash are two of the common symptoms of dengue fever.Thus, age, BMI,weight, temperature will be numeric features selected for the logistic regression model.Sex, Rash and Vomiting will be the categorical features selected for the logistic regression. 
 
 
 ```{r train logistic with 10-fold CV}
@@ -511,24 +475,52 @@ for(i in 1:10){
   logisticTrain<-logisticTotal[-inlogistic,]
   logisticTest<-logisticTotal[inlogistic,]
   
-  modelTrained<-glm(data=logisticTrain,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Hepatomegaly)
+  modelTrained<-glm(data=logisticTrain,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash)
   probabilities<-predict(modelTrained,newdata=logisticTest)
   predicted.Y<-ifelse(probabilities>0.5,"1","0")
   storage_logistic$Predicted[inlogistic]<-as.numeric(as.character(predicted.Y))
   
 }
+
+modelTotal<-glm(data=dengue,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash)
+storage_modelTotal<-data.frame("Prediction"= rep(NA,5726))
+ModelTotalprobabilities<-predict(modelTotal,newdata=dengue)
+predicted.YTotal<-ifelse(ModelTotalprobabilities>0.5,"1","0")
+storage_modelTotal$Prediction<-as.numeric(as.character(predicted.YTotal))
+knitr::kable(table(storage_modelTotal$Prediction, dengue$Y), caption= "Table x: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold CV) ", col = c("Not Dengue", "Dengue"))  
 ```
 
+$$Sensitivity = \frac{3139}{752+3139}\approx 0.807$$
 
-#Formatted Confusion Matrix of Prediction with logistic regression
+$$Specificity = \frac{946}{752+946}\approx 0.557$$
+
+
+
+# Formatted Confusion Matrix of Prediction with logistic regression
+
 ```{r}
 knitr::kable(table(storage_logistic$Predicted, knnActual$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
 ```
 
 
-$$Sensitivity = \frac{3137}{761+3137}\approx 0.805$$
+$$Sensitivity = \frac{3138}{759+3138}\approx 0.805$$
 
-$$Specificity = \frac{937}{761+937}\approx 0.5518$$
+$$Specificity = \frac{939}{759+939}\approx 0.553$$
+
+```{r 80 20 Split model for logistic, eval=FALSE, include=FALSE}
+logisticModel8020<-glm(data=manual_train,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash)
+logisticModel8020
+```
+
+
+```{r 8020 logistic, eval=FALSE, include=FALSE}
+storageLogi8020<-data.frame("Prediction"= rep(NA,5726))
+LogiProbabilities<-predict(logisticModel8020,newdata=knnActual)
+predicted.Y8020<-ifelse(LogiProbabilities>0.5,"1","0")
+storageLogi8020$Prediction<-as.numeric(as.character(predicted.Y8020))
+knitr::kable(table(storageLogi8020$Prediction, dengue$Y), caption= "Table x: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 80% Training 20% Testing)  ", col = c("Not Dengue", "Dengue"))  
+```
+
 
 ## Section 4 Discussion
 
@@ -536,4 +528,7 @@ $$Specificity = \frac{937}{761+937}\approx 0.5518$$
 
 
 
+
+## Bibliography
+CDC. (2021, September 20). Symptoms and treatment. Centers for Disease Control and Prevention. Retrieved September 28, 2022, from https://www.cdc.gov/dengue/symptoms/index.html\
 
