@@ -225,39 +225,37 @@ for(k in 1:nk){
     #Create training and testing sets
     Train_Dengue<-knnActual[-infold,]
     Test_Dengue<-knnActual[infold,]
-    
+   (set.seed(363))
     #Run Knn
     k_preds<-knn(Train_Dengue[,c(2,3,8,9)],Test_Dengue[,c(2,3,8,9)],k=k,cl=Train_Dengue$Y)
     
-    #store results
+    #store predicted result from each fold to storage_inner and obtain predictions to     the full data set 
     storage_inner$YHat[infold]<-as.numeric(as.character(k_preds))
-    
+  }
     #Find rows with positive and negative result
-    true1K<-which(Test_Dengue$Y == 1)
-    true0K<-which(Test_Dengue$Y == 0)
+    true1K<-which(dengue$Y == 1)
+    true0K<-which(dengue$Y == 0)
     
     #Compute the amount of rows corresponding to each result
     ntrue1K<-length(true1K)
     ntrue0K<-length(true0K)
-#Compute sensitivity and specificity, as well as GeoMetric Mean for determining the best value for k
-sensitivity<-sum(k_preds[true1K] == 1)/ntrue1K
-storage$Sensitivity[k]<-sensitivity
-specificity<-sum(k_preds[true0K] == 0)/ntrue0K
-storage$Specificity[k]<-specificity
-storage$GeoMean[k]<-sqrt(sensitivity*specificity)
-  }
+    #Compute sensitivity and specificity, as well as GeoMetric Mean for determining the best value for k
+    sensitivity<-sum(storage_inner$YHat[true1K] == 1)/ntrue1K
+    storage$Sensitivity[k]<-sensitivity
+    specificity<-sum(storage_inner$YHat[true0K] == 0)/ntrue0K
+    storage$Specificity[k]<-specificity
+    storage$GeoMean[k]<-sqrt(sensitivity*specificity)
+    
+    if(k==8){
+      YHatOut <- storage_inner$YHat
+    }
+   
 }
-
-
-
 
 ```
 
-$$Sensitivity = \frac{3608}{3608+420}\approx 0.895$$
 
-$$Specificity = \frac{544}{554+1154}\approx 0.320$$
 
-$$Accuracy = \frac{544+3608}{5726}\approx 0.725$$
 
 
 
@@ -274,16 +272,20 @@ knnActualPlot
 
 For the k fold Cross Validation, we found k=35 to be the best k value for 10-fold Cross Validation because it provides the largest geometric mean among k values from 1-50, indicating the most ideal balance between the sensitivity and specificity of the prediction.
 
+
+
+
 ```{r}
-knitr::kable(table(storage_inner$YHat, dengue$Y), caption= "Table 2: Confusion Matrix of Predicting Dengue Status (10 Fold CV & KNN with K = 35)  ", col = c("Not Dengue", "Dengue"))  
+knitr::kable(table(YHatOut, dengue$Y), caption= "Table 2: Confusion Matrix of Predicting Dengue Status (10 Fold CV & KNN with K = 8)  ", col = c("Not Dengue", "Dengue"))  
 ```
 
-We have
-$$Sensitivity = \frac{3608}{3608+420}\approx 0.895$$
+We have:
 
-$$Specificity = \frac{544}{554+1154}\approx 0.320$$
+$$Sensitivity = \frac{3431}{3431+597}\approx 0.852$$
 
-$$Accuracy = \frac{544+3608}{5726}\approx 0.725$$
+$$Specificity = \frac{615}{615+1083}\approx 0.362$$
+
+$$Accuracy = \frac{615+3431}{5726}\approx 0.71$$
 
 ```{r k equals 35, eval=FALSE, include=FALSE}
 #Set a seed for sampling
@@ -483,11 +485,14 @@ for(i in 1:10){
 }
 
 modelTotal<-glm(data=dengue,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Age+Weight)
-storage_modelTotal<-data.frame("Prediction"= rep(NA,5726))
-ModelTotalprobabilities<-predict(modelTotal,newdata=dengue)
-predicted.YTotal<-ifelse(ModelTotalprobabilities>0.5,"1","0")
-storage_modelTotal$Prediction<-as.numeric(as.character(predicted.YTotal))
-knitr::kable(table(storage_logistic$Predicted, dengue$Y), caption= "Table x: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold CV) ", col = c("Not Dengue", "Dengue"))  
+modelTotal
+
+
+```
+
+
+```{r}
+knitr::kable(table(storage_logistic$Predicted, knnActual$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
 ```
 
 $$Sensitivity = \frac{3138}{890+3138}\approx 0.779$$
@@ -498,28 +503,13 @@ $$Accuracy = \frac{939+3138}{5726} \approx 0.712$$
 
 # Formatted Confusion Matrix of Prediction with logistic regression
 
-```{r}
-knitr::kable(table(storage_logistic$Predicted, knnActual$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
-```
+
 
 
 $$Sensitivity = \frac{3138}{759+3138}\approx 0.805$$
 
 $$Specificity = \frac{939}{759+939}\approx 0.553$$
 
-```{r 80 20 Split model for logistic, eval=FALSE, include=FALSE}
-logisticModel8020<-glm(data=manual_train,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash)
-logisticModel8020
-```
-
-
-```{r 8020 logistic, eval=FALSE, include=FALSE}
-storageLogi8020<-data.frame("Prediction"= rep(NA,5726))
-LogiProbabilities<-predict(logisticModel8020,newdata=knnActual)
-predicted.Y8020<-ifelse(LogiProbabilities>0.5,"1","0")
-storageLogi8020$Prediction<-as.numeric(as.character(predicted.Y8020))
-knitr::kable(table(storageLogi8020$Prediction, dengue$Y), caption= "Table x: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 80% Training 20% Testing)  ", col = c("Not Dengue", "Dengue"))  
-```
 
 
 ## Section 4 Discussion
