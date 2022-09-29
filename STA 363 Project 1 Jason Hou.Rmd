@@ -122,12 +122,12 @@ ggplot()+
   geom_segment(aes(x=8,xend=9,
                    y=100,yend=117))+
   
-  ggtitle("Figure 1: How KNN Works")
+  ggtitle("Figure 2.1: How KNN Works")
   
   
 ```
 
-Here we have a data point (a boy with height of 100cm and age of 8 year old, shown as the black dot on the graph above).For instance, if we set our K for k-Nearest Neighbor Algorithm(KNN) equals to 4, the KNN Algorithm finds the dengue status of the 3 nearest data point respect to this data point on the graph(as shown in graph with black lines connect to the boy's data point) and check the dengue status of these 4 data points.The KNN then assigns the dengue status of the majority of these 4 data points as the predicted status of the boy. In this case, the dengue status of 3 out of 4 nearest data point to this boy's data point were shown as "1", indicating these three patients has dengue fever, therefore the boy was predicted to have dengue fever.
+In figure 2.1 we have a data point (a boy with height of 100cm and age of 8 year old, shown as the black dot on the graph above).For instance, if we set our K for k-Nearest Neighbor Algorithm(KNN) equals to 4, the KNN Algorithm finds the dengue status of the 3 nearest data point respect to this data point on the graph(as shown in graph with black lines connect to the boy's data point) and check the dengue status of these 4 data points.The KNN then assigns the dengue status of the majority of these 4 data points as the predicted status of the boy. In this case, the dengue status of 3 out of 4 nearest data point to this boy's data point were shown as "1", indicating these three patients has dengue fever, therefore the boy was predicted to have dengue fever.
 
 
 
@@ -180,19 +180,20 @@ We utilized two approaches to predict the dengue status through KNN: (1) Creatin
 #Create plot to find the best k for KNN 
 knnSplit<-ggplot(storage_split,aes(K,GeoMean))+
   geom_line()+
-  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage_split$GeoMean)),title = "Figure 2: GeoMean Graph of KNN with Best k Shown
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage_split$GeoMean)),title = "Figure 2.2: GeoMean Graph of KNN with Best k Shown
   (80% Training Data and 20% Testing Data)",y = " ")+
   geom_vline(xintercept = which.max(storage_split$GeoMean),lty = 2,col="red")
 knnSplit
 ```
 
-For the first approach, we determined the best k value for KNN through running KNN with k from 1-50 and calculating the geometric mean of the sensitivity and specificity of prediction under each k value. We found k=46 to be the best k value since the prediction under k=46 provide the most balanced sensitivity(true positive rate) and specificity(true negative rate) in the prediction of dengue fever status.
+For the first approach, we determined the best k value for KNN through running KNN with k from 1-50 and calculating the geometric mean of the sensitivity and specificity of prediction under each k value, and plot a line graph of geometric mean respect to each k value. Figure 2.1 shows that k=46 (indicated by a red line) is the best k value since the prediction under k=46 provide the most balanced sensitivity(true positive rate) and specificity(true negative rate) in the prediction of dengue fever status.
 
-```{r}
+```{r confusion matrix 8020}
 knitr::kable(table(storage8020$Predictions, manual_test$Y), caption= "Table 1: Confusion Matrix of Dengue Status Prediction(80% Training & 20% Testing ) ", col = c("Not Dengue", "Dengue"))
 ```
 
 From the 80% training, 20% testing approach, we have:
+
 $$Sensitivity = \frac{711}{711+87}\approx 0.891$$
 $$Specificity = \frac{122}{122+226}\approx 0.351$$
 $$Accuracy = \frac{122+711}{122+711+226+87}\approx 0.727$$
@@ -263,14 +264,14 @@ for(k in 1:nk){
 #Create plot to find the best k for KNN 
 knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
   geom_line()+
-  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 3: GeoMean Graph of KNN with Best k Shown
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 2.3: GeoMean Graph of KNN with Best k Shown
   (10 Fold Cross Validation)",y = " ")+
   geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
 #Show Plot
 knnActualPlot
 ```
 
-For the k fold Cross Validation, we found k=35 to be the best k value for 10-fold Cross Validation because it provides the largest geometric mean among k values from 1-50, indicating the most ideal balance between the sensitivity and specificity of the prediction.
+For the k fold Cross Validation, Figure 2.3 shows that  k = 8 is the best k value for 10-fold Cross Validation because it provides the largest geometric mean among k values from 1-50, indicating the most ideal balance between the sensitivity and specificity of the prediction.
 
 
 
@@ -286,50 +287,13 @@ $$Sensitivity = \frac{3431}{3431+597}\approx 0.852$$
 $$Specificity = \frac{615}{615+1083}\approx 0.362$$
 
 $$Accuracy = \frac{615+3431}{5726}\approx 0.71$$
+### Table 3 Comparison of Predictive Metrics of 2 Types of KNN
 
-```{r k equals 35, eval=FALSE, include=FALSE}
-#Set a seed for sampling
-set.seed(363663)
-#create storage for prediction result
-storage_inner_trial<-data.frame("pred"=rep(NA,5726))
-fold35<-sample(pool,5726,replace = FALSE)
-
-#run 10 fold knn with best k value = 35
- for(i in 1:10){
-   
-   #Find data in each fold
-    infold2<-which(fold35 == i)
-    
-    #Creating Training and testing set
-    Train_Dengue<-knnActual[-infold2,]
-    Test_Dengue<-knnActual[infold2,]
-    #Run knn
-    k_preds_best<-knn(Train_Dengue[,c(2,3,8,9)],Test_Dengue[,c(2,3,8,9)],k=35,cl=Train_Dengue$Y)
-    trueBestk1<-which(Test_Dengue$Y==1)
-    trueBestk0<-which(Test_Dengue$Y==0)
-    
-    ntrueBest1<-length(trueBestk1)
-    ntrueBest0<-length(trueBestk0)
-    
-    #Compute sensitivity and specificity,formating them
-    sensitivity35<-sum(k_preds_best[trueBestk1] == 1)/ntrueBest1
-    print(ntrueBest1)
-    specificit35<-sum(k_preds_best[trueBestk0] == 0)/ntrueBest0
-
-    #store result
-    storage_inner_trial$pred[infold2]<-as.numeric(as.character(k_preds_best))
-    
-    
-
-    
- }
-
-
-
-#Create confusion Matrix for the prediction with full dengue set
-
-```
-
+|             | KNN(80% Train 20% Test) | KNN(K Fold CV) | Winner                  |
+|-------------|-------------------------|----------------|-------------------------|
+| Sensitivity | 0.891                   | 0.852          | KNN(80% Train 20% Test) |
+| Specificity | 0.351                   | 0.362          | KNN(K Fold CV)          |
+| Accuracy    | 0.727                   | 0.706          | Logistic                |
 
 
 
@@ -450,7 +414,7 @@ knnActual%>%
 #Checking correlations between variable to determine multicolinearity
 correlation<-cor(dengueForCheck[,c(2,8:11)])
 correlation_tr<-round(correlation,3)
-knitr::kable(correlation_tr)
+knitr::kable((correlation_tr),caption = "Correlation Matrix of Numeric Features")
 ```
 
 We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. An interaction term between age and weight will be added to deal with the multicolinearity Additionally, vomiting and rash are two of the common symptoms of dengue fever.Thus, age, BMI,weight, temperature will be numeric features selected for the logistic regression model.Sex, Rash and Vomiting will be the categorical features selected for the logistic regression. 
@@ -490,10 +454,13 @@ modelTotal
 
 ```
 
+# Formatted Confusion Matrix of Prediction with logistic regression
 
 ```{r}
-knitr::kable(table(storage_logistic$Predicted, knnActual$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
+knitr::kable(table(storage_logistic$Predicted, dengue$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
 ```
+
+For prediction through logistic regression, we ha
 
 $$Sensitivity = \frac{3138}{890+3138}\approx 0.779$$
 
@@ -501,25 +468,17 @@ $$Specificity = \frac{939}{759+939}\approx 0.553 $$
 
 $$Accuracy = \frac{939+3138}{5726} \approx 0.712$$
 
-# Formatted Confusion Matrix of Prediction with logistic regression
 
-
-
-
-$$Sensitivity = \frac{3138}{759+3138}\approx 0.805$$
-
-$$Specificity = \frac{939}{759+939}\approx 0.553$$
 
 
 
 ## Section 4 Discussion
 
-|             | KNN   | Logistic | Winner   |   |
-|-------------|-------|----------|----------|---|
-| Sensitivity | 0.272 | 0.02     | KNN      |   |
-| Specificity | 0.964 | 1        | Logistic |   |
-| Accuracy    | 0.893 | 0.9      | Logistic |   |
-
+|             | KNN(80% Train 20% Test) | KNN(K Fold CV) | Logistic | Winner            |   |
+|-------------|-------------------------|----------------|----------|-------------------|---|
+| Sensitivity | 0.891                   | 0.852          | 0.779    | KNN(80% 20%)      |   |
+| Specificity | 0.351                   | 0.362          | 0.553    | Logistic          |   |
+| Accuracy    | 0.727                   | 0.706          | 0.712    | Logistic          |   |
 
 
 
