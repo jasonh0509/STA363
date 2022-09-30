@@ -5,15 +5,20 @@ date: '2022-09-12'
 output: html_document
 ---
 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
 # Abstract
 
+Dengue fever, defined as the disease caused by dengue virus, is an infectious disease that transmits through the bite of infected mosquito, is prevalent in tropic countries and regions that has warm and humid climate patterns. According to CDC, up to 400 million cases of dengue fever are confirmed each year, with approximately 40000 of them would suffer severe dengue fever and lead to death.Due to the fact that dengue symptoms can be confused with other illnesses that could cause fever, it is crucial for medical professionals to be able to accurately diagnose dengue fever for the sake of mitigating this annual pandemic, especially for areas that lacks standard facility and equipment for the diagnosis.The primary goal of this project is to establish a tool for professionals with limited access to advanced medical care to diagnose dengue in children. Two predictive methods, the k-Nearest Neighbors (KNN) and logistic regression, were implemented to build this tool for diagnosis. We found logistic regression has a more balanced overall performance on predicting predicting positive and negative cases of dengue fever, while improvements on the prediction of true negative cases of dengue fever is still needed.
 
 
-# Section 1 Introduction and Data
+  
 
-We are working on the data set that records 5726 children with potential dengue fever, which is a disease that is difficult to diagnose. The data set contains the basic information and measures of the children, including age, sex, BMI(Body Mass Index), height and weight, and 9 features about potential symptoms of dengue fever.The goal of our client is to use this data to establish a efficacious tool as an alternative to predict the dengue fever in children who lacks the access to standard diagnosis test for dengue fever.    
-
-```{r load packages}
+```{r load packages, include=FALSE}
 #Load all required packages
 library(ggplot2)
 library(broom)
@@ -24,21 +29,23 @@ library(tidyverse)
 library(gridExtra)
 ```
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
 
 ```{r load data}
 #Load dengue data
 dengue<-read.csv("dengueData.csv")
 ```
 
+# Section 1: Introduction and Data
+
+The main objective of this project is to develop effective method for the diagnosis of dengue fever, which is a prevalent in tropical countries that transmits through mosquito bites. People who are suffering from dengue virus(the virus that causes dengue fever) would have a series of symptoms, including nausea, vomiting, rash, aches/pains through the body, and often accompanied by fever. These symptoms can be confused with other disease with similar symptoms, which could lead to misdiagnosis and delayed medical attention that causes further suffering and danger for the patients. 
+
+We are working on the data set that records 5726 children with dengue symptoms.The data set contains the basic information and measures of the children, including age, sex, BMI(Body Mass Index), height and weight, and 9 features about potential symptoms of dengue fever, including days of disease, vomiting, abdominal pain, mucosal bleeding, skin bleeding, body temperature, flush(redness on cheek), hepatomegaly(enlarged liver) and rash .The goal of our client is to use this data to establish a efficacious tool as an alternative to predict the dengue fever in children who lacks the access to standard diagnosis test for dengue fever. No missing values were found in the data set. 
+
 ```{r checking}
 #Checking if NA exists in data set
 knitr::kable(sum(is.na(dengue)),col.names = "Missing Value")
 ```
-
-No missing value was detected from the data set.
 
 
 ```{r look, include=FALSE}
@@ -47,9 +54,8 @@ glimpse(dengue)
 ```
 
 
-#Section 2 KNN
+# Section 2: KNN
 
-## KNN Example
 
 ```{r data set for demo}
 #Create a data set for demo
@@ -90,7 +96,7 @@ knnDemoPlot
 ```
 
 
-##Demo KNN
+### (1) KNN Example
 
 ```{r create example sets, include=FALSE}
 numb<-nrow(knnDemo)
@@ -135,8 +141,9 @@ In figure 2.1 we have a data point (a boy with height of 100cm and age of 8 year
 knnActual<-dengue
 ```
 
+We utilized two approaches to predict the dengue status through KNN: (1) Creating a 20% test, 80% training split of the data and use it to for the KNN.(2)Using LOOCV or k-fold Cross Validation. For the first approach, 80% of the 5726 data entries were used for training purpose, and 20% of the data set were used to test the efficacy of the prediction. For the second approach, k-fold Cross Validation was selected, since the relative large size of the data set would lead to a executing time of the prediction. Only Age, DayDisease, Temp and BMI were kept for KNN since KNN can not accept categorical features. Height and Weight were excluded since BMI was calculated from them.
 
-### Split data in to 20% testing and 80% training 
+### (2) Split data in to 20% testing and 80% training to build model for predicting dengue fever
 
 ```{r 80-20 split}
 q<-nrow(knnActual)
@@ -173,7 +180,6 @@ for(t in 1:50){
 ```
 
 
-We utilized two approaches to predict the dengue status through KNN: (1) Creating a 20% test, 80% training split of the data and use it to for the KNN.(2)Using LOOCV or k-fold Cross Validation. For the first approach, 80% of the 5726 data entries were used for training purpose, and 20% of the data set were used to test the efficacy of the prediction. For the second approach, k-fold Cross Validation was selected, since the relative large size of the data set would lead to a executing time of the prediction. Only Age, DayDisease, Temp and BMI were kept for KNN since KNN can not accept categorical features. Height and Weight were excluded since BMI was calculated from them.
 
 
 ```{r 80-20 plot, echo=FALSE}
@@ -186,18 +192,15 @@ knnSplit<-ggplot(storage_split,aes(K,GeoMean))+
 knnSplit
 ```
 
-For the first approach, we determined the best k value for KNN through running KNN with k from 1-50 and calculating the geometric mean of the sensitivity and specificity of prediction under each k value, and plot a line graph of geometric mean respect to each k value. Figure 2.1 shows that k=46 (indicated by a red line) is the best k value since the prediction under k=46 provide the most balanced sensitivity(true positive rate) and specificity(true negative rate) in the prediction of dengue fever status.
+For the first approach(split data into 20% testing and 80% training), we determined the best k value for KNN through running KNN with k from 1-50 and calculating the geometric mean of the sensitivity and specificity of prediction under each k value, and plot a line graph of geometric mean respect to each k value. Figure 2.1 shows that k=46 (indicated by a red line) is the best k value since the prediction under k=46 provide the most balanced sensitivity(true positive rate) and specificity(true negative rate) in the prediction of dengue fever status.
 
 ```{r confusion matrix 8020}
-knitr::kable(table(storage8020$Predictions, manual_test$Y), caption= "Table 1: Confusion Matrix of Dengue Status Prediction(80% Training & 20% Testing ) ", col = c("Not Dengue", "Dengue"))
+knitr::kable(table(storage8020$Predictions, manual_test$Y), caption= "Table 2.1: Confusion Matrix of Dengue Status Prediction(80% Training & 20% Testing ) ", col = c("Not Dengue", "Dengue"))
 ```
 
-From the 80% training, 20% testing approach, we have:
 
-$$Sensitivity = \frac{711}{711+87}\approx 0.891$$
-$$Specificity = \frac{122}{122+226}\approx 0.351$$
-$$Accuracy = \frac{122+711}{122+711+226+87}\approx 0.727$$
 
+### (3) Using 10 Fold Cross Validation to predict dengue fever
 
 ```{r 10 fold CV determine best k }
 n<-nrow(knnActual)
@@ -271,32 +274,30 @@ knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
 knnActualPlot
 ```
 
-For the k fold Cross Validation, Figure 2.3 shows that  k = 8 is the best k value for 10-fold Cross Validation because it provides the largest geometric mean among k values from 1-50, indicating the most ideal balance between the sensitivity and specificity of the prediction.
+For the second approach (k fold Cross Validation), Figure 2.3 shows that  k = 8 is the best k value for 10-fold Cross Validation because it provides the largest geometric mean among k values from 1-50, indicating the most ideal balance between the sensitivity and specificity of the prediction.
 
 
 
 
 ```{r}
-knitr::kable(table(YHatOut, dengue$Y), caption= "Table 2: Confusion Matrix of Predicting Dengue Status (10 Fold CV & KNN with K = 8)  ", col = c("Not Dengue", "Dengue"))  
+knitr::kable(table(YHatOut, dengue$Y), caption= "Table 2.2: Confusion Matrix of Predicting Dengue Status (10 Fold CV & KNN with K = 8)  ", col = c("Not Dengue", "Dengue"))  
 ```
 
-We have:
 
-$$Sensitivity = \frac{3431}{3431+597}\approx 0.852$$
-
-$$Specificity = \frac{615}{615+1083}\approx 0.362$$
-
-$$Accuracy = \frac{615+3431}{5726}\approx 0.71$$
-### Table 3 Comparison of Predictive Metrics of 2 Types of KNN
+##### Table 2.3 Comparison of Predictive Accuracy of 2 Types of KNN
 
 |             | KNN(80% Train 20% Test) | KNN(K Fold CV) | Winner                  |
 |-------------|-------------------------|----------------|-------------------------|
 | Sensitivity | 0.891                   | 0.852          | KNN(80% Train 20% Test) |
 | Specificity | 0.351                   | 0.362          | KNN(K Fold CV)          |
-| Accuracy    | 0.727                   | 0.706          | Logistic                |
+| Accuracy    | 0.727                   | 0.706          | KNN(80% Train 20% Test) |
 
 
+It is recommended for the client to use (2) K fold Cross Validation to assess the predictive accuracy since it uses each portion of the data set to test the predictive accuracy of the method, therefore providing a more comprehensive evaluation of the predictive method .
 
+We are assessing the predictive accuracy through 3 predictive metrics: sensitivity(true positive rate), specificity(true negative rate) and accuracy. The sensitivity is the percentage of correctly predicted positive case in all the true positive cases of dengue fever. The specificity is the percentage of correctly predicted negative case in all the true negative cases of dengue fever. The accuracy represents the percentage of all the correct prediction in all children recorded in this data set.
+
+According to the 10-fold Cross Validation assessment, the KNN method has a sensitivity of 0.852, meaning this method could accurately predict 85.2% of the true positive case of dengue fever. The method has a specificity of 0.362, meaning this method could accurately predict 36.2% of the true negative case of dengue fever. The overall accuracy of the KNN is 0.706, meaning this method can correctly predict the dengue status of 70.6% of the children recorded in this data set.
 
 
 ## Section 3 Logistic Regression 
@@ -361,10 +362,10 @@ prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
 }
 ```
 
-#EDA 
+### Exploratory Data Analysis 
 
 
-##Checking Conditions and Interactions
+#### Checking Conditions
 
 
 ```{r creating dedicated data set}
@@ -378,9 +379,14 @@ dengueForCheck<-knnActual
 op<-par(mfrow=c(2,2))
 
 #Checking linear relationship between log odds that Y=1 and four numeric Xi
-logit_DayDisease<-emplogitPlot(x=dengueForCheck$DayDisease,y=dengueForCheck$Y,xlab = "Day Diseases",ylab = "Log Odds of Dengue",main = "Figure 3.1 Empirical Logit Plot Day Disease")
+logit_DayDisease<-emplogitPlot(x=dengueForCheck$DayDisease,y=dengueForCheck$Y,xlab = "Day Diseases",ylab = "Log Odds of Dengue",main = "Figure 3.1 Empirical Logit Plot DayDisease")
 
-logit_Temp<-emplogitPlot(x=dengueForCheck$Temp,y=dengueForCheck$Y,xlab = "Temperature",ylab = "Log Odds of Dengue",main = "Figure 3.2 Empirical Logit Plot Temperature")
+logit_Temp<-emplogitPlot(x=dengueForCheck$Temp,y=dengueForCheck$Y,xlab = "Temperature",ylab = "Log Odds of Dengue",main = "Figure 3.2 Empirical Logit Plot Temp")
+
+```
+
+```{r logit plot 2}
+op<-par(mfrow=c(2,2))
 
 logit_Age<-emplogitPlot(x=dengueForCheck$Age,y=dengueForCheck$Y,xlab = "Age",ylab = "Log Odds of Dengue",main = "Figure 3.3 Empirical Logit Plot Age")
 
@@ -388,36 +394,52 @@ logit_BMI<-emplogitPlot(x=dengueForCheck$BMI,y=dengueForCheck$Y,xlab = "BMI",yla
 
 ```
 
+```{r weight and height logit plot}
+#Checking linear relationship between log odds that Y=1 and fo
 
+op<-par(mfrow=c(2,2))
+
+emplogitPlot(x=dengueForCheck$Weight,y=dengueForCheck$Y,xlab = "Weight",ylab = "Log Odds of Dengue",main = "Figure 3.5 Empirical Logit Plot Weight")
+
+emplogitPlot(x=dengueForCheck$Height,y=dengueForCheck$Y,xlab = "Height",ylab = "Log Odds of Dengue",main = "Figure 3.6 Empirical Logit Plot Height")
+```
+
+Figure 3.1 to 3.6 show that the relationship between all numeric featues and the log odd of patient suffering dengue is linear. (For Figure 3.1, since there are only 3 different values for DayDisease, the plot behave abnormally but can still be described as a linear trend)
+
+#### Checking Interactions
 
 ```{r box plot sex and temperature}
 #Convert sex from a numeric feature to categorical
-dengueForCheck$Sex=as.factor(dengueForCheck$Sex)
-BoxDengue<-ggplot(data=dengueForCheck,aes(x=Sex,y=Temp,fill=Temp))+
-  theme_bw()+
-  geom_boxplot()
+#dengueForCheck$Sex=as.factor(dengueForCheck$Sex)
+dengueForCheck$Sex[dengueForCheck$Sex=="1"]<-"Male"
+dengueForCheck$Sex[dengueForCheck$Sex=="2"]<-"Female"
+
+BoxDengue<-ggplot(data=dengueForCheck,aes(x=Sex,y=Temp,fill=Temp,col=Sex))+
+  geom_boxplot()+
+  ggtitle("Figure 3.7 Body Temperature Across Sex")
 BoxDengue
 ```
 
 No significant difference on body temperature across sex was found. 
 
 ```{r scatter plot to see relationship between age and dengue status}
-knnActual%>%
-  mutate(dengue_status=as.factor(Y))%>%
-  ggplot(aes(x=Age,y=Height,color=dengue_status))+
+dengueForCheck<-dengueForCheck%>%
+  mutate(dengue_status=as.factor(Y))
+ggplot(data=dengueForCheck,aes(x=Age,y=Weight,color=dengue_status))+
   geom_point()+
-  ggtitle("Figure 3.6: Age vs Height Plot Respect to Dengue Status")
+  ggtitle("Figure 3.8: Age vs Height Plot Respect to Dengue Status")
 ```
 
+Figure 3.8 shows that there are more positive dengue fever case in children younger than 8 years old. Also, potential interaction is possible between age and weight of children recorded in the data set. \
 
 ```{r exploring correlation}
 #Checking correlations between variable to determine multicolinearity
 correlation<-cor(dengueForCheck[,c(2,8:11)])
 correlation_tr<-round(correlation,3)
-knitr::kable((correlation_tr),caption = "Correlation Matrix of Numeric Features")
+knitr::kable((correlation_tr),caption = "Table 3.1: Correlation Matrix of Numeric Features")
 ```
 
-We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. An interaction term between age and weight will be added to deal with the multicolinearity Additionally, vomiting and rash are two of the common symptoms of dengue fever.Thus, age, BMI,weight, temperature will be numeric features selected for the logistic regression model.Sex, Rash and Vomiting will be the categorical features selected for the logistic regression. 
+We suspected that multicolinearity exist between height and weight, as well as Age and height/weight. We also suspect multicolinearity appear between BMI and Height/Weight, since BMI was calculated from these two features. An interaction term between age and weight will be added to deal with the multicolinearity due to the high correlation index between these two features. Additionally, according to CDC, vomiting and rash are two of the common symptoms of dengue fever.Thus, age, BMI,weight, temperature will be numeric features selected for the logistic regression model.Sex, Rash and Vomiting will be the categorical features selected for the logistic regression. \
 
 
 ```{r train logistic with 10-fold CV}
@@ -449,30 +471,35 @@ for(i in 1:10){
 }
 
 modelTotal<-glm(data=dengue,family = binomial,Y~Sex+Vomiting+Temp+Age*Weight+BMI+Rash+Age+Weight)
+```
+
+```{r include=FALSE}
 modelTotal
-
-
 ```
 
-# Formatted Confusion Matrix of Prediction with logistic regression
-
-```{r}
-knitr::kable(table(storage_logistic$Predicted, dengue$Y), caption= "Table 3: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
+```{r Confusion Matrix 10 Fold CV}
+#Formatted Confusion Matrix of Prediction with logistic regression
+knitr::kable(table(storage_logistic$Predicted, dengue$Y), caption= "Table 3.2: Confusion Matrix of Predicting Dengue Status (Logistic Regerssion & 10 Fold cv)  ", col = c("Not Dengue", "Dengue"))  
 ```
 
-For prediction through logistic regression, we ha
 
-$$Sensitivity = \frac{3138}{890+3138}\approx 0.779$$
+##### Table 3.3: Coefficient Estimates of Logistic Regression Model Fitted for Prediction
 
-$$Specificity = \frac{939}{759+939}\approx 0.553 $$
+| Features   	| Coefficient Estimates 	|
+|------------	|-----------------------	|
+| Intercept  	| 10.752                	|
+| Sex        	| -0.148                	|
+| Vomiting   	| 0.365                 	|
+| Temp       	| -0.206                	|
+| Age        	| -0.213                	|
+| Weight     	| -0.091                	|
+| BMI        	| 0.034                 	|
+| RashTRUE   	| -0.921                	|
+| Age:Weight 	| 0.005                 	|
 
-$$Accuracy = \frac{939+3138}{5726} \approx 0.712$$
 
 
-
-
-
-## Section 4 Discussion
+##### Table 3.4 Comparison of Predictive Metrics of 3 Different Approach For Predicting Dengue Fever
 
 |             | KNN(80% Train 20% Test) | KNN(K Fold CV) | Logistic | Winner            |   |
 |-------------|-------------------------|----------------|----------|-------------------|---|
@@ -480,8 +507,14 @@ $$Accuracy = \frac{939+3138}{5726} \approx 0.712$$
 | Specificity | 0.351                   | 0.362          | 0.553    | Logistic          |   |
 | Accuracy    | 0.727                   | 0.706          | 0.712    | Logistic          |   |
 
+Based on the predictive metrics calculated from KNN(80% Train 20% Test), KNN(K Fold CV), and Logistic regression, we found both KNN appears to have better prediction result in sensitivity(0.891 for 80% Train 20% Test, 0.852 for 10 fold CV)compare to logistic regression. KNN(80% Train 20% Test) performs the best among three methods in the accuracy of prediction. While on the other hand, logistic regression has a specificity of 0.553, which performed the best among the three prediction methods. 
 
+
+## Section 4 Discussion
+
+We would recommend our client choose the logistic regression model to predict the diagnosis of dengue fever since it has better performances in two of the three predictive metrics. KNN(80% Train 20% Test) and KNN(K Fold CV) performed better when predicting positive cases and overall diagnosis of dengue fever, while logistic regression has a significantly better performance when predicting negative cases of dengue fever. The reason that accounts for this better performance is that logistic regression can include both numeric and categorical features, while KNN can only accept numeric features during the prediction. Since multiple common symptoms of dengue fever were recorded as categorical features, logistic regression would consequently predict to a more comprehensive extent, and lead to a better and balanced performance between sensitivity and specificity of the prediction. Thus,despite the fact that both KNN methods provided slightly better prediction when predicting true positive cases of dengue fever,logistic regression will be recommended to be used in the diagnosis due to its balanced predictive ability across positive and negative cases. 
 
 ## Bibliography
+
 CDC. (2021, September 20). Symptoms and treatment. Centers for Disease Control and Prevention. Retrieved September 28, 2022, from https://www.cdc.gov/dengue/symptoms/index.html\
 
