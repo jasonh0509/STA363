@@ -1,0 +1,100 @@
+---
+title: "STA 363 Lab 4"
+author: "Jason Hou"
+date: '2022-09-29'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+source("http://www.openintro.org/stat/data/cdc.R")
+```
+
+
+
+```{r load packages}
+#Load all required packages
+library(ggplot2)
+library(broom)
+library(gridExtra)
+library(dplyr)
+library(class)
+library(tidyverse)
+library(gridExtra)
+library(leaps)
+```
+
+```{r}
+glimpse(cdc)
+```
+
+
+## Question 1 
+*Is this a regression or classification task?*
+
+This is a regression task since the response variable is numeric
+
+## Question 2 
+*Create a box plot of the response variable. Does it seem like anything is unusual? If so, explain what and how you will choose to handle it before analysis.*
+
+```{r }
+cdc$wtchange<- cdc$weight -cdc$wtdesire
+
+```
+
+```{r boxplot}
+LossGainBox<-ggplot(data=cdc,aes(x=wtchange))+
+  geom_boxplot()
+LossGainBox
+```
+
+The boxplot indicates unusually high and low extreme values in the data set. I would try to remove the extreme and unreasonable values before the analysis in order to handle this issue.
+
+```{r remove extreme values}
+cdcSelected<-cdc
+#cdcSelected$wtchange=cdcSelected$wtchange[cdcSelected$wtchange > upper_bound]
+#upper_bound <- 21+1.5*sd(cdcSelected$wtchange)
+
+cdcSelected<-cdcSelected%>%
+  filter(wtchange<200)
+
+
+```
+
+
+## Question 3
+*Create an appropriate plot to visualize the relationship between weight and desired weight change. Label your plot Figure 2. Based on shape alone, does LSLR seem like a reasonable choice?*
+
+```{r LSLR check graph}
+weight_desiredWt<-ggplot(data=cdcSelected,aes(x=weight,y=wtchange))+
+  geom_point()
+weight_desiredWt
+
+```
+
+Based on the shape of the scatter plot alone, LSLR seem like a reasonable choice.
+
+## Question 4
+*Write down the population form of the LSLR regression model (so include the error term, no hats) in matrix form in the white space in your Markdown file. This is to help you practice writing matrix notation. Remember that to start an equation you use $ in the white space, and that the R Code help site for our course has examples. Example: $Y = \beta_0 + \beta_1 X + \epsilon$. Hint: To make a symbol bold, you use \boldsymbol{}. To make text bold, you use \mathbf{}.*
+
+$$\widehat{Y} = \matrix{\boldsymbol{1}&\boldsymbol{X}}\cdot\boldsymbol{\beta} $$
+
+$$\widehat{Y}=\boldsymbol{X_D}\boldsymbol{\beta}+\epsilon$$
+
+## Question 5
+
+*Create the needed design matrix for an LSLR model for Y= desired weight change and X = weight and store the result as XD. Show the first few rows of your matrix (head(XD)).*
+
+$$\widehat{Y} = \matrix{\boldsymbol{1}&\boldsymbol{X}}$$
+
+```{r XD}
+X<-cdcSelected[,c("weight")]
+XD<-cbind(1,X)
+Y<-cdcSelected$wtchange
+head(XD)
+```
+
+
