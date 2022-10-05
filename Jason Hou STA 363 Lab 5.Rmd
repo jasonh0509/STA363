@@ -94,7 +94,25 @@ $$\widehat{Y} = \matrix{\boldsymbol{1}&\boldsymbol{X}}$$
 X<-cdcSelected[,c("weight")]
 XD<-cbind(1,X)
 Y<-cdcSelected$wtchange
-head(XD)
+knitr::kable(head(XD),caption = "First Few Rows of Matrix XD")
 ```
 
+## Question 6
+*State the dimensions of Y and the dimensions of XD.*
+
+The dimension of Y is 19988\*1(19988 rows and 1 column). The dimension of XD is 19988\*2(19988 rows and 2 columns).
+
+
+## Question 7 
+
+$$\boldsymbol{\widehat{\beta}} = (\boldsymbol{X^\mathbf{T}_\mathbf{D}X_\mathbf{D}})^{-1}\boldsymbol{X^\mathbf{T}_\mathbf{D}Y}$$
+
+## Question 8
+
+```{r}
+result<-solve(t(XD)%*%XD)%*%t(XD)%*%Y
+knitr::kable(result)
+```
+
+$$\boldsymbol{\widehat{\beta}}=\matrix{-44.81983445\\0.3496484}$$
 
