@@ -143,21 +143,6 @@ We need to remove the wtdesire from the data before running BSS because our resp
 ## Question 11
 *Based on this, how many models do you think we fit in Stage 1 (Step 1) of BSS? Hint: Think carefully here. Some of the variables are categorical with more than two levels.*
 
-```{r}
-features<-cdcSelected[,c(1,2,3,4,5,6,7,8)]
-results<-data.frame("Intercept"=rep(NA,12),slope=rep(NA,12))
-for(i in 1:8){
-  X2<-features[,i]
-  X2D<-cbind(1,X2)
-  Y<-cdcSelected$wtchange
-  intercept<-
-  results$Intercept=
-  
-
-}
-```
-
-
 We would have 12 models, since some of the categorical variables are having more than 2 levels, and the models will be fitted for all the levels beside the base level. 
 
 
@@ -167,19 +152,37 @@ We would have 12 models, since some of the categorical variables are having more
 
 *Once we have fit all the models in with two features, how do you think we choose one? Hint: Same as Stage 1 (Step 1).*
 
-```{r}
-
-```
+We would choose the model with the highest $R^2$ value.
 
 
 ## Question 13
 
 *How many β terms are in this full model? In other words, we end with Stage 1 ( Step what) ? Hint: If you are stuck, just fit the model in R and look. You can do this by putting in all the features manually, or using ModelFull <- lm( wtchange ~ . , data = cdc).*
 
+```{r full model}
+ModelFull <- lm( wtchange ~ . , data = cdcSelected)
+knitr::kable(summary(ModelFull)$coefficients)
+```
+
+There are 12 $\beta$ terms in the full model.
+
+## Question 14
+
+*Look at only the categorical features in the data. Using these categorical features only, run the first stage of BSS and call the output BSScat. Remember to change the nvmax part of the code!!! You will notice that nothing seems to happen, as the output has been stored. Let’s look at the R2adj value of each of these models by using the code summary(BSScat)$adjr2. What is the R2adj of the model fit with one feature? (This is the first value). With two features? (This is the second value).*
+
 ```{r}
+cdcSelected$exerany=as.factor(cdcSelected$exerany)
+cdcSelected$hlthplan=as.factor(cdcSelected$hlthplan)
+cdcSelected$smoke100=as.factor(cdcSelected$smoke100)
 
 ```
 
-## Question
 
+
+```{r}
+BSScat <- regsubsets( Y ~ genhlth + exerany + hlthplan + smoke100 + gender, data = cdcSelected, nvmax = 5, method="exhaustive")
+knitr::kable(summary(BSScat)$adjr2,caption = "Adjusted R-squared of Models with CDC Data Set(Categorical Features")
+```
+
+The $R_{adj}^2$ of the model fit with one feature is 0.025. The $R_{adj}^2$ of the model fit iwth two features is 0.033.
 
