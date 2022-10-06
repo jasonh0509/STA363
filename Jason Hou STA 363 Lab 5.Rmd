@@ -101,7 +101,7 @@ knitr::kable(head(XD),caption = "Table 1. First Few Rows of Matrix XD")
 ## Question 6
 *State the dimensions of Y and the dimensions of XD.*
 
-The dimension of Y is 19988\*1(19988 rows and 1 column). The dimension of XD is 19988\*2(19988 rows and 2 columns).
+The dimension of Y is 19998\*1(19998 rows and 1 column). The dimension of XD is 19998\*2(19998 rows and 2 columns).
 
 
 ## Question 7 
