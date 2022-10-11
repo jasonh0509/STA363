@@ -1,0 +1,73 @@
+---
+title: "Jason Hou STA 363 Lab 6"
+author: "Jason Hou"
+date: '2022-10-11'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages}
+#Load all required packages
+library(ggplot2)
+library(broom)
+library(gridExtra)
+library(dplyr)
+library(class)
+library(tidyverse)
+library(gridExtra)
+library(leaps)
+```
+
+```{r load data}
+#loading data needed
+collegeData<-read.csv("collegedata.csv")
+```
+
+```{r take a look}
+glimpse(collegeData)
+```
+
+
+## Question 1
+*Is this a regression or classification task? Based on this, what metric will we likely use to assess predictive accuracy?*
+
+It is a regression task since the response variable is numeric. We are likely to use the MSE/RMSE to assess the predictive accuracy
+
+## Question 2
+*Make a visualization to explore the distribution of graduation rate. What is the smallest value of graduation rate? The largest?*
+
+```{r distribution}
+ggplot(data=collegeData,aes(x=Grad.Rate))+
+  geom_boxplot()+
+  ggtitle("Figure 1. Distribution of Graduation Rate")
+```
+
+```{r max and min graduation rate}
+gradmax<-max(collegeData$Grad.Rate)
+gradmin<-min(collegeData$Grad.Rate)
+knitr::kable(c("Largest" = gradmax,"Smallest" = gradmin),caption = "Largest and Smallest")
+```
+
+
+
+## Question 3
+
+*Compute the MSE (training) and RMSE (training) for these data using Y^i=Y¯ for all rows i.*
+
+```{r MSE and RMSE}
+## MSE = RSS/n
+MSE<-sum((collegeData$Grad.Rate-mean(collegeData$Grad.Rate))^2)/776
+RMSE<-sqrt(MSE)
+knitr::kable(c("MSE" = MSE,"RMSE" = RMSE),caption = "MSE and RMSE")
+```
+
+## Question 4
+*Train an LSLR (OLS) regression model using the whole data set and the single feature X = the student faculty ratio. Find the MSE (training) and RMSE (training). How much has our training predictive accuracy improved from the values you got in Question 3?*
+
+```{r}
+
+```
+
