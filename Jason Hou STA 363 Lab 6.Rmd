@@ -19,6 +19,9 @@ library(class)
 library(tidyverse)
 library(gridExtra)
 library(leaps)
+library(corrplot)
+library(RColorBrewer)
+library(glmnet)
 ```
 
 ```{r load data}
@@ -48,7 +51,7 @@ ggplot(data=collegeData,aes(x=Grad.Rate))+
 ```{r max and min graduation rate}
 gradmax<-max(collegeData$Grad.Rate)
 gradmin<-min(collegeData$Grad.Rate)
-knitr::kable(c("Largest" = gradmax,"Smallest" = gradmin),caption = "Largest and Smallest")
+knitr::kable(c("Largest" = gradmax,"Smallest" = gradmin),caption =  "Table 1. Largest and Smallest")
 ```
 
 
@@ -61,7 +64,7 @@ knitr::kable(c("Largest" = gradmax,"Smallest" = gradmin),caption = "Largest and 
 ## MSE = RSS/n
 MSE<-sum((collegeData$Grad.Rate-mean(collegeData$Grad.Rate))^2)/776
 RMSE<-sqrt(MSE)
-knitr::kable(c("MSE" = MSE,"RMSE" = RMSE),caption = "MSE and RMSE")
+knitr::kable(c("MSE" = MSE,"RMSE" = RMSE),caption = "Table 2.MSE and RMSE")
 ```
 
 ## Question 4
@@ -71,6 +74,109 @@ knitr::kable(c("MSE" = MSE,"RMSE" = RMSE),caption = "MSE and RMSE")
 fac_ratio_only<-lm(data = collegeData, Grad.Rate~S.F.Ratio)
 SFonly_Pred<-data.frame("Y_hat" = rep(NA,776))
 SFonly_Pred$Y_hat<-predict(fac_ratio_only)
-MSE_fac_Ratio<-sum(
+MSE_fac_Ratio<-sum((SFonly_Pred$Y_hat-mean(SFonly_Pred$Y_hat))^2)/776
+RMSE_fac_Ratio<-sqrt(MSE_fac_Ratio)
 ```
+
+$$MSE-MSE\_fac\_Ratio=291.51-27.80=263.71$$
+
+$$RMSE-RMSE\_fac\_Ratio=17.07-5.27=11.8$$
+
+The MSE has improved for 263.71. The RMSE has improved for 11.8
+
+
+
+## Question 5
+*Which column in the data set cannot be used as a feature (aside from the response variable)? Explain why this column cannot be used.*
+
+The column that can not be used is the X, which is the name of each university, because it has 776 different levels, plus, the name of school is useless when it comes to predict the graduate rate of the each institution.
+
+##  Question 6
+*Build a correlation plot (you can choose the styling you like best!) to explore the correlations in the features in this data set.*
+
+
+```{r}
+collegeData$Private<-ifelse(collegeData$Private == "Yes",1,0)
+M<-cor(collegeData[,2:19])
+corrplot(M, method = "circle",type = "upper")
+```
+
+## Question 7
+*Based on the plot in Question 6, why would you suggest we start with Ridge Regression instead of LSLR?*
+
+I would suggest to start with Ridge Regression instead of LSLR since we have several columns that are highly correlated.
+
+## Question 8
+
+*Using the code above, create the design matrix. State the dimensions of this matrix.*
+
+```{r desigend matrix}
+XD <- model.matrix(Grad.Rate ~ ., data = collegeData[,-1])
+```
+
+## Question 9
+*Suppose we let λ=2. Adapting the code above, what is β^Ridge?*
+
+```{r}
+# Train Ridge
+ridge.model2<- glmnet(XD[,-1], collegeData$Grad.Rate, alpha = 0, lambda =2 , standardize = TRUE)
+```
+
+```{r lambda 2}
+# Print the coefficients
+Betas <- data.frame("Ridge" = as.numeric(coefficients(ridge.model2)))
+rownames(Betas) <- colnames(XD)
+knitr::kable(Betas,
+            caption = "Table 3. Coefficients with Tuning Parameter = 2")
+```
+
+
+## Question 10
+*What is the sum of the coefficients (excluding the intercept) when λ=2? Hint: To find this, use sum(ridge.model2$beta).*
+
+```{r sum of coefficient}
+knitr::kable(sum(ridge.model2$beta),caption = "Table 4. Sum of Coefficients when lambda = 2 ")
+```
+
+The sum of the coefficient(excluding the intercecpt) when $\lambda=2$ is 4.137.
+
+## Question 11
+
+*Suppose we let λ=200. Adapting the code above, what is β^Ridge?*
+
+```{r}
+ridge.model200<- glmnet(XD[,-1], collegeData$Grad.Rate, alpha = 0, lambda =200 , standardize = TRUE)
+
+
+Betas200 <- data.frame("Ridge" = as.numeric(coefficients(ridge.model2)))
+rownames(Betas200) <- colnames(XD)
+knitr::kable(Betas200,
+            caption = "Table 5. Coefficients with Tuning Parameter = 200 ")
+```
+
+## Question 12
+
+*What is the sum of the coefficients (excluding the intercept) when λ=200?*
+
+```{r sum lambda 200}
+knitr::kable(sum(ridge.model200$beta),caption = "Table 6. Sum of Coefficients when lambda = 200")
+```
+
+
+
+## Question 13
+*What do you notice happens to the sum of the coefficients as λ increases?*
+
+The sum of the coefficients decreases as $\lambda$ increases 
+
+## Question 14
+
+*Briefly explain the process of choosing the tuning parameter in ridge regression. Use words, not code!*
+
+We can utilize the build-in function cv.glmnet() to find out the best tuning parameter in ridge regression. Firstly we have to set a random seed before using cv.glmnet(). Secondly, we enter the design matrix, the response variable, value of alpha(here we use 1 because it instructs R that we are performing Ridge Regression)
+
+
+## Question 15
+*Why do we need to set a random seed here?*
+
 
