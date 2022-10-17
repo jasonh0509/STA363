@@ -67,7 +67,10 @@ knitr::kable(c("MSE" = MSE,"RMSE" = RMSE),caption = "MSE and RMSE")
 ## Question 4
 *Train an LSLR (OLS) regression model using the whole data set and the single feature X = the student faculty ratio. Find the MSE (training) and RMSE (training). How much has our training predictive accuracy improved from the values you got in Question 3?*
 
-```{r}
-
+```{r faculty ratio only}
+fac_ratio_only<-lm(data = collegeData, Grad.Rate~S.F.Ratio)
+SFonly_Pred<-data.frame("Y_hat" = rep(NA,776))
+SFonly_Pred$Y_hat<-predict(fac_ratio_only)
+MSE_fac_Ratio<-sum(
 ```
 
