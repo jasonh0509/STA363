@@ -171,12 +171,50 @@ The sum of the coefficients decreases as $\lambda$ increases
 
 ## Question 14
 
-*Briefly explain the process of choosing the tuning parameter in ridge regression. Use words, not code!*
+*Briefly explain the process of choosing the tuning parameter in ridge regression. Use words, not code!*没写完！
 
-We can utilize the build-in function cv.glmnet() to find out the best tuning parameter in ridge regression. Firstly we have to set a random seed before using cv.glmnet(). Secondly, we enter the design matrix, the response variable, value of alpha(here we use 1 because it instructs R that we are performing Ridge Regression)
+We can utilize the build-in function cv.glmnet() to find out the best tuning parameter in ridge regression. Firstly we have to set a random seed before using cv.glmnet(). Secondly, we enter the design matrix, the response variable, value of alpha(here we use 0 because it instructs R that we are performing Ridge Regression)
+
+```{r}
+set.seed(114514)
+ridge.mod <- cv.glmnet(XD[,-1], collegeData$Grad.Rate , alpha = 0 , lambda = seq(from=0, to=50,by=0.5) , standardize = TRUE)
+```
+
 
 
 ## Question 15
 *Why do we need to set a random seed here?*
 
+Because the k-fold cross validation involves a random sampling process, setting a random seed will the replication of same outcome when the code was used across the devices.
+
+## Question 16
+*Why do we want to make sure to include λ=0 in our list of possible tuning parameters?*
+
+## Question 17
+
+```{r load a function, include=FALSE}
+ridgePlot <- function(ridge.mod, metric, title){
+  library(ggplot2)
+  
+  smallestLambda <- ridge.mod$lambda[which.min(ridge.mod$cvm)] 
+  
+  if(metric == "MSE"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = (ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test MSE values for Different Tuning Parameters. Smallest MSE at lambda = ", smallestLambda), title = title, y = "Test MSE", x = "Tuning Parameter")
+  
+  }
+  
+  if(metric == "RMSE"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = sqrt(ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test RMSE values for Different Tuning Parameters. Smallest RMSE at lambda = ", smallestLambda), title = title, y = "Test RMSE", x = "Tuning Parameter")
+
+  }
+  
+  g1
+}
+```
+
+
+```{r}
+ridgePlot(ridge.mod, metric = "RMSE" , title ="lambda plot" )
+
+```
 
