@@ -610,7 +610,7 @@ Adapting the code above, what is <span class="math inline">\(β^Ridge\)</span>?<
 <pre class="r"><code>ridge.model200&lt;- glmnet(XD[,-1], collegeData$Grad.Rate, alpha = 0, lambda =200 , standardize = TRUE)
 
 
-Betas200 &lt;- data.frame(&quot;Ridge&quot; = as.numeric(coefficients(ridge.model2)))
+Betas200 &lt;- data.frame(&quot;Ridge&quot; = as.numeric(coefficients(ridge.model200)))
 rownames(Betas200) &lt;- colnames(XD)
 knitr::kable(Betas200,
             caption = &quot;Table 5. Coefficients with Tuning Parameter = 200 &quot;)</code></pre>
@@ -625,75 +625,75 @@ knitr::kable(Betas200,
 <tbody>
 <tr class="odd">
 <td align="left">(Intercept)</td>
-<td align="right">33.8140140</td>
+<td align="right">56.3360365</td>
 </tr>
 <tr class="even">
 <td align="left">Private</td>
-<td align="right">3.5800642</td>
+<td align="right">0.8082141</td>
 </tr>
 <tr class="odd">
 <td align="left">Apps</td>
-<td align="right">0.0005856</td>
+<td align="right">0.0000433</td>
 </tr>
 <tr class="even">
 <td align="left">Accept</td>
-<td align="right">0.0002645</td>
+<td align="right">0.0000333</td>
 </tr>
 <tr class="odd">
 <td align="left">Enroll</td>
-<td align="right">0.0002597</td>
+<td align="right">-0.0000179</td>
 </tr>
 <tr class="even">
 <td align="left">Top10perc</td>
-<td align="right">0.0930465</td>
+<td align="right">0.0292154</td>
 </tr>
 <tr class="odd">
 <td align="left">Top25perc</td>
-<td align="right">0.1109139</td>
+<td align="right">0.0255111</td>
 </tr>
 <tr class="even">
 <td align="left">F.Undergrad</td>
-<td align="right">-0.0001430</td>
+<td align="right">-0.0000166</td>
 </tr>
 <tr class="odd">
 <td align="left">P.Undergrad</td>
-<td align="right">-0.0013784</td>
+<td align="right">-0.0001935</td>
 </tr>
 <tr class="even">
 <td align="left">Outstate</td>
-<td align="right">0.0007933</td>
+<td align="right">0.0001500</td>
 </tr>
 <tr class="odd">
 <td align="left">Room.Board</td>
-<td align="right">0.0017864</td>
+<td align="right">0.0004040</td>
 </tr>
 <tr class="even">
 <td align="left">Books</td>
-<td align="right">-0.0024418</td>
+<td align="right">-0.0000980</td>
 </tr>
 <tr class="odd">
 <td align="left">Personal</td>
-<td align="right">-0.0016920</td>
+<td align="right">-0.0004365</td>
 </tr>
 <tr class="even">
 <td align="left">PhD</td>
-<td align="right">0.0707884</td>
+<td align="right">0.0194660</td>
 </tr>
 <tr class="odd">
 <td align="left">Terminal</td>
-<td align="right">-0.0298726</td>
+<td align="right">0.0193521</td>
 </tr>
 <tr class="even">
 <td align="left">S.F.Ratio</td>
-<td align="right">0.0604338</td>
+<td align="right">-0.0723084</td>
 </tr>
 <tr class="odd">
 <td align="left">perc.alumni</td>
-<td align="right">0.2533070</td>
+<td align="right">0.0432018</td>
 </tr>
 <tr class="even">
 <td align="left">Expend</td>
-<td align="right">-0.0002480</td>
+<td align="right">0.0000700</td>
 </tr>
 </tbody>
 </table>
@@ -716,7 +716,7 @@ when λ=200?</em></p>
 </tr>
 </tbody>
 </table>
-<p>The sum of the coefficients(excluding the intercept when <span class="math inline">\(\lambda = 200\)</span> is 0.873)</p>
+<p>The sum of the coefficients(excluding the intercept) when <span class="math inline">\(\lambda = 200\)</span> is 0.873</p>
 </div>
 <div id="question-13" class="section level2">
 <h2>Question 13</h2>

@@ -148,7 +148,7 @@ The sum of the coefficient(excluding the intercept) when $\lambda=2$ is 4.137.
 ridge.model200<- glmnet(XD[,-1], collegeData$Grad.Rate, alpha = 0, lambda =200 , standardize = TRUE)
 
 
-Betas200 <- data.frame("Ridge" = as.numeric(coefficients(ridge.model2)))
+Betas200 <- data.frame("Ridge" = as.numeric(coefficients(ridge.model200)))
 rownames(Betas200) <- colnames(XD)
 knitr::kable(Betas200,
             caption = "Table 5. Coefficients with Tuning Parameter = 200 ")
@@ -162,7 +162,7 @@ knitr::kable(Betas200,
 knitr::kable(sum(ridge.model200$beta),caption = "Table 6. Sum of Coefficients when lambda = 200")
 ```
 
-The sum of the coefficients(excluding the intercept when $\lambda = 200$ is 0.873)
+The sum of the coefficients(excluding the intercept) when $\lambda = 200$ is 0.873
 
 ## Question 13
 *What do you notice happens to the sum of the coefficients as λ increases?*
