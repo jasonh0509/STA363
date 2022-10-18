@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r load packages}
+```{r load packages, include=FALSE}
 #Load all required packages
 library(ggplot2)
 library(broom)
@@ -24,12 +24,12 @@ library(RColorBrewer)
 library(glmnet)
 ```
 
-```{r load data}
+```{r load data, include=FALSE}
 #loading data needed
 collegeData<-read.csv("collegedata.csv")
 ```
 
-```{r take a look}
+```{r take a look, include=FALSE}
 glimpse(collegeData)
 ```
 
@@ -42,7 +42,7 @@ It is a regression task since the response variable is numeric. We are likely to
 ## Question 2
 *Make a visualization to explore the distribution of graduation rate. What is the smallest value of graduation rate? The largest?*
 
-```{r distribution}
+```{r distribution, warning=FALSE}
 ggplot(data=collegeData,aes(x=Grad.Rate))+
   geom_boxplot()+
   ggtitle("Figure 1. Distribution of Graduation Rate")
@@ -54,11 +54,11 @@ gradmin<-min(collegeData$Grad.Rate)
 knitr::kable(c("Largest" = gradmax,"Smallest" = gradmin),caption =  "Table 1. Largest and Smallest")
 ```
 
-
+The smallest value of graduation rate is 10. The largest value of graduation rate is 100.
 
 ## Question 3
 
-*Compute the MSE (training) and RMSE (training) for these data using Y^i=Y¯ for all rows i.*
+*Compute the MSE (training) and RMSE (training) for these data using $\hat{Y}_i = \bar{Y}$ for all rows i.*
 
 ```{r MSE and RMSE}
 ## MSE = RSS/n
@@ -82,7 +82,7 @@ $$MSE-MSE\_fac\_Ratio=291.51-27.80=263.71$$
 
 $$RMSE-RMSE\_fac\_Ratio=17.07-5.27=11.8$$
 
-The MSE has improved for 263.71. The RMSE has improved for 11.8
+The MSE has improved for 263.71. The RMSE has improved for 11.8.
 
 
 
@@ -98,7 +98,7 @@ The column that can not be used is the X, which is the name of each university, 
 ```{r}
 collegeData$Private<-ifelse(collegeData$Private == "Yes",1,0)
 M<-cor(collegeData[,2:19])
-corrplot(M, method = "circle",type = "upper")
+corrplot(M, method = "circle",type = "upper",title = "Figure 2. Correlation Plot of Features in CollegeData",mar = c(0,0,1,0))
 ```
 
 ## Question 7
@@ -138,11 +138,11 @@ knitr::kable(Betas,
 knitr::kable(sum(ridge.model2$beta),caption = "Table 4. Sum of Coefficients when lambda = 2 ")
 ```
 
-The sum of the coefficient(excluding the intercecpt) when $\lambda=2$ is 4.137.
+The sum of the coefficient(excluding the intercept) when $\lambda=2$ is 4.137.
 
 ## Question 11
 
-*Suppose we let λ=200. Adapting the code above, what is β^Ridge?*
+*Suppose we let $\lambda=200$. Adapting the code above, what is $β^Ridge$?*
 
 ```{r}
 ridge.model200<- glmnet(XD[,-1], collegeData$Grad.Rate, alpha = 0, lambda =200 , standardize = TRUE)
@@ -162,28 +162,29 @@ knitr::kable(Betas200,
 knitr::kable(sum(ridge.model200$beta),caption = "Table 6. Sum of Coefficients when lambda = 200")
 ```
 
-
+The sum of the coefficients(excluding the intercept when $\lambda = 200$ is 0.873)
 
 ## Question 13
 *What do you notice happens to the sum of the coefficients as λ increases?*
 
-The sum of the coefficients decreases as $\lambda$ increases 
+The sum of the coefficients decreases as $\lambda$ increases. 
 
 ## Question 14
 
-*Briefly explain the process of choosing the tuning parameter in ridge regression. Use words, not code!*没写完！
+*Briefly explain the process of choosing the tuning parameter in ridge regression. Use words, not code!*
 
-We can utilize the build-in function cv.glmnet() to find out the best tuning parameter in ridge regression. Firstly we have to set a random seed before using cv.glmnet(). Secondly, we enter the design matrix, the response variable, value of alpha(here we use 0 because it instructs R that we are performing Ridge Regression)
+To select the best tuning parameter in ridge regression, we have to choose the range of $\lambda$ that we want to consider first.Then, we utilize the build-in function cv.glmnet() to find out the best tuning parameter in ridge regression. 
+Firstly, we have to set a random seed before using cv.glmnet(), then enter the design matrix(with unusable column removed), the response variable, value of alpha(here we use 0 because it instructs R that we are performing Ridge Regression),the sequence of $\lambda$ we would like to test for, and standardization indicator(set as TRUE). The cv.glmnet function will perform 10 fold CV for each value of $\lambda$ based on the features and response variable provided, and record the metrics that includes MSE and RMSE under each value of $\lambda$.Lastly, we choose the value of $\lambda$ that optimizes the test metric chosen(in this case, the MSE and RMSE).
 
-```{r}
-set.seed(100)
-ridge.mod <- cv.glmnet(XD[,-1], collegeData$Grad.Rate , alpha = 0 , lambda = seq(from=0, to=50,by=0.05) , standardize = TRUE)
-```
 
 
 
 ## Question 15
 *Why do we need to set a random seed here?*
+```{r set seed}
+set.seed(100)
+ridge.mod <- cv.glmnet(XD[,-1], collegeData$Grad.Rate , alpha = 0 , lambda = seq(from=0, to=50,by=0.05) , standardize = TRUE)
+```
 
 Because the k-fold cross validation involves a random sampling process, setting a random seed will the replication of same outcome when the code was used across the devices.
 
@@ -215,11 +216,11 @@ ridgePlot <- function(ridge.mod, metric, title){
 
 
 ```{r lambda plot}
-ridgePlot(ridge.mod, metric = "RMSE" , title ="lambda plot" )
+ridgePlot(ridge.mod, metric = "RMSE" , title ="Figure 3.RMSE in Response to Lambda" )
 
 ```
 
-The $\lambda = 2.7$ gives the best value for our test metric.
+The $\lambda = 2.7$ gives the best value for our test metric(RMSE).
 
 ## Question 18
 *Why might it be helpful to look at the plot instead of just using ridge.mod$lambda.min all the time?*
@@ -238,7 +239,7 @@ The test MSE we would obtain using the ridge regression is 164.54.
 *Using your choice of λ, what is the estimated test RMSE?*
 
 ```{r RMSE with chosen lambda}
-knitr::kable(sqrt(minMSE),caption = "Table 8.  Estimated test MSE with lambda = 2.7")
+knitr::kable(sqrt(minMSE),caption = "Table 8.  Estimated test MSE with Lambda = 2.7")
 ```
 
 ## Question 20
@@ -247,9 +248,10 @@ knitr::kable(sqrt(minMSE),caption = "Table 8.  Estimated test MSE with lambda = 
 ```{r}
 EstRMSE<-sqrt(minMSE)
 improved<-RMSE-EstRMSE
-knitr::kable(improved,caption = "Table 9. Improved Amount of RMSE")
+knitr::kable(improved,caption = "Table 9. Improved Amount RMSE")
 ```
 
+The RMSE improved 4.246 from the values we got in Question 3.
 
 ## Question 21
 *Using the code above as a template, train your ridge regression model. Then, train the LSLR model using the same code template and call the result lslr.final. Once we have trained the model, we can make a data frame holding the coefficients for both LSLR and ridge using the following code. Show the resultant data frame as the answer to this question. Make sure you have formatted it using knitr::kable().*
@@ -261,7 +263,7 @@ ridge.betas <- as.numeric(coefficients(ridge.final))
 lslr.betas <- as.numeric(coefficients(lslr.final))
 BetasFinal <- data.frame("LSLR" = lslr.betas, "Ridge" = ridge.betas)
 rownames(BetasFinal) <- colnames(XD)
-knitr::kable(BetasFinal)
+knitr::kable(BetasFinal, caption = "Table 10. Coefficients for LSLR and Ridge")
 ```
 
 
@@ -280,7 +282,10 @@ MSE_final<-ridge.final.out$cvm
 # Output the test RMSE
 RMSE_final<-sqrt(ridge.final.out$cvm)
 
-LSLR_and_Ridge<-data.frame("Type" = c("LSLR","Ridge") ,"Lambda" = lambda_final, "MSE" = MSE_final, "RMSE" = RMSE_final)
-knitr::kable(LSLR_and_Ridge,caption = "")
+LSLR_and_Ridge<-data.frame("Type" = c("Ridge","LSLR") ,"Lambda" = lambda_final, "MSE" = MSE_final, "RMSE" = RMSE_final)
+knitr::kable(LSLR_and_Ridge,caption = "Table 11. Estimated MSE and RMSE for Ridge and LSLR")
 ```
 
+$$Percent\ Difference\ between Ridge\ and\ LSLR = \frac{12.963-12.828}{12.963} \approx 0.0104$$
+
+The estimated test RMSE got from 10-fold CV for LSLR is 12.963.The estimated test RMSE for ridge regression is 12.828. The ridge regression has the best predictive accuracy, it performed better than LSLR by approximately $1.04\%$. 
