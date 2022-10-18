@@ -214,8 +214,73 @@ ridgePlot <- function(ridge.mod, metric, title){
 ```
 
 
-```{r}
+```{r lambda plot}
 ridgePlot(ridge.mod, metric = "RMSE" , title ="lambda plot" )
 
+```
+
+The $\lambda = 2.7$ gives the best value for our test metric.
+
+## Question 18
+*Why might it be helpful to look at the plot instead of just using ridge.mod$lambda.min all the time?*
+
+Because the plot shows the change of MSE as the lambda changes as a curve, which would enable us to find the ideal range of $\lambda$ that should be used in the code, as well as the best $\lambda$ value for the ridge regression. 
+
+```{r lambda minimum}
+minMSE<-min(ridge.mod$cvm)
+knitr::kable(minMSE,caption = "Table 7. Minimum MSE")
+```
+
+The test MSE we would obtain using the ridge regression is 164.54.
+
+
+## Question 19
+*Using your choice of λ, what is the estimated test RMSE?*
+
+```{r RMSE with chosen lambda}
+knitr::kable(sqrt(minMSE),caption = "Table 8.  Estimated test MSE with lambda = 2.7")
+```
+
+## Question 20
+*How much has our RMSE improved from the values you got in Question 3? This allows us to see how much better our model does than using no feature information.*
+
+```{r}
+EstRMSE<-sqrt(minMSE)
+improved<-RMSE-EstRMSE
+knitr::kable(improved,caption = "Table 9. Improved Amount of RMSE")
+```
+
+
+## Question 21
+*Using the code above as a template, train your ridge regression model. Then, train the LSLR model using the same code template and call the result lslr.final. Once we have trained the model, we can make a data frame holding the coefficients for both LSLR and ridge using the following code. Show the resultant data frame as the answer to this question. Make sure you have formatted it using knitr::kable().*
+
+```{r models}
+ridge.final <- glmnet(XD[,-1], collegeData$Grad.Rate, alpha = 0 , lambda = 2.7 , standardize = TRUE)
+lslr.final<- glmnet(XD[,-1], collegeData$Grad.Rate, alpha = 0 , lambda = 0 , standardize = TRUE)
+ridge.betas <- as.numeric(coefficients(ridge.final))
+lslr.betas <- as.numeric(coefficients(lslr.final))
+BetasFinal <- data.frame("LSLR" = lslr.betas, "Ridge" = ridge.betas)
+rownames(BetasFinal) <- colnames(XD)
+knitr::kable(BetasFinal)
+```
+
+
+
+## Question 22
+*State the estimated test RMSE that you got from 10-fold CV for both of the two trained models (LSLR or ridge regression). Which has the best predictive accuracy? By how much (in percent difference)?NOTE: How do we do this in code???*
+
+```{r}
+# Run 10-fold CV for only the two choices of lambda
+set.seed(100)
+ridge.final.out <- cv.glmnet(XD[,-1], collegeData$Grad.Rate , alpha = 0 , lambda = c(0, 2.7), standardize = TRUE)
+# Output the Lambdas
+lambda_final<-ridge.final.out$lambda
+# Output the test MSE
+MSE_final<-ridge.final.out$cvm
+# Output the test RMSE
+RMSE_final<-sqrt(ridge.final.out$cvm)
+
+LSLR_and_Ridge<-data.frame("Type" = c("LSLR","Ridge") ,"Lambda" = lambda_final, "MSE" = MSE_final, "RMSE" = RMSE_final)
+knitr::kable(LSLR_and_Ridge,caption = "")
 ```
 
