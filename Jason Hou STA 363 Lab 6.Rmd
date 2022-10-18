@@ -176,8 +176,8 @@ The sum of the coefficients decreases as $\lambda$ increases
 We can utilize the build-in function cv.glmnet() to find out the best tuning parameter in ridge regression. Firstly we have to set a random seed before using cv.glmnet(). Secondly, we enter the design matrix, the response variable, value of alpha(here we use 0 because it instructs R that we are performing Ridge Regression)
 
 ```{r}
-set.seed(114514)
-ridge.mod <- cv.glmnet(XD[,-1], collegeData$Grad.Rate , alpha = 0 , lambda = seq(from=0, to=50,by=0.5) , standardize = TRUE)
+set.seed(100)
+ridge.mod <- cv.glmnet(XD[,-1], collegeData$Grad.Rate , alpha = 0 , lambda = seq(from=0, to=50,by=0.05) , standardize = TRUE)
 ```
 
 
@@ -189,6 +189,7 @@ Because the k-fold cross validation involves a random sampling process, setting 
 
 ## Question 16
 *Why do we want to make sure to include λ=0 in our list of possible tuning parameters?*
+Because we want to compare it with LSLR, while the result from $\lambda=0$ is the same as LSLR.
 
 ## Question 17
 
