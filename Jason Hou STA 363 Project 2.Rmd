@@ -1,0 +1,42 @@
+---
+title: "Jason Hou STA 363 Project 2"
+author: "Jason Hou"
+date: '2022-10-25'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r load packages}
+##Here we load the packages needed
+library(ggplot2)
+library(broom)
+library(gridExtra)
+library(dplyr)
+library(class)
+library(tidyverse)
+library(gridExtra)
+library(leaps)
+library(corrplot)
+library(RColorBrewer)
+library(glmnet)
+```
+
+
+```{r load packages}
+vrboData<-read.csv("VRBO.csv")
+```
+
+```{r take a look}
+glimpse(vrboData)
+```
+
+```{r checking and cleaning}
+# Find out the number of missing values in the vrbo data set
+sum(is.na(vrboData))
+#Remove rows with missing values 
+vrboCleaed<-na.omit(vrboData)
+```
+
