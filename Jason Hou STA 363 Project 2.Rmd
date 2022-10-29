@@ -23,9 +23,11 @@ library(corrplot)
 library(RColorBrewer)
 library(glmnet)
 ```
+# Abstract
 
+## Part 1 Introduction of Data
 
-```{r load packages}
+```{r load data}
 vrboData<-read.csv("VRBO.csv")
 ```
 
@@ -33,10 +35,12 @@ vrboData<-read.csv("VRBO.csv")
 glimpse(vrboData)
 ```
 
+
+## Part 2: Data Cleaning
+
 ```{r checking and cleaning}
 # Find out the number of missing values in the vrbo data set
 sum(is.na(vrboData))
 #Remove rows with missing values 
 vrboCleaed<-na.omit(vrboData)
 ```
-
