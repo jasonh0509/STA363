@@ -22,6 +22,7 @@ library(leaps)
 library(corrplot)
 library(RColorBrewer)
 library(glmnet)
+library(xtable)
 ```
 # Abstract
 
@@ -89,25 +90,46 @@ We created a correlation plot for numeric features in the data set to explore if
 
 
 
-```{r}
+```{r creating design matrix ridge}
+# Create the design matrix for ridge regression
 XD <- model.matrix(price ~., data = vrboCleaned)
 ```
 
 
-```{r}
-ridge.modeltest<- glmnet(XD[,-1], vrboCleaned$price, alpha = 0, lambda =200 , standardize = TRUE)
-coefficients(ridge.modeltest)
-```
 
 
 
-```{r eval=FALSE, include=FALSE}
+```{r include=FALSE}
 set.seed(1)
-ridge.mod <- cv.glmnet(XD[,-1], vrboCleaned$price , alpha = 0 , lambda = seq(from=0, to=50,by=0.05) , standardize = TRUE)
+ridge.modFind_Lambda <- cv.glmnet(XD[,-1], vrboCleaned$price , alpha = 0 , lambda = seq(from=0, to=50,by=0.05) , standardize = TRUE)
 ```
 
 
-```{r}
+```{r load a function, include=FALSE}
+##Load a function for creating the plot of RMSE in response of change in Lambda
+ridgePlot <- function(ridge.mod, metric, title){
+  library(ggplot2)
+  
+  smallestLambda <- ridge.mod$lambda[which.min(ridge.mod$cvm)] 
+  
+  if(metric == "MSE"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = (ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test MSE values for Different Tuning Parameters. Smallest MSE at lambda = ", smallestLambda), title = title, y = "Test MSE", x = "Tuning Parameter")
+  
+  }
+  
+  if(metric == "RMSE"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = sqrt(ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test RMSE values for Different Tuning Parameters. Smallest RMSE at lambda = ", smallestLambda), title = title, y = "Test RMSE", x = "Tuning Parameter")
+
+  }
+  
+  g1
+}
+```
+
+
+```{r plot to determine the best lambda}
+#Using the ridgePlot function(immported) to creat graph of RMSE in response to Lambda
+ridgePlot(ridge.modFind_Lambda, metric = "RMSE" , title ="Figure 3.1 RMSE in Response to Lambda" )
 
 ```
 
@@ -118,7 +140,13 @@ ridge.mod <- cv.glmnet(XD[,-1], vrboCleaned$price , alpha = 0 , lambda = seq(fro
 
 
 
-```{r}
+```{r ridge}
+ridge.mod_Final <- glmnet(XD[,-1], vrboCleaned$price , alpha = 0 , lambda = 13.1 , standardize = TRUE)
+Betas_ridge<-as.numeric(coefficients(ridge.mod_Final))
+ridge_coef<-data.frame("Coefficients" = Betas_ridge)
+
+rownames(ridge_coef)<-colnames(XD)
+knitr::kable(ridge_coef,caption = "Table 3.1 Coefficients of Model using Ridge Regression")
 
 ```
 
