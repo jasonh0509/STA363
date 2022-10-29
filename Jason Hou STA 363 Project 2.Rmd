@@ -129,7 +129,7 @@ ridgePlot <- function(ridge.mod, metric, title){
 
 ```{r plot to determine the best lambda}
 #Using the ridgePlot function(immported) to creat graph of RMSE in response to Lambda
-ridgePlot(ridge.modFind_Lambda, metric = "RMSE" , title ="Figure 3.1 RMSE in Response to Lambda" )
+ridgePlot(ridge.modFind_Lambda, metric = "RMSE" , title ="Figure 3.1 RMSE in Response to Lambda(Ridge)" )
 
 ```
 
@@ -150,4 +150,62 @@ knitr::kable(ridge_coef,caption = "Table 3.1 Coefficients of Model using Ridge R
 
 ```
 
+
+## Part 4: Lasso
+
+```{r}
+#Set seed for random sampling process within the cv.glmnet
+set.seed(1)
+#Fit modesls for a serie of lambda values, respectively 
+Lasso.modFind_Lambda <- cv.glmnet(XD[,-1], vrboCleaned$price , alpha = 1 , lambda = seq(from=0, to=50,by=0.05) , standardize = TRUE)
+
+#Plot the change of RMSE in reponse to lambda values
+ridgePlot(Lasso.modFind_Lambda, metric = "RMSE" , title ="Figure 3.2 RMSE in Response to Lambda(Lasso)" )
+
+```
+
+```{r lasso final}
+ridge.mod_Final <- glmnet(XD[,-1], vrboCleaned$price , alpha = 1 , lambda = 0.75 , standardize = TRUE)
+Betas_lasso<-as.numeric(coefficients(ridge.mod_Final))
+lasso_coef<-data.frame("Coefficients" = Betas_ridge)
+
+rownames(ridge_coef)<-colnames(XD)
+knitr::kable(ridge_coef,caption = "Table 3.1 Coefficients of Model using Ridge Regression")
+
+```
+
+
+## Part 5. Elastic Net
+
+```{r find alpha and lambda with smallest RMSE}
+alphaseq<-seq(from = 0, to = 1, by = 0.01)
+storageElastic<-data.frame("Alpha" = rep(NA,length(alphaseq)), "Lambda" = rep(NA,length(alphaseq)), "RMSE" = rep(NA,length(alphaseq)))
+
+a=1
+
+set.seed(1)
+for(i in alphaseq){
+  Elastic.modFind<-cv.glmnet(XD[,-1],vrboCleaned$price,alpha = i, lambda = seq(from = 0, to = 25,by = .5))
+  storageElastic$Lambda[a]<-cvOUt$lambda.min
+  storageElastic$RMSE[a]<-sqrt((min(cvOUt$cvm)))
+  storageElastic$Alpha[a]<-i
+  a=a+1
+}
+
+```
+
+
+```{r smallest MSE}
+storageElastic[which.min(storageElastic$RMSE),]
+```
+
+```{r elastic final model}
+elastic.modFinal<-glmnet(XD[,-1],vrboCleaned$price,alpha = 0.15,lambda = 5)
+
+Betas_elastic<-as.numeric(coefficients(elastic.modFinal))
+elastic_coef<-data.frame("Coefficients" = Betas_elastic)
+rownames(elastic_coef)<-colnames(XD)
+
+knitr::kable(elastic_coef,caption = "Coefficients of Model using Elastic Net")
+```
 
