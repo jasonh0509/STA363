@@ -42,45 +42,68 @@ glimpse(vrboData)
 # Find out the number of missing values in the vrbo data set
 sum(is.na(vrboData))
 #Remove rows with missing values 
-vrboCleaed<-na.omit(vrboData)
+
+
+vrboCleaned<-vrboData%>%
+  na.omit(vrboData)%>%
+  select(-UnitNumber)
+vrboCleaned$PctRentals=as.numeric((vrboCleaned$PctRentals)*100)
 ```
 
-```{r correlation}
-M<-cor(vrboCleaed[,-c(5,9,10)])
-corrplot(M, method= "circle",type = "upper",title="Figure 2.1 Correlation Plot of Numeric Variables in Vrbo Data Set ")
+```{r distribution}
+ggplot(data=vrboCleaned,aes(x=price))+
+  geom_boxplot()+
+  ggtitle("Figure 2.1 Distribution of Price")
+```
+
+```{r}
+knitr::kable(table(vrboData$room_type))
+```
+
+We identified that the UnitNumber is a feature that should be removed from the data set before building the model, as it has 1423 different levels, and is irrelevant to the price of the vrbo rentals.A new data set "VrboCleaned" was created for the following sections. 
+
+
+```{r convert data type}
+#convert character features into factor
+vrboCleaned$neighborhood <-as.factor(vrboCleaned$neighborhood)
+```
+
+```{r correlation plot}
+#Obtain correlation between features and save it as an object
+M<-cor(vrboCleaned[,-c(4,8,9)])
+#Create correlation plot
+corrplot(M, method= "circle",type = "upper",title="Figure 2.2 Correlation Plot of Numeric Variables in Vrbo Data Set ",mar = c(0,0,2,0))
 #M
 ```
 
+We created a correlation plot for numeric features in the data set to explore if there are potential correlations present between features that allows us to determine the proper regression methods for building the model. Figure 2.1 shows that several significant correlations are presented between features, indicating shrinkage and selection techniques are appropriate to be used on building the model.
+
+
+
+
+
+
+
+
+## Part 3: Ridge Regression
+
+
+
 ```{r}
-vrboCleaed$neighborhood <-as.factor(vrboCleaed$neighborhood)
+XD <- model.matrix(price ~., data = vrboCleaned)
 ```
 
-```{r}
-table(vrboCleaed$neighborhood)
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ```{r}
-
+ridge.modeltest<- glmnet(XD[,-1], vrboCleaned$price, alpha = 0, lambda =200 , standardize = TRUE)
+coefficients(ridge.modeltest)
 ```
 
 
 
-```{r}
-
+```{r eval=FALSE, include=FALSE}
+set.seed(1)
+ridge.mod <- cv.glmnet(XD[,-1], vrboCleaned$price , alpha = 0 , lambda = seq(from=0, to=50,by=0.05) , standardize = TRUE)
 ```
 
 
