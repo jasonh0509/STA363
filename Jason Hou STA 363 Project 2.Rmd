@@ -165,12 +165,12 @@ ridgePlot(Lasso.modFind_Lambda, metric = "RMSE" , title ="Figure 3.2 RMSE in Res
 ```
 
 ```{r lasso final}
-ridge.mod_Final <- glmnet(XD[,-1], vrboCleaned$price , alpha = 1 , lambda = 0.75 , standardize = TRUE)
-Betas_lasso<-as.numeric(coefficients(ridge.mod_Final))
-lasso_coef<-data.frame("Coefficients" = Betas_ridge)
+lasso.mod_Final <- glmnet(XD[,-1], vrboCleaned$price , alpha = 1 , lambda = 0.75 , standardize = TRUE)
+Betas_lasso<-as.numeric(coefficients(lasso.mod_Final))
+lasso_coef<-data.frame("Coefficients" = Betas_lasso)
 
-rownames(ridge_coef)<-colnames(XD)
-knitr::kable(ridge_coef,caption = "Table 3.1 Coefficients of Model using Ridge Regression")
+rownames(lasso_coef)<-colnames(XD)
+knitr::kable(lasso_coef,caption = "Table 3.1 Coefficients of Model using Ridge Regression")
 
 ```
 
