@@ -186,8 +186,8 @@ a=1
 set.seed(1)
 for(i in alphaseq){
   Elastic.modFind<-cv.glmnet(XD[,-1],vrboCleaned$price,alpha = i, lambda = seq(from = 0, to = 25,by = .5))
-  storageElastic$Lambda[a]<-cvOUt$lambda.min
-  storageElastic$RMSE[a]<-sqrt((min(cvOUt$cvm)))
+  storageElastic$Lambda[a]<-Elastic.modFind$lambda.min
+  storageElastic$RMSE[a]<-sqrt((min(Elastic.modFind$cvm)))
   storageElastic$Alpha[a]<-i
   a=a+1
 }
