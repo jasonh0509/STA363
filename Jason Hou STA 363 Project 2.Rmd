@@ -57,6 +57,9 @@ ggplot(data=vrboCleaned,aes(x=price))+
   ggtitle("Figure 2.1 Distribution of Price")
 ```
 
+
+We can see that 
+
 ```{r}
 knitr::kable(table(vrboData$room_type))
 ```
@@ -87,7 +90,6 @@ We created a correlation plot for numeric features in the data set to explore if
 
 
 ## Part 3: Ridge Regression
-
 
 
 ```{r creating design matrix ridge}
@@ -136,10 +138,6 @@ ridgePlot(ridge.modFind_Lambda, metric = "RMSE" , title ="Figure 3.1 RMSE in Res
 
 
 
-
-
-
-
 ```{r ridge}
 ridge.mod_Final <- glmnet(XD[,-1], vrboCleaned$price , alpha = 0 , lambda = 13.1 , standardize = TRUE)
 Betas_ridge<-as.numeric(coefficients(ridge.mod_Final))
@@ -149,6 +147,15 @@ rownames(ridge_coef)<-colnames(XD)
 knitr::kable(ridge_coef,caption = "Table 3.1 Coefficients of Model using Ridge Regression")
 
 ```
+
+```{r ridge metrics}
+CV_result_ridge<-data.frame("Lambda" = ridge.modFind_Lambda$lambda,"MSE" = ridge.modFind_Lambda$cvm,"RMSE" = sqrt(ridge.modFind_Lambda$cvm))
+smallestRidge_MSE<-which.min(CV_result_ridge$MSE)
+smallestRidge_RMSE<-which.min(CV_result_ridge$RMSE)
+CV_result_ridge[smallestRidge_MSE,]
+CV_result_ridge[smallestRidge_RMSE,]
+```
+
 
 
 ## Part 4: Lasso
@@ -170,23 +177,35 @@ Betas_lasso<-as.numeric(coefficients(lasso.mod_Final))
 lasso_coef<-data.frame("Coefficients" = Betas_lasso)
 
 rownames(lasso_coef)<-colnames(XD)
-knitr::kable(lasso_coef,caption = "Table 3.1 Coefficients of Model using Ridge Regression")
+knitr::kable(lasso_coef,caption = "Table 4.1 Coefficients of Model using Lasso Regression")
 
 ```
 
+```{r lasso metrics} 
+CV_result_lasso<-data.frame("Lambda" = Lasso.modFind_Lambda$lambda,"MSE" = Lasso.modFind_Lambda$cvm,"RMSE" = sqrt(Lasso.modFind_Lambda$cvm))
+smallestLasso_MSE<-which.min(CV_result_lasso$MSE)
+smallestLasso_RMSE<-which.min(CV_result_lasso$RMSE)
+CV_result_lasso[smallestLasso_MSE,]
+CV_result_lasso[smallestLasso_RMSE,]
+```
 
-## Part 5. Elastic Net
+
+
+## Part 5: Elastic Net
 
 ```{r find alpha and lambda with smallest RMSE}
+#Set a sequence of numbers from 0 to 1, increment by 0.01 each time 
 alphaseq<-seq(from = 0, to = 1, by = 0.01)
-storageElastic<-data.frame("Alpha" = rep(NA,length(alphaseq)), "Lambda" = rep(NA,length(alphaseq)), "RMSE" = rep(NA,length(alphaseq)))
+#Create empty data frame to hold alpha, lambda and RMSE of each model fitted with corresponding tuning parameter
+storageElastic<-data.frame("Alpha" = rep(NA,length(alphaseq)), "Lambda" = rep(NA,length(alphaseq)),"MSE" = rep(NA, length(alphaseq)) ,"RMSE" = rep(NA,length(alphaseq)))
 
 a=1
-
+#Set seed for random sampling 
 set.seed(1)
 for(i in alphaseq){
   Elastic.modFind<-cv.glmnet(XD[,-1],vrboCleaned$price,alpha = i, lambda = seq(from = 0, to = 25,by = .5))
   storageElastic$Lambda[a]<-Elastic.modFind$lambda.min
+  storageElastic$MSE[a]<-min(Elastic.modFind$cvm)
   storageElastic$RMSE[a]<-sqrt((min(Elastic.modFind$cvm)))
   storageElastic$Alpha[a]<-i
   a=a+1
@@ -195,9 +214,11 @@ for(i in alphaseq){
 ```
 
 
-```{r smallest MSE}
-storageElastic[which.min(storageElastic$RMSE),]
+```{r elastic metrics}
+smallestElastic_RMSE<-which.min(storageElastic$RMSE)
+storageElastic[smallestElastic_RMSE,]
 ```
+
 
 ```{r elastic final model}
 elastic.modFinal<-glmnet(XD[,-1],vrboCleaned$price,alpha = 0.15,lambda = 5)
@@ -206,6 +227,33 @@ Betas_elastic<-as.numeric(coefficients(elastic.modFinal))
 elastic_coef<-data.frame("Coefficients" = Betas_elastic)
 rownames(elastic_coef)<-colnames(XD)
 
-knitr::kable(elastic_coef,caption = "Coefficients of Model using Elastic Net")
+knitr::kable(elastic_coef,caption = "Table  5.1 Coefficients of Model using Elastic Net")
 ```
 
+
+
+## Part 6: Comparison and Conclusion
+
+```{r}
+
+```
+
+
+```{r}
+Coefficient_Comparison<-data.frame("Ridge" = rep(NA,62), "Lasso" = rep(NA,62),"Elastic Net" = rep(NA,62))
+Coefficient_Comparison$Ridge=ridge_coef$Coefficients
+Coefficient_Comparison$Lasso=lasso_coef$Coefficients
+Coefficient_Comparison$Elastic.Net=elastic_coef$Coefficients
+
+
+
+knitr::kable(Coefficient_Comparison)
+```
+
+
+
+| Method      	| Tuning Parameter                	| Test MSE 	| Test RMSE 	| Features 	|
+|-------------	|---------------------------------	|----------	|-----------	|----------	|
+| Ridge       	| 13.1                            	| 3620.68  	| 60.17     	| 62       	|
+| Lasso       	| 0.75                            	| 3643.55  	| 60.36     	| 34       	|
+| Elastic Net 	| $\alpha$ = 0.15, $\lambda$ = 5  	| 3531.36  	| 59.34     	| 37       	|
