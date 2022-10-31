@@ -101,7 +101,7 @@ XD <- model.matrix(price ~., data = vrboCleaned)
 
 
 
-```{r include=FALSE}
+```{r cv to find the best lambda}
 set.seed(1)
 ridge.modFind_Lambda <- cv.glmnet(XD[,-1], vrboCleaned$price , alpha = 0 , lambda = seq(from=0, to=50,by=0.05) , standardize = TRUE)
 ```
@@ -130,7 +130,7 @@ ridgePlot <- function(ridge.mod, metric, title){
 
 
 ```{r plot to determine the best lambda}
-#Using the ridgePlot function(immported) to creat graph of RMSE in response to Lambda
+#Using the ridgePlot function(imported) to create graph of RMSE in response to Lambda
 ridgePlot(ridge.modFind_Lambda, metric = "RMSE" , title ="Figure 3.1 RMSE in Response to Lambda(Ridge)" )
 
 ```
@@ -239,8 +239,10 @@ knitr::kable(elastic_coef,caption = "Table  5.1 Coefficients of Model using Elas
 ```
 
 
-```{r}
+```{r coefficient data frame}
+#Create a data frama to hold all the coefficeints from each regression model
 Coefficient_Comparison<-data.frame("Ridge" = rep(NA,62), "Lasso" = rep(NA,62),"Elastic Net" = rep(NA,62))
+#Assign coefficeints to corresponding colums in the data set
 Coefficient_Comparison$Ridge=ridge_coef$Coefficients
 Coefficient_Comparison$Lasso=lasso_coef$Coefficients
 Coefficient_Comparison$Elastic.Net=elastic_coef$Coefficients
