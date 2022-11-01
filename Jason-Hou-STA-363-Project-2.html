@@ -363,85 +363,21 @@ pre code {
 </div>
 
 
-<pre class="r"><code>##Here we load the packages needed
-library(ggplot2)
-library(broom)
-library(gridExtra)
-library(dplyr)</code></pre>
-<pre><code>## 
-## Attaching package: &#39;dplyr&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:gridExtra&#39;:
-## 
-##     combine</code></pre>
-<pre><code>## The following objects are masked from &#39;package:stats&#39;:
-## 
-##     filter, lag</code></pre>
-<pre><code>## The following objects are masked from &#39;package:base&#39;:
-## 
-##     intersect, setdiff, setequal, union</code></pre>
-<pre class="r"><code>library(class)
-library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages
-## ───────────────────────────────────────
-## tidyverse 1.3.2 ──</code></pre>
-<pre><code>## ✔ tibble  3.1.8     ✔ purrr   0.3.5
-## ✔ tidyr   1.2.1     ✔ stringr 1.4.1
-## ✔ readr   2.1.3     ✔ forcats 0.5.2
-## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## ✖ dplyr::combine() masks gridExtra::combine()
-## ✖ dplyr::filter()  masks stats::filter()
-## ✖ dplyr::lag()     masks stats::lag()</code></pre>
-<pre class="r"><code>library(gridExtra)
-library(leaps)
-library(corrplot)</code></pre>
-<pre><code>## corrplot 0.92 loaded</code></pre>
-<pre class="r"><code>library(RColorBrewer)
-library(glmnet)</code></pre>
-<pre><code>## Loading required package: Matrix
-## 
-## Attaching package: &#39;Matrix&#39;
-## 
-## The following objects are masked from &#39;package:tidyr&#39;:
-## 
-##     expand, pack, unpack
-## 
-## Loaded glmnet 4.1-4</code></pre>
-<pre class="r"><code>library(xtable)</code></pre>
 <div id="abstract" class="section level1">
 <h1>Abstract</h1>
 <div id="part-1-introduction-of-data" class="section level2">
 <h2>Part 1 Introduction of Data</h2>
-<pre class="r"><code>vrboData&lt;-read.csv(&quot;VRBO.csv&quot;)</code></pre>
-<pre class="r"><code>glimpse(vrboData)</code></pre>
-<pre><code>## Rows: 1,561
-## Columns: 14
-## $ UnitNumber           &lt;int&gt; 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15…
-## $ price                &lt;int&gt; 85, 35, 175, 75, 160, 60, 39, 65, 47, 100, 150, 3…
-## $ overall_satisfaction &lt;dbl&gt; 5.0, 5.0, 4.5, 5.0, 5.0, 5.0, 5.0, 5.0, 4.5, 4.5,…
-## $ reviews              &lt;int&gt; 6, 8, 7, 52, 3, 5, 8, 25, 7, 24, 8, 3, 10, 15, 3,…
-## $ room_type            &lt;chr&gt; &quot;Private room&quot;, &quot;Private room&quot;, &quot;Entire home/apt&quot;…
-## $ accommodates         &lt;int&gt; 2, 1, 4, 2, 6, 1, 2, 2, 2, 6, 6, 1, 4, 3, 4, 6, 2…
-## $ bedrooms             &lt;int&gt; 1, 1, 2, 1, 2, 1, 1, 1, 1, 2, 2, 1, 1, 1, 2, 3, 1…
-## $ minstay              &lt;int&gt; 1, 1, 2, 1, 1, 1, 3, 2, 1, NA, 5, 10, 2, 1, 2, 2,…
-## $ neighborhood         &lt;chr&gt; &quot;Albany Park&quot;, &quot;Albany Park&quot;, &quot;Albany Park&quot;, &quot;Alb…
-## $ district             &lt;chr&gt; &quot;Far North&quot;, &quot;Far North&quot;, &quot;Far North&quot;, &quot;Far North…
-## $ WalkScore            &lt;int&gt; 87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 87, 8…
-## $ TransitScore         &lt;int&gt; 62, 62, 62, 62, 62, 62, 62, 62, 62, 62, 62, 62, 6…
-## $ BikeScore            &lt;int&gt; 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 68, 6…
-## $ PctRentals           &lt;dbl&gt; 0.04253154, 0.04253154, 0.04253154, 0.04253154, 0…</code></pre>
 </div>
 <div id="part-2-data-cleaning" class="section level2">
 <h2>Part 2: Data Cleaning</h2>
 <pre class="r"><code># Find out the number of missing values in the vrbo data set
 sum(is.na(vrboData))</code></pre>
 <pre><code>## [1] 138</code></pre>
-<pre class="r"><code>#Remove rows with missing values 
-
-
+<pre class="r"><code>#Remove rows with missing values and adjust the scales 
 vrboCleaned&lt;-vrboData%&gt;%
   na.omit(vrboData)%&gt;%
   select(-UnitNumber)
-vrboCleaned$PctRentals=as.numeric((vrboCleaned$PctRentals)*100)</code></pre>
+#vrboCleaned$PctRentals=as.numeric((vrboCleaned$PctRentals)*100)</code></pre>
 <pre class="r"><code>ggplot(data=vrboCleaned,aes(x=price))+
   geom_boxplot()+
   ggtitle(&quot;Figure 2.1 Distribution of Price&quot;)</code></pre>
@@ -474,7 +410,9 @@ from the data set before building the model, as it has 1423 different
 levels, and is irrelevant to the price of the vrbo rentals.A new data
 set “VrboCleaned” was created for the following sections.</p>
 <pre class="r"><code>#convert character features into factor
-vrboCleaned$neighborhood &lt;-as.factor(vrboCleaned$neighborhood)</code></pre>
+vrboCleaned$neighborhood &lt;-as.factor(vrboCleaned$neighborhood)
+vrboCleaned$room_type &lt;-as.factor(vrboCleaned$room_type)
+vrboCleaned$district&lt;-as.factor(vrboCleaned$district)</code></pre>
 <pre class="r"><code>#Obtain correlation between features and save it as an object
 M&lt;-cor(vrboCleaned[,-c(4,8,9)])
 #Create correlation plot
@@ -495,6 +433,10 @@ effect of shrinkage. That is,shrinking the coefficients of correlated
 features, therefore limits the impacts from these features to the model.
 For this we need to find the tuning parameter that provides the best
 shirking effect.</p>
+<p>We will use the term Residual Sum of Squares (RSS), plus the penalty
+term The</p>
+<p><span class="math inline">\(RSS + \lambda
+\boldsymbol{\widehat{\beta}^\mathbf{T}\mathbf{\widehat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\widehat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\widehat{\beta}})+\lambda\boldsymbol{\widehat{\beta}^\mathbf{T}\mathbf{\widehat{\beta}}}\)</span></p>
 <p>We are going to use the root mean square error(RMSE) to assess the
 predictive accuracy of each model that uses different values of <span class="math inline">\(\lambda\)</span>(tuning parameter). The RMSE is
 defined as the square root of the mean squared error, which is the mean
@@ -791,7 +733,7 @@ Regression</caption>
 </tr>
 <tr class="even">
 <td align="left">PctRentals</td>
-<td align="right">-0.0752141</td>
+<td align="right">-7.5214119</td>
 </tr>
 </tbody>
 </table>
@@ -1371,7 +1313,7 @@ knitr::kable(elastic_coef,caption = &quot;Table  5.1 Coefficients of Model using
 </tr>
 <tr class="even">
 <td align="left">PctRentals</td>
-<td align="right">-0.0066399</td>
+<td align="right">-0.6639934</td>
 </tr>
 </tbody>
 </table>
@@ -1387,8 +1329,10 @@ Coefficient_Comparison$Elastic.Net=elastic_coef$Coefficients
 
 
 
-knitr::kable(Coefficient_Comparison)</code></pre>
+knitr::kable(Coefficient_Comparison,caption = &quot;Table 6.1 Coefficients of Ridge, Lasso and Elastic Net Regression&quot;)</code></pre>
 <table>
+<caption>Table 6.1 Coefficients of Ridge, Lasso and Elastic Net
+Regression</caption>
 <thead>
 <tr class="header">
 <th align="right">Ridge</th>
@@ -1703,12 +1647,14 @@ knitr::kable(Coefficient_Comparison)</code></pre>
 <td align="right">0.3297103</td>
 </tr>
 <tr class="even">
-<td align="right">-0.0752141</td>
+<td align="right">-7.5214119</td>
 <td align="right">0.0000000</td>
-<td align="right">-0.0066399</td>
+<td align="right">-0.6639934</td>
 </tr>
 </tbody>
 </table>
+<p>Table 6.2 Comparison Across Ridge, Lasso and Elastic Net on Tuning
+Parameter, Predictive Accuracy Metrics, and Features</p>
 <table>
 <colgroup>
 <col width="16%" />
