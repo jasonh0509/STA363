@@ -63,6 +63,20 @@ knitr::kable(table(vrboData$room_type))
 We identified that the UnitNumber is a feature that should be removed from the data set before building the model, as it has 1423 different levels, and is irrelevant to the price of the vrbo rentals.A new data set "VrboCleaned" was created for the following sections. 
 
 
+
+
+
+
+
+
+
+
+
+
+## Part 3: Ridge Regression
+
+We utilized a correlation plot to explore if correlated columns exist in the data set.Thus, we created a correlation plot for numeric features in the data set to explore if there are potential correlations present between features.
+
 ```{r convert data type}
 #convert character features into factor
 vrboCleaned$neighborhood <-as.factor(vrboCleaned$neighborhood)
@@ -79,23 +93,18 @@ corrplot(M, method= "circle",type = "upper",title="Figure 2.2 Correlation Plot o
 #M
 ```
 
-We created a correlation plot for numeric features in the data set to explore if there are potential correlations present between features that allows us to determine the proper regression methods for building the model. Figure 2.1 shows that several significant correlations are presented between features, indicating shrinkage and selection techniques are appropriate to be used on building the model.
+
+We can see from Figure 2.1 that several significant correlations are presented between features, indicating shrinkage and selection techniques are appropriate to be used on building the model.
 
 
+Firstly, we use the ridge regression to fit the model, as it provides the effect of shrinkage. That is,shrinking the coefficients of correlated features, therefore limits the impacts from these features to the model to off set the negative effect induced by multicollinearity(correlated columns in data set). For this we need to find the tuning parameter that provides the best shirking effect. 
 
 
+We will use the term Residual Sum of Squares (RSS), defined as the standard deviation of observed values vs predicted values, plus the penalty term $\lambda\boldsymbol{\widehat{\beta}^\mathbf{T}\mathbf{\widehat{\beta}}}$
 
-
-
-
-## Part 3: Ridge Regression
-
-Here we use the ridge regression to fit the model, as it provides the effect of shrinkage. That is,shrinking the coefficients of correlated features, therefore limits the impacts from these features to the model. For this we need to find the tuning parameter that provides the best shirking effect. 
-
-We will use the term Residual Sum of Squares (RSS), plus the penalty term The 
+Our goal is to find the tuning parameter $\lambda$, as well as the $\boldsymbol{\beta}$  that minimizes the following:
 
 $RSS + \lambda \boldsymbol{\widehat{\beta}^\mathbf{T}\mathbf{\widehat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\widehat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\widehat{\beta}})+\lambda\boldsymbol{\widehat{\beta}^\mathbf{T}\mathbf{\widehat{\beta}}}$
-
 
 We are going to use the root mean square error(RMSE) to assess the predictive accuracy of each model that uses different values of $\lambda$(tuning parameter). The RMSE is defined as the square root of the mean squared error, which is the mean of the difference between the predicted values and observed values. The RMSE allows use to assess how well the model fits the observed data points, so that we can determine the predictive accuracy of the model. Lower RMSE indicates a higher predictive accuracy, higher RMSE, on the other hand, indicates lower predictive accuracy.
 

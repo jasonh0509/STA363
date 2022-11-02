@@ -430,11 +430,13 @@ techniques are appropriate to be used on building the model.</p>
 <h2>Part 3: Ridge Regression</h2>
 <p>Here we use the ridge regression to fit the model, as it provides the
 effect of shrinkage. That is,shrinking the coefficients of correlated
-features, therefore limits the impacts from these features to the model.
-For this we need to find the tuning parameter that provides the best
-shirking effect.</p>
+features, therefore limits the impacts from these features to the model
+to off set the negative effect induced by multicollinearity(correlated
+columns in data set). For this we need to find the tuning parameter that
+provides the best shirking effect.</p>
 <p>We will use the term Residual Sum of Squares (RSS), plus the penalty
-term The</p>
+term <span class="math inline">\(\lambda\boldsymbol{\widehat{\beta}^\mathbf{T}\mathbf{\widehat{\beta}}}\)</span></p>
+<p>Our goal is to find the tuning parameter <span class="math inline">\(\lambda\)</span> that minimizes the following:</p>
 <p><span class="math inline">\(RSS + \lambda
 \boldsymbol{\widehat{\beta}^\mathbf{T}\mathbf{\widehat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\widehat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\widehat{\beta}})+\lambda\boldsymbol{\widehat{\beta}^\mathbf{T}\mathbf{\widehat{\beta}}}\)</span></p>
 <p>We are going to use the root mean square error(RMSE) to assess the
