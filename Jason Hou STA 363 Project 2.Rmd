@@ -30,21 +30,21 @@ library(xtable)
 ## Part 1 Introduction of Data
 
 ```{r load data, include=FALSE}
-vrboData<-read.csv("VRBO.csv")
+VRBOData<-read.csv("VRBO.csv")
 ```
 
 ```{r take a look, include=FALSE}
-glimpse(vrboData)
+glimpse(VRBOData)
 ```
 
 ## Part 2: Data Cleaning
 
 ```{r checking and cleaning}
-# Find out the number of missing values in the vrbo data set
-sum(is.na(vrboData))
+# Find out the number of missing values in the VRBO data set
+sum(is.na(VRBOData))
 #Remove rows with missing values and adjust the scales 
-vrboCleaned<-vrboData%>%
-  na.omit(vrboData)%>%
+vrboCleaned<-VRBOData%>%
+  na.omit(VRBOData)%>%
   select(-UnitNumber)
 #vrboCleaned$PctRentals=as.numeric((vrboCleaned$PctRentals)*100)
 ```
@@ -56,14 +56,14 @@ ggplot(data=vrboCleaned,aes(x=price))+
 ```
 
 ```{r}
-knitr::kable(table(vrboData$room_type))
+knitr::kable(table(VRBOData$room_type))
 ```
 
-We identified that the UnitNumber is a feature that should be removed from the data set before building the model, as it has 1423 different levels, and is irrelevant to the price of the vrbo rentals.A new data set "VrboCleaned" was created for the following sections.
+We identified that the UnitNumber is a feature that should be removed from the data set before building the model, as it has 1423 different levels, and is irrelevant to the price of the VRBO rental properties.A new data set "vrboCleaned" was created for the following sections.
 
 ## Part 3: Ridge Regression
 
-We utilized a correlation plot to explore if correlated columns exist in the data set.Thus, we created a correlation plot for numeric features in the data set to explore if there are potential correlations present between features.
+We utilized a correlation plot to explore if correlated features exist in the data set.Thus, we created a correlation plot for numeric features in the data set to explore if there are potential correlations between features.
 
 ```{r convert data type}
 #convert character features into factor
@@ -77,27 +77,26 @@ vrboCleaned$district<-as.factor(vrboCleaned$district)
 #Obtain correlation between features and save it as an object
 M<-cor(vrboCleaned[,-c(4,8,9)])
 #Create correlation plot
-corrplot(M, method= "circle",type = "upper",title="Figure 2.2 Correlation Plot of Numeric Variables in Vrbo Data Set ",mar = c(0,0,2,0))
+corrplot(M, method= "circle",type = "upper",title="Figure 2.2 Correlation Plot of Numeric Variables in VRBO Data Set ",mar = c(0,0,2,0))
 #M
 ```
 
-We can see from Figure 2.1 that several significant correlations are presented between features. If we use the traditional LSLR to fit the model, unreasonably large coefficients and high variance will occur in the model, which leads to a unusable regression model.Thus, shrinkage and selection techniques are appropriate to be used on building the model to resolve this issue.
+We can see from Figure 2.2 that several significant correlations exist between features. If we use the traditional LSLR to fit the model, unreasonably large coefficients and high variance will occur in the model, which leads to a unusable regression model.Thus, shrinkage and selection techniques are appropriate to be used on building the model to resolve this issue.
 
-Firstly, we use the ridge regression to fit the model, as it provides the effect of shrinkage. That is,shrinking the coefficients of correlated features towards 0, therefore limits the impacts from these features to the model to off set the negative effect induced by multicollinearity(correlated columns in data set). For this we need to find the tuning parameter that provides the best shirking effect.
+Firstly, we use the ridge regression to fit the model, as it provides the effect of shrinkage. That is,shrinking the coefficients of correlated features towards 0, therefore limits the impacts from these features to the model to off set the negative effect induced by multicollinearity(correlated features in data set). For this we need to find the tuning parameter that provides the best shirking effect.
 
 The general form of the model is: $$\boldsymbol{Y}=\boldsymbol{X_D\beta+\epsilon}$$
 
 The Residual Sum of Squares (RSS) of the model is defined as the standard deviation of observed values in the data set vs predicted values. The equation is : $$RSS=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^\mathbf{T}(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})$$
 
-where XD is our design matrix that consist of all the features in the data set,these features in the design matrix were standardized..
+,where XD is our design matrix that consist of all the features in the data set.
 
 For ridge regression ,we use RSS, plus the penalty term $\lambda\boldsymbol{\hat{\beta}^ \mathbf{T}\mathbf{\hat{\beta}}}$, which serves to constraining the regression coefficients under the presence of correlated features.
 
 Our goal is to find the $\boldsymbol{\beta}$ coefficients that minimizes the following:
 
-$$RSS + \lambda \boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$ To do this, we need to find the value of tuning parameter $\lambda$ that provides the most ideal shrinkage on the coefficients.
-
-We minimize the values of coefficients for each $\lambda$ value from 0 to 50, increment by 0.05 for each time.We choose to use the root mean square error(RMSE) to assess the predictive accuracy of each model that uses different values of $\lambda$(tuning parameter). The RMSE is defined as the square root of the mean squared error, which is the mean of the difference between the predicted values and observed values. The RMSE allows use to assess how well the model fits the observed data points, so that we can determine the predictive accuracy of the model. Lower RMSE indicates a higher predictive accuracy, higher RMSE, on the other hand, indicates lower predictive accuracy. We use 10 fold Cross Validation to calculate the RMSE and create a graph of change in RMSE in response of $\lambda$,and select the corresponding $\lambda$ value which provides the shrinkage that balance between variance and bias of the model.
+$$RSS + \lambda \boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$ 
+To do this, we need to find the value of tuning parameter $\lambda$ that provides the most ideal shrinkage. We fit models with $\lambda$ value from 0 to 50, increment by 0.05 for each time to find the ideal value of $\lambda$. We choose to use the root mean square error(RMSE) to assess the predictive accuracy of each model that uses different values of $\lambda$(tuning parameter). The RMSE is defined as the square root of the mean squared error, which is the mean of the difference between the predicted values and observed values. The RMSE allows us to assess how well the model fits the observed data points, so that we can determine the predictive accuracy of the model. Lower RMSE indicates a higher predictive accuracy, higher RMSE, on the other hand, indicates lower predictive accuracy.We use 10 fold Cross Validation to fit the model with to calculate the RMSE and then create a graph of change in RMSE in response of $\lambda$,and select the corresponding $\lambda$ value which provides the ideal extent of shrinkage, as well as balancing bias and variance. The features in the design matrix were standardized when performing 10 fold Cross Validation.
 
 ```{r creating design matrix ridge}
 # Create the design matrix for ridge regression
@@ -134,8 +133,7 @@ ridgePlot <- function(ridge.mod, metric, title){
 
 ```{r plot to determine the best lambda}
 #Using the ridgePlot function(imported) to create graph of RMSE in response to Lambda
-ridgePlot(ridge.modFind_Lambda, metric = "RMSE" , title ="Figure 3.1 RMSE in Response to Lambda(Ridge)" )
-
+ridgePlot(ridge.modFind_Lambda, metric = "RMSE" , title ="Figure 3.1 Change of RMSE in Response to  Change of Lambda(Ridge)" )
 ```
 
 ```{r ridge metrics}
@@ -144,12 +142,11 @@ CV_result_ridge<-data.frame("Lambda" = ridge.modFind_Lambda$lambda,"MSE" = ridge
 smallestRidge_MSE<-which.min(CV_result_ridge$MSE)
 smallestRidge_RMSE<-which.min(CV_result_ridge$RMSE)
 #CV_result_ridge[smallestRidge_MSE,]
-CV_result_ridge[smallestRidge_RMSE,]
 ```
 
-We can see from Figure 3.1 that the smallest RMSE appeared when the model is using $\lambda = 13.1$ as the tuning parameter for the ridge regression. Thus, we chooses this value of $\lambda$ as the tuning parameter for our final ridge regression model and fit the regression model. The coefficient were shown in the following table.
+We can see from Figure 3.1 that the smallest RMSE appeared when the model is using $\lambda = 13.1$ as the tuning parameter for the ridge regression. Thus, we chooses this value of $\lambda$ as the $\lambda$  for our final ridge regression model and fit the regression model. The coefficient were shown in the following table.
 
-```{r ridge}
+```{r ridge final}
 #Use ridge regression to fit the final model with chosen tuning parameter
 ridge.mod_Final <- glmnet(XD[,-1], vrboCleaned$price , alpha = 0 , lambda = 13.1 , standardize = TRUE)
 #Save coefficients for the ridge final model
@@ -163,13 +160,26 @@ knitr::kable(ridge_coef,caption = "Table 3.1 Coefficients of Model using Ridge R
 
 ```
 
+```{r}
+knitr::kable(CV_result_ridge[smallestRidge_RMSE,],caption = "Table 3.2 RMSE of Model with Chosen Lambda(Ridge)")
+
+```
+
+We can see from Table 3.2 that the RMSE of the final model with $\lambda = 13.1$ is 60.17, meaning that in average. the predicted value of prices deviates from the actual values in the data set by 60.17 dollars.
+
+
 ## Part 4: Lasso
 
-We then tried to use the lasso regression to fit the model for the prediction of vrbo price since it has the effect of both shrinkage and selection. In other words, lasso regression allows us to remove correlated features from the model to resolve multicollinearity issue without sacrificing the accuracy of the prediction from the model.Like the ridge regression, we need to find the best tuning parameter that controls the selection process and generate the model with the most favorable predictive accuracy.
+We then tried to use the lasso regression to fit the model for predicting  prices of VRBO rental properties since it has the effect of both shrinkage and selection. In other words, lasso regression allows us to remove correlated features from the model to resolve multicollinearity issue without potentially sacrificing the accuracy of the prediction from the model.Like the ridge regression, we need to find the best tuning parameter that controls the selection process and generate the model with the most favorable predictive accuracy.
 
-We use RSS, plus the penalty term $\lambda||\boldsymbol{\hat{\beta}}||$ for lasso regression. Our goal is the find the $\boldsymbol{\hat{\beta}}$ that minimize the following: $$RSS + \lambda \boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})+\lambda\sum|\hat{\beta_j}|$$. To do this, we minimized and select the coefficients for each $\lambda$ value from 0 to 50, increments by 0.05 for each time. We use the RMSE to assess the predictive accuracy of each model with different $\lambda$, and create a graph of change in RMSE in response of the change in $\lambda$, then select this $\lambda$ as the value of tuning parameter used in final model,as it provides the shrinkage and selection that lead to the highest predictive accuracy and balance between bias and variance.
+We use RSS, plus the penalty term $\lambda||\boldsymbol{\hat{\beta}}||_1$ for lasso regression. Our goal is the find the $\boldsymbol{\hat{\beta}}$ that minimize the following: $$RSS + \lambda \boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})+\lambda\sum|\hat{\beta_j}|$$. To do this, we fit models for each $\lambda$ value from 0 to 50, increments by 0.05 for each time, and compare the predictive accuracy of each model to determine the ideal value of $\lambda$.
 
-```{r}
+
+We choose the RMSE to assess the predictive accuracy of each model with different $\lambda$.We use 10 fold Cross Validation to fit the models and calculate the RMSE and then create a graph of change in RMSE in response of $\lambda$,then select the corresponding $\lambda$ value that provides the shrinkage that balance between variance and bias of the model.The features in the design matrix were standardized when performing 10 fold Cross Validation.
+
+
+
+```{r find best lambda for lasso}
 #Set seed for random sampling process within the cv.glmnet
 set.seed(1)
 #Fit modesls for a serie of lambda values, respectively 
@@ -180,7 +190,8 @@ ridgePlot(Lasso.modFind_Lambda, metric = "RMSE" , title ="Figure 4.1 RMSE in Res
 
 ```
 
-```{r lasso metrics}
+```{r lasso metrics, include=FALSE}
+#save result of lambda , MSE, RMSE to a data frame and get the smallest RMSE and corresponding lambda
 CV_result_lasso<-data.frame("Lambda" = Lasso.modFind_Lambda$lambda,"MSE" = Lasso.modFind_Lambda$cvm,"RMSE" = sqrt(Lasso.modFind_Lambda$cvm))
 smallestLasso_MSE<-which.min(CV_result_lasso$MSE)
 smallestLasso_RMSE<-which.min(CV_result_lasso$RMSE)
@@ -188,21 +199,30 @@ CV_result_lasso[smallestLasso_MSE,]
 CV_result_lasso[smallestLasso_RMSE,]
 ```
 
-We can see from Figure 4.1 that the lowest RMSE appeared when the model is using $\lambda=0.75$ as the tuning parameter. Thus, we choose $\lambda = 0.75$ as the final model for the prediction of price.The coefficients of the model are listed below.
+We can see from Figure 4.1 that the lowest RMSE appeared when the model is using $\lambda=0.75$ as the tuning parameter. Thus, we choose $\lambda = 0.75$ as the final model for the prediction of price.The coefficients of the model are listed below. Features removed during the selection process are marked as "removed"
 
 ```{r lasso final}
 lasso.mod_Final <- glmnet(XD[,-1], vrboCleaned$price , alpha = 1 , lambda = 0.75 , standardize = TRUE)
 Betas_lasso<-as.numeric(coefficients(lasso.mod_Final))
-lasso_coef<-data.frame("Coefficients" = Betas_lasso)
+lasso_coef<-data.frame("Coefficients" = Betas_lasso,"Selecting Status" = ifelse(Betas_elastic=="0","Removed",""))
 
 rownames(lasso_coef)<-colnames(XD)
 knitr::kable(lasso_coef,caption = "Table 4.1 Coefficients of Model using Lasso Regression")
 
 ```
 
+```{r}
+knitr::kable(CV_result_lasso[smallestLasso_RMSE,]
+, caption = "Table 4.2 RMSE with Chosen Lambda(Lasso)")
+```
+
+We can see from Table 4.2 that the RMSE of final model using $\lambda = 0.75$ is 60.36, indicating that in average, the predicted prices of VRBO properties deviates from actual values in the data set by 60.36 dollars. 
+
 ## Part 5: Elastic Net
 
-Ridge regression is effective on dealing with situation where we have more features than the number of rows, and constrain the impact of correlated features toward the model, while lasso has the advantage of shrinking and selecting features at the same time. However, ridge regression is unable to select features, and lasso regression is designed to select instead to shrink, which leads to model with limited features that sacrifices predictive accuracy. Therefore, we utilize the elastic net regression, which allows us to use both ridge and lasso regression at the same time to balance the shrinkage approach of ridge and ability of selection from lasso. In order to fit the model with the ideal predictive accuracy, we need to find the tuning parameters that controls the extent shrinkage and selection when fitting the model.For elastic net, we choose the $\boldsymbol{\hat{\beta}}$ that minimizes $$RSS + \lambda \sum((1-\alpha)\hat{\beta_j^2}+\alpha|\hat{\beta_j}|)$$. We minimize and select coefficients for each value of $\alpha$(from 0 to 1, increment by 0.01 each time) and $\lambda$(from 0 to 25, increment by 0.5 each time), and calculate the RMSE for each model.
+Ridge regression is effective on dealing with situation where we have more features than the number of rows, and constrain the impact of correlated features toward the model, while lasso has the advantage of shrinking and selecting features at the same time. However, ridge regression is unable to select features, and lasso regression is designed to select features instead of shrinking them, which leads to model with limited features that potentially sacrifices predictive accuracy. Therefore, we also utilize the elastic net regression, which allows us to use both ridge and lasso regression at the same time to balance the shrinkage approach of ridge and ability of selection from lasso, to fit the model for predicting the prices of VRBO rental properties. In order to fit the model with the best predictive accuracy, we need to find the ideal tuning parameters that controls the extent shrinkage and selection when fitting the model.For elastic net, we choose the $\boldsymbol{\hat{\beta}}$ that minimizes $$RSS + \lambda \sum((1-\alpha)\hat{\beta_j^2}+\alpha|\hat{\beta_j}|)$$.
+We use 10 fold Cross Validation fit models for each value of $\alpha$(from 0 to 1, increment by 0.01 each time) and $\lambda$(from 0 to 25, increment by 0.5 each time), and calculate the RMSE for each model.The features in the design matrix were standardized when performing 10 fold Cross Validation.
+
 
 ```{r find alpha and lambda with smallest RMSE}
 #Set a sequence of numbers from 0 to 1, increment by 0.01 each time 
@@ -213,6 +233,7 @@ storageElastic<-data.frame("Alpha" = rep(NA,length(alphaseq)), "Lambda" = rep(NA
 a=1
 #Set seed for random sampling 
 set.seed(1)
+#Loop to test each lambda and alpha and save MSE, RMSE with corresponding lambda and alpha to a dataframe
 for(i in alphaseq){
   Elastic.modFind<-cv.glmnet(XD[,-1],vrboCleaned$price,alpha = i, lambda = seq(from = 0, to = 25,by = .5))
   storageElastic$Lambda[a]<-Elastic.modFind$lambda.min
@@ -224,20 +245,21 @@ for(i in alphaseq){
 
 ```
 
+
 ```{r elastic metrics}
+#Get the smallest RMSE value as well as corresponding lambda and alpha
 smallestElastic_RMSE<-which.min(storageElastic$RMSE)
 knitr::kable(storageElastic[smallestElastic_RMSE,],caption = "Table 5.1 Smallest RMSE with Corresponding Alpha and Lambda")
 
-
 ```
 
-We can see from Table 5.1 that the lowest RMSE appeared when $\alpha=0.15$ and $\lambda = 5$. Thus we choose $\alpha = 0.15$ and $\lambda = 5$ to be the value of tuning parameters used in the final model. The coefficients of the final model using elastic net regression are list below.
+We can see from Table 5.1 that the lowest RMSE appeared when $\alpha=0.15$ and $\lambda = 5$. Thus we choose $\alpha = 0.15$ and $\lambda = 5$ to be the value of tuning parameters used in the final model. The coefficients of the final model using elastic net regression are list below. Features removed during the selection process were marked with "removed".
 
 ```{r elastic final model}
 elastic.modFinal<-glmnet(XD[,-1],vrboCleaned$price,alpha = 0.15,lambda = 5)
 
 Betas_elastic<-as.numeric(coefficients(elastic.modFinal))
-elastic_coef<-data.frame("Coefficients" = Betas_elastic)
+elastic_coef<-data.frame("Coefficients" = Betas_elastic,"Selecting Status" = ifelse(Betas_elastic==0,"Removed",""))
 rownames(elastic_coef)<-colnames(XD)
 
 knitr::kable(elastic_coef,caption = "Table  5.1 Coefficients of Model using Elastic Net")
@@ -247,6 +269,8 @@ knitr::kable(elastic_coef,caption = "Table  5.1 Coefficients of Model using Elas
 
 We listed out the coefficient table of three regression method we used, and compare predictive metrics and predictive accuracy of the three models.
 
+
+
 ```{r coefficient data frame}
 #Create a data frama to hold all the coefficeints from each regression model
 Coefficient_Comparison<-data.frame("Ridge" = rep(NA,62), "Lasso" = rep(NA,62),"Elastic Net" = rep(NA,62))
@@ -255,17 +279,17 @@ Coefficient_Comparison$Ridge=ridge_coef$Coefficients
 Coefficient_Comparison$Lasso=lasso_coef$Coefficients
 Coefficient_Comparison$Elastic.Net=elastic_coef$Coefficients
 
-
-
 knitr::kable(Coefficient_Comparison,caption = "Table 6.1 Coefficients of Ridge, Lasso and Elastic Net Regression")
 ```
 
-Table 6.2 Comparison Across Ridge, Lasso and Elastic Net on Tuning Parameter, Predictive Accuracy Metrics, and Features
+Table 6.2 Comparison Across Ridge, Lasso and Elastic Net on Tuning Parameter, Predictive Accuracy Metrics, and Features(intercept removed)
 
 | Method      | Tuning Parameter               | Test MSE | Test RMSE | Features |
 |-------------|--------------------------------|----------|-----------|----------|
-| Ridge       | 13.1                           | 3620.68  | 60.17     | 62       |
-| Lasso       | 0.75                           | 3643.55  | 60.36     | 34       |
-| Elastic Net | $\alpha$ = 0.15, $\lambda$ = 5 | 3531.36  | 59.34     | 37       |
+| Ridge       | 13.1                           | 3620.68  | 60.17     | 61       |
+| Lasso       | 0.75                           | 3643.55  | 60.36     | 36       |
+| Elastic Net | $\alpha$ = 0.15, $\lambda$ = 5 | 3531.36  | 59.34     | 36       |
 
-We can see from Table 6.2 that the model fitted with elastic net has the lowest RMSE of 59.34 among the three models fitted for predicting the price of vrbo rentals(with $\alpha = 0.15$ and $\lambda = 5$). The RMSE of model built through elastic net is 1.7% lower than the model built with lasso, and 1.4% lower than the model built with ridge. Therefore, we conclude that the model built with elastic net regression offers the best prediction to the price of vrbo rental properties.
+We can see from Table 6.2 that the RMSE of model built through ridge, lasso and elastic net, which indicates the estimated standard deviation of residuals of the model, are 60.17, 60.36 and 59.34, respectively. The RMSE of ridge model is 60.17, which is about 0.3% lower than the RMSE of lasso model. We can see that the elastic net model performs better at prediction than the other two models.The RMSE of model built through elastic net is 1.7% lower than the model built with lasso, and 1.4% lower than the model built with ridge. The model fitted with elastic net has the lowest RMSE of 59.34 among the three models fitted for predicting the price of VRBO rentals(with $\alpha = 0.15$ and $\lambda = 5$), which means in average, the predicted prices deviate from the actual price for 59.34. Consider the range the price varies in the data set(from 0 to 1000), this RMSE indicates a relatively better predictive accuracy of the model, which also simultaneously balance bias and variance 
+
+Therefore, we conclude that the model built with elastic net regression offers the best prediction to the price of VRBO rental properties.
