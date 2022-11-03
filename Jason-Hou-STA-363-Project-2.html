@@ -438,32 +438,37 @@ correlated features towards 0, therefore limits the impacts from these
 features to the model to off set the negative effect induced by
 multicollinearity(correlated columns in data set). For this we need to
 find the tuning parameter that provides the best shirking effect.</p>
-<p>The Residual Sum of Squares (RSS) of a model is defined as the
+<p>The general form of the model is: <span class="math display">\[\boldsymbol{Y}=\boldsymbol{X_D\beta+\epsilon}\]</span></p>
+<p>The Residual Sum of Squares (RSS) of the model is defined as the
 standard deviation of observed values in the data set vs predicted
-values. The equation is : <span class="math display">\[RSS=(\boldsymbol{Y-X_\mathbf{D}\widehat{\beta}})^\mathbf{T}(\boldsymbol{Y-X_\mathbf{D}\widehat{\beta}})\]</span></p>
-<p>where XD is our design matrix that consist of</p>
-<p>For ridge regression ,we will use RSS, plus the penalty term <span class="math inline">\(\lambda\boldsymbol{\widehat{\beta}^
-\mathbf{T}\mathbf{\widehat{\beta}}}\)</span>, which serves to
-constraining the regression coefficients under the presence of
-correlated features.</p>
-<p>Our goal is to find the tuning parameter <span class="math inline">\(\lambda\)</span>, as well as the <span class="math inline">\(\boldsymbol{\beta}\)</span> that minimizes the
-following:</p>
+values. The equation is : <span class="math display">\[RSS=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^\mathbf{T}(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})\]</span></p>
+<p>where XD is our design matrix that consist of all the features in the
+data set,these features in the design matrix were standardized..</p>
+<p>For ridge regression ,we use RSS, plus the penalty term <span class="math inline">\(\lambda\boldsymbol{\hat{\beta}^
+\mathbf{T}\mathbf{\hat{\beta}}}\)</span>, which serves to constraining
+the regression coefficients under the presence of correlated
+features.</p>
+<p>Our goal is to find the <span class="math inline">\(\boldsymbol{\beta}\)</span> coefficients that
+minimizes the following:</p>
 <p><span class="math display">\[RSS + \lambda
-\boldsymbol{\widehat{\beta}^\mathbf{T}\mathbf{\widehat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\widehat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\widehat{\beta}})+\lambda\boldsymbol{\widehat{\beta}^\mathbf{T}\mathbf{\widehat{\beta}}}\]</span></p>
-<p>In order to find the best <span class="math inline">\(\lambda\)</span> value that provides the most
-appropriate shrinkage for the coefficients, we are going to minimize the
-values of coefficients for each <span class="math inline">\(\lambda\)</span> value from 0 to 50, increment by
-0.05 for each time.We used the root mean square error(RMSE) to assess
-the predictive accuracy of each model that uses different values of
-<span class="math inline">\(\lambda\)</span>(tuning parameter). The RMSE
-is defined as the square root of the mean squared error, which is the
-mean of the difference between the predicted values and observed values.
-The RMSE allows use to assess how well the model fits the observed data
-points, so that we can determine the predictive accuracy of the model.
-Lower RMSE indicates a higher predictive accuracy, higher RMSE, on the
-other hand, indicates lower predictive accuracy. 10 fold Cross
-Validation was used to calculate the RMSE, the features in the design
-matrix were standardized.</p>
+\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}\]</span>
+To do this, we need to find the value of tuning parameter <span class="math inline">\(\lambda\)</span> that provides the most ideal
+shrinkage on the coefficients.</p>
+<p>We minimize the values of coefficients for each <span class="math inline">\(\lambda\)</span> value from 0 to 50, increment by
+0.05 for each time.We choose to use the root mean square error(RMSE) to
+assess the predictive accuracy of each model that uses different values
+of <span class="math inline">\(\lambda\)</span>(tuning parameter). The
+RMSE is defined as the square root of the mean squared error, which is
+the mean of the difference between the predicted values and observed
+values. The RMSE allows use to assess how well the model fits the
+observed data points, so that we can determine the predictive accuracy
+of the model. Lower RMSE indicates a higher predictive accuracy, higher
+RMSE, on the other hand, indicates lower predictive accuracy. We use 10
+fold Cross Validation to calculate the RMSE and create a graph of change
+in RMSE in response of <span class="math inline">\(\lambda\)</span>,and
+select the corresponding <span class="math inline">\(\lambda\)</span>
+value which provides the shrinkage that balance between variance and
+bias of the model.</p>
 <pre class="r"><code># Create the design matrix for ridge regression
 XD &lt;- model.matrix(price ~., data = vrboCleaned)</code></pre>
 <pre class="r"><code>#Set seed for random sampling
@@ -760,6 +765,25 @@ Regression</caption>
 </div>
 <div id="part-4-lasso" class="section level2">
 <h2>Part 4: Lasso</h2>
+<p>We then tried to use the lasso regression to fit the model for the
+prediction of vrbo price since it has the effect of both shrinkage and
+selection. In other words, lasso regression allows us to remove
+correlated features from the model to resolve multicollinearity issue
+without sacrificing the accuracy of the prediction from the model.Like
+the ridge regression, we need to find the best tuning parameter that
+controls the selection process and generate the model with the most
+favorable predictive accuracy.</p>
+<p>We use RSS, plus the penalty term <span class="math inline">\(\lambda||\boldsymbol{\hat{\beta}}||\)</span> for
+lasso regression. Our goal is the find the <span class="math inline">\(\boldsymbol{\hat{\beta}}\)</span> that minimize
+the following: <span class="math display">\[RSS + \lambda
+\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})+\lambda\sum|\hat{\beta_j}|\]</span>.
+To do this, we minimized and select the coefficients for each <span class="math inline">\(\lambda\)</span> value from 0 to 50, increments by
+0.05 for each time. We use the RMSE to assess the predictive accuracy of
+each model with different <span class="math inline">\(\lambda\)</span>,
+and create a graph of change in RMSE in response of the change in <span class="math inline">\(\lambda\)</span>, then select this <span class="math inline">\(\lambda\)</span> as the value of tuning parameter
+used in final model,as it provides the shrinkage and selection that lead
+to the highest predictive accuracy and balance between bias and
+variance.</p>
 <pre class="r"><code>#Set seed for random sampling process within the cv.glmnet
 set.seed(1)
 #Fit modesls for a serie of lambda values, respectively 
@@ -780,8 +804,8 @@ CV_result_lasso[smallestLasso_MSE,]</code></pre>
 <p>We can see from Figure 4.1 that the lowest RMSE appeared when the
 model is using <span class="math inline">\(\lambda=0.75\)</span> as the
 tuning parameter. Thus, we choose <span class="math inline">\(\lambda =
-0.75\)</span> as the <span class="math inline">\(\lambda\)</span> value
-for the final model.</p>
+0.75\)</span> as the final model for the prediction of price.The
+coefficients of the model are listed below.</p>
 <pre class="r"><code>lasso.mod_Final &lt;- glmnet(XD[,-1], vrboCleaned$price , alpha = 1 , lambda = 0.75 , standardize = TRUE)
 Betas_lasso&lt;-as.numeric(coefficients(lasso.mod_Final))
 lasso_coef&lt;-data.frame(&quot;Coefficients&quot; = Betas_lasso)
@@ -1051,6 +1075,25 @@ Regression</caption>
 </div>
 <div id="part-5-elastic-net" class="section level2">
 <h2>Part 5: Elastic Net</h2>
+<p>Ridge regression is effective on dealing with situation where we have
+more features than the number of rows, and constrain the impact of
+correlated features toward the model, while lasso has the advantage of
+shrinking and selecting features at the same time. However, ridge
+regression is unable to select features, and lasso regression is
+designed to select instead to shrink, which leads to model with limited
+features that sacrifices predictive accuracy. Therefore, we utilize the
+elastic net regression, which allows us to use both ridge and lasso
+regression at the same time to balance the shrinkage approach of ridge
+and ability of selection from lasso. In order to fit the model with the
+ideal predictive accuracy, we need to find the tuning parameters that
+controls the extent shrinkage and selection when fitting the model.For
+elastic net, we choose the <span class="math inline">\(\boldsymbol{\hat{\beta}}\)</span> that minimizes
+<span class="math display">\[RSS + \lambda
+\sum((1-\alpha)\hat{\beta_j^2}+\alpha|\hat{\beta_j}|)\]</span>. We
+minimize and select coefficients for each value of <span class="math inline">\(\alpha\)</span>(from 0 to 1, increment by 0.01
+each time) and <span class="math inline">\(\lambda\)</span>(from 0 to
+25, increment by 0.5 each time), and calculate the RMSE for each
+model.</p>
 <pre class="r"><code>#Set a sequence of numbers from 0 to 1, increment by 0.01 each time 
 alphaseq&lt;-seq(from = 0, to = 1, by = 0.01)
 #Create empty data frame to hold alpha, lambda and RMSE of each model fitted with corresponding tuning parameter
@@ -1068,9 +1111,32 @@ for(i in alphaseq){
   a=a+1
 }</code></pre>
 <pre class="r"><code>smallestElastic_RMSE&lt;-which.min(storageElastic$RMSE)
-storageElastic[smallestElastic_RMSE,]</code></pre>
-<pre><code>##    Alpha Lambda      MSE     RMSE
-## 16  0.15      5 3521.362 59.34106</code></pre>
+knitr::kable(storageElastic[smallestElastic_RMSE,],caption = &quot;Table 5.1 Smallest RMSE with Corresponding Alpha and Lambda&quot;)</code></pre>
+<table>
+<caption>Table 5.1 Smallest RMSE with Corresponding Alpha and
+Lambda</caption>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">Alpha</th>
+<th align="right">Lambda</th>
+<th align="right">MSE</th>
+<th align="right">RMSE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">16</td>
+<td align="right">0.15</td>
+<td align="right">5</td>
+<td align="right">3521.362</td>
+<td align="right">59.34106</td>
+</tr>
+</tbody>
+</table>
+<p>We can see from Table 5.1 that the lowest RMSE appeared when <span class="math inline">\(\alpha=0.15\)</span> and <span class="math inline">\(\lambda = 5\)</span>. Thus we choose <span class="math inline">\(\alpha = 0.15\)</span> and <span class="math inline">\(\lambda = 5\)</span> to be the value of tuning
+parameters used in the final model. The coefficients of the final model
+using elastic net regression are list below.</p>
 <pre class="r"><code>elastic.modFinal&lt;-glmnet(XD[,-1],vrboCleaned$price,alpha = 0.15,lambda = 5)
 
 Betas_elastic&lt;-as.numeric(coefficients(elastic.modFinal))
@@ -1340,9 +1406,12 @@ knitr::kable(elastic_coef,caption = &quot;Table  5.1 Coefficients of Model using
 </div>
 <div id="part-6-comparison-and-conclusion" class="section level2">
 <h2>Part 6: Comparison and Conclusion</h2>
+<p>We listed out the coefficient table of three regression method we
+used, and compare predictive metrics and predictive accuracy of the
+three models.</p>
 <pre class="r"><code>#Create a data frama to hold all the coefficeints from each regression model
 Coefficient_Comparison&lt;-data.frame(&quot;Ridge&quot; = rep(NA,62), &quot;Lasso&quot; = rep(NA,62),&quot;Elastic Net&quot; = rep(NA,62))
-#Assign coefficeints to corresponding colums in the data set
+#Assign coefficients to corresponding columns in the data set
 Coefficient_Comparison$Ridge=ridge_coef$Coefficients
 Coefficient_Comparison$Lasso=lasso_coef$Coefficients
 Coefficient_Comparison$Elastic.Net=elastic_coef$Coefficients
@@ -1716,6 +1785,14 @@ Parameter, Predictive Accuracy Metrics, and Features</p>
 </tr>
 </tbody>
 </table>
+<p>We can see from Table 6.2 that the model fitted with elastic net has
+the lowest RMSE of 59.34 among the three models fitted for predicting
+the price of vrbo rentals(with <span class="math inline">\(\alpha =
+0.15\)</span> and <span class="math inline">\(\lambda = 5\)</span>). The
+RMSE of model built through elastic net is 1.7% lower than the model
+built with lasso, and 1.4% lower than the model built with ridge.
+Therefore, we conclude that the model built with elastic net regression
+offers the best prediction to the price of vrbo rental properties.</p>
 </div>
 </div>
 
