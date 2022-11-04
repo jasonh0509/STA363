@@ -29,6 +29,8 @@ library(xtable)
 
 ## Part 1 Introduction of Data
 
+We are working on the data set that records 1561 VRBO rental properties. The data set contains the information about attributes of the property that might impact the rental price of the properties, including the overall satisfaction score and reviews from customers, the capacity of the properties, location, percentage of rental property nearby and traffic-related attributes. The goal of our client is to use the data to build a model for predicting the price of a rental, which can be used to help the client to set appropriate prices for new rental properties so that make them more likely to be rented out. 
+
 ```{r load data, include=FALSE}
 VRBOData<-read.csv("VRBO.csv")
 ```
@@ -41,7 +43,7 @@ glimpse(VRBOData)
 
 ```{r checking and cleaning}
 # Find out the number of missing values in the VRBO data set
-sum(is.na(VRBOData))
+knitr::kable(sum(is.na(VRBOData)),caption = "Table 2.1 Number of Missing Values")
 #Remove rows with missing values and adjust the scales 
 vrboCleaned<-VRBOData%>%
   na.omit(VRBOData)%>%
@@ -55,9 +57,7 @@ ggplot(data=vrboCleaned,aes(x=price))+
   ggtitle("Figure 2.1 Distribution of Price")
 ```
 
-```{r}
-knitr::kable(table(VRBOData$room_type))
-```
+138 rows with missing values were found from the data set. They are removed from data set. The 1423 observations were used for the following steps.
 
 We identified that the UnitNumber is a feature that should be removed from the data set before building the model, as it has 1423 different levels, and is irrelevant to the price of the VRBO rental properties.A new data set "vrboCleaned" was created for the following sections.
 
@@ -293,6 +293,4 @@ We can see from Table 6.2 that the RMSE of model built through ridge, lasso and 
 
 The model fitted with elastic net has the lowest RMSE of 59.34 among the three models fitted for predicting the price of VRBO rentals(with $\alpha = 0.15$ and $\lambda = 5$), which means in average, the predicted prices deviate from the actual price for 59.34 dollars. Consider the range the price varies in the data set(from 0 to 1000), this RMSE indicates a relatively better predictive accuracy of the model, which also simultaneously balance bias and variance.
 
-While ridge regression allows us to keep all the features provided in the model, including all the features in the model could increase model's complexity and cause overfitting , in other words, make the model fitted tuned too tight the training data and unusable for prediction based on new data.Also, the task of fitting the model with all the features given could be computationally expensive when it comes to the real-world setting. Lasso regression allows us to completely remove correlated features instead of shrinking them, but it also imposes limitation on the number of features selected, which lead to a lower predictive accuracy compare to ridge regression and lasso regression as it shown in Table 6.2. We can see that the elastic net model performs better at prediction than the other two models,  
-
-Therefore, we conclude that the model built with elastic net regression offers the best prediction to the price of VRBO rental properties.
+While ridge regression allows us to keep all the features provided in the model, including all the features in the model could increase model's complexity and cause overfitting , in other words, make the model fitted tuned too tight the training data and unusable for prediction based on new data.Also, the task of fitting the model with all the features given could be computationally expensive when it comes to the real-world setting. Lasso regression allows us to completely remove correlated features instead of shrinking them, but it also imposes limitation on the number of features selected, which lead to a lower predictive accuracy compare to ridge regression and lasso regression as it shown in Table 6.2. We can see that the elastic net model performs better at prediction than the other two models.Therefore, we conclude that the model built with elastic net regression offers the best prediction to the price of VRBO rental properties, and choose it as the most idea model to be used for predicting the price of a VRBO rental property.
