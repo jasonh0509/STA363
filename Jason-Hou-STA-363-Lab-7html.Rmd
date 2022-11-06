@@ -1,0 +1,25 @@
+---
+title: "Jason Hou STA 363 Lab 7"
+author: "Jason Hou"
+date: '2022-11-06'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages}
+library(palmerpenguins)
+# Grows the tree
+library(rpart)
+# Allows us to visualize the tree
+library(rattle)
+library(rpart.plot)
+```
+
+```{r data}
+data(penguins)
+penguins <- na.omit(penguins)
+```
+
