@@ -23,3 +23,16 @@ data(penguins)
 penguins <- na.omit(penguins)
 ```
 
+## Question 1
+*Is this an association task or a prediction task?*
+
+This is an association task because the response variable is numeric.
+
+
+## Question 2
+*In the root, what is the predicted value $\hat{Y_i}$ for all penguins?*
+
+```{r}
+
+```
+
