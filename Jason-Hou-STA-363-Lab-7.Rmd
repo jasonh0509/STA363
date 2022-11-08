@@ -1,0 +1,122 @@
+---
+title: "Jason Hou STA 363 Lab 7"
+author: "Jason Hou"
+date: '2022-11-06'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r packages}
+library(palmerpenguins)
+# Grows the tree
+library(rpart)
+# Allows us to visualize the tree
+library(rattle)
+library(rpart.plot)
+library(dplyr)
+```
+
+```{r data}
+data(penguins)
+penguins <- na.omit(penguins)
+```
+
+## Question 1
+*Is this an association task or a prediction task?*
+
+This is an association task because the response variable is numeric.
+
+
+## Question 2
+*In the root, what is the predicted value $\hat{Y_i}$ for all penguins?*
+
+```{r root model}
+predicted<-mean(penguins$body_mass_g)
+knitr::kable(predicted,caption = "Table 1: Predicted Value of Root Node")
+```
+
+The predicted value $\hat{Y_i}$ for all penguins in root is 4207.06.
+
+
+
+
+## Question  3
+*What is the RSS and RMSE with all the data in the root node (i.e, using no features)?*
+
+
+```{r RMSE}
+RMSE_root<-sqrt(mean((penguins$body_mass_g - predicted)^2))
+RSS<-sum((penguins$body_mass_g-predicted)^2)
+RMSE_RSS<-data.frame("RMSE" = RMSE_root,"RSS" = RSS)
+knitr::kable(RMSE_RSS,caption = "Table 2: RMSE and RSS of Root Node")
+```
+
+## Quetion 4
+*With species as a feature, what are all the possible splitting rules we could use to divide the root into two leaves? Note: Order doesn’t matter.*
+
+```{r}
+table(penguins$species)%>%
+  knitr::kable(caption = "Table 3. Type of Peguin Species in Data Set")
+```
+
+We can see from  Table 3 that there are 3 types of penguins in the data set,therfore, there are 3 splitting rules we could use to divide the root into two leaves, they are:
+1. Is the penguin an Adelie penguin?
+2. Is the penguin an Chinstrap penguin?
+3. Is the penguin an Gentoo penguin?
+
+## Question 5
+
+```{r simulate tree}
+n<-nrow(penguins)
+Y<-penguins$body_mass_g
+X<-penguins$species
+
+#TypeSpecies<-seq("Adelie","Chinstrap","Gentoo")
+species<-c("Adelie","Chinstrap","Gentoo")
+RSS<-rep(0,length(species))
+t <- 1
+for(i in species){
+  leaf1<-which(X==i)
+  leaf2<-c(1:n)[-leaf1]
+  mean1<-mean(Y[leaf1])
+  mean2<-mean(Y[leaf2])
+
+  preds<-rep(0,n)
+  
+  preds[leaf1]<-mean1
+  preds[leaf2]<-mean2
+  RSS[t]<-sum((Y-preds)^2)
+  t<-t+1
+}
+```
+
+
+
+## Question 6
+
+```{r}
+species[which.min(RSS)]
+```
+
+Based on the result of Question 5, I recommend that we use "Is the penguin a Gentoo penguin" to split the root node into 2 trees. 
+
+
+## Question 7
+
+```{r}
+tree1<- rpart(body_mass_g ~ species, data = penguins, method = "anova", maxdepth = 1)
+
+# Option 1 
+fancyRpartPlot(tree1, sub = "Figure 1: One Split")
+```
+
+We can see from Figure 1 that 36 percent of penguins are in leaf 2.
+
+## Question 8
+
+The tree predicts that all Chinstrap penguins has body mass of 3715 grams.
+
+## Question 9
