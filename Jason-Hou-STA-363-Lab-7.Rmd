@@ -137,3 +137,33 @@ The LSLR model fitted is $$BodyMass_i = 3714.72+1377.717Gentoo_i$$
 *Based on the regression model, what body mass would you predict for a Chinstrap penguin? Keeping in mind that in the visualization our trees round to the nearest whole number, how do these predictions compare to those you made from the tree?*
 
 Based on the regression model, I would predict that a Chinstrap penguin to have body mass of 3714.72 grams. 
+
+
+## Question 11
+*Find the training RSS that we would get if we built a tree with one split using each of the possible splitting rules on flipper length. Show your code and the RSS for each splitting rule. Which splitting rule should we use? Hint: A for loop helps is required here. Write out the steps in words before you start to code. This will help you figure out what each line of code needs to do.*
+
+```{r}
+n2<-nrow(penguins)
+Y2<-penguins$body_mass_g
+X2<-penguins$flipper_length_mm
+
+#TypeSpecies<-seq("Adelie","Chinstrap","Gentoo")
+rangeFlipper<-seq(from = min(X2),to = max(X2))
+RSS_Flip<-rep(0,length(rangeFlipper))
+#t <- 1
+for(j in 1:length(rangeFlipper)){
+  leaf1_flip<-which(X2<rangeFlipper[j])
+  leaf2_flip<-c(1:n2)[-leaf1_flip]
+  mean1_flip<-mean(Y2[leaf1_flip])
+  mean2_flip<-mean(Y2[leaf2_flip])
+
+  preds_flip<-rep(0,n2)
+  
+  preds_flip[leaf1_flip]<-mean1_flip
+  preds_flip[leaf2_flip]<-mean2_flip
+  RSS_Flip[j]<-sum((Y2-preds_flip)^2)
+ # t<-t+1
+}
+rangeFlipper[which.min(RSS_Flip)]
+```
+
