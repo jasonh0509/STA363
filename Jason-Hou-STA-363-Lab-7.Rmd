@@ -98,13 +98,14 @@ for(i in species){
 ## Question 6
 
 ```{r}
-species[which.min(RSS)]
+knitr::kable(species[which.min(RSS)],caption = "Table 4. Splitting Rule with Lowerst RSS")
 ```
 
 Based on the result of Question 5, I recommend that we use "Is the penguin a Gentoo penguin" to split the root node into 2 trees. 
 
 
 ## Question 7
+*What percent of penguins are in leaf 2?*
 
 ```{r}
 tree1<- rpart(body_mass_g ~ species, data = penguins, method = "anova", maxdepth = 1)
@@ -116,7 +117,23 @@ fancyRpartPlot(tree1, sub = "Figure 1: One Split")
 We can see from Figure 1 that 36 percent of penguins are in leaf 2.
 
 ## Question 8
+*What body mass does the tree predict for all Chinstrap penguins?*
 
 The tree predicts that all Chinstrap penguins has body mass of 3715 grams.
 
 ## Question 9
+
+*Fit a least squares linear regression model for body mass, using whether or not a penguin is a Gentoo penguin as a feature. Call this model LSLR1. Write out the fitted regression line. Hint: To specify an indicator variable for a specific level of a categorical variable, you can use, for instance, (species==“Adelie”). The ( ) are important.*
+
+```{r LSLR}
+LSLR1<-lm(body_mass_g~(species == "Gentoo"),data = penguins)
+knitr::kable(summary(LSLR1)$coefficients,caption = "Table 5. LSLR Model Table with Species = \"Gentoo\"")
+```
+
+The LSLR model fitted is $$BodyMass_i = 3714.72+1377.717Gentoo_i$$
+
+
+## Question 10
+*Based on the regression model, what body mass would you predict for a Chinstrap penguin? Keeping in mind that in the visualization our trees round to the nearest whole number, how do these predictions compare to those you made from the tree?*
+
+Based on the regression model, I would predict that a Chinstrap penguin to have body mass of 3714.72 grams. 
