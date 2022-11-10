@@ -167,3 +167,18 @@ for(j in 1:length(rangeFlipper)){
 rangeFlipper[which.min(RSS_Flip)]
 ```
 
+## Question 12
+
+```{r}
+tree2<- rpart(body_mass_g ~ flipper_length_mm, data = penguins, method = "anova", maxdepth = 1)
+
+
+fancyRpartPlot(tree2, sub = "Figure 2: One Split with Flipper Length")
+```
+
+
+## Question 13
+
+Based on the tree, I would predict a penguin with a flipper length of 210 mm to have body mass of 5047 grams.
+
+

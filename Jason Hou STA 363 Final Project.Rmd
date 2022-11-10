@@ -1,0 +1,81 @@
+---
+title: "Final Project"
+author: "Jason Hou"
+date: '2022-11-08'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r load packages, include=FALSE}
+##Here we load the packages needed
+library(ggplot2)
+library(broom)
+library(gridExtra)
+library(dplyr)
+library(class)
+library(tidyverse)
+library(gridExtra)
+library(leaps)
+library(corrplot)
+library(RColorBrewer)
+library(glmnet)
+library(xtable)
+
+```
+
+```{r}
+stroke<-read.csv("StrokeData.csv")
+stroke<-na.omit(stroke)
+stroke$bmi<-as.numeric(stroke$bmi)
+```
+
+```{r}
+M<-cor(stroke[-c(1,2,6,7,8,11,12)])
+corrplot(M, method= "circle",type = "upper",title="Stroke ",mar = c(0,0,2,0))
+```
+
+```{r creating design matrix ridge}
+# Create the design matrix for ridge regression
+XD <- model.matrix(stroke ~., data = stroke)
+```
+
+```{r cv to find the best lambda}
+#Set seed for random sampling
+set.seed(1)
+#Run cross validation for lambda value from 1 to 50(increment by 0.05 for each run)
+ridge.modFind_Lambda <- cv.glmnet(XD[,-c(1,12)], stroke$stroke , alpha = 1, standardize = TRUE,family = "binomial")
+```
+
+```{r load a function, include=FALSE}
+##Load a function for creating the plot of RMSE in response of change in Lambda
+ridgePlot <- function(ridge.mod, metric, title){
+  library(ggplot2)
+  
+  smallestLambda <- ridge.mod$lambda[which.min(ridge.mod$cvm)] 
+  
+  if(metric == "MSE"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = (ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test MSE values for Different Tuning Parameters. Smallest MSE at lambda = ", smallestLambda), title = title, y = "Test MSE", x = "Tuning Parameter")
+  
+  }
+  
+  if(metric == "RMSE"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = sqrt(ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test RMSE values for Different Tuning Parameters. Smallest RMSE at lambda = ", smallestLambda), title = title, y = "Test RMSE", x = "Tuning Parameter")
+
+  }
+  
+  g1
+}
+```
+
+```{r}
+ridgePlot(ridge.modFind_Lambda, metric = "RMSE" , title ="Figure 3.2 Change of RMSE in Response to  Change of Lambda(Ridge)" )
+
+```
+
+
+
