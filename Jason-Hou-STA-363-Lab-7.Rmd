@@ -92,6 +92,8 @@ for(i in species){
   RSS[t]<-sum((Y-preds)^2)
   t<-t+1
 }
+RSS_spliting_rules<-data.frame("Is Adelie/?" = RSS[1],"Is Chinstrap/?" = RSS[2],"Is Gentoo/?" = RSS[3])
+knitr::kable(RSS_spliting_rules,caption = "Table 4.RSS of Each Splitting Rule")
 ```
 
 
@@ -129,7 +131,7 @@ The tree predicts that all Chinstrap penguins has body mass of 3715 grams.
 
 ```{r LSLR, warning=FALSE}
 LSLR1<-lm(body_mass_g~(species == "Gentoo"),data = penguins)
-knitr::kable(summary(LSLR1)$coefficients,caption = "Table 5. LSLR Model Table with Species = \"Gentoo\"")
+knitr::kable(summary(LSLR1)$coefficients,caption = "Table 6. LSLR Model Table with Species = \"Gentoo\"")
 ```
 
 The LSLR model fitted is $$BodyMass_i = 3714.72+1377.717Gentoo_i$$
@@ -168,7 +170,7 @@ for(j in 1:length(rangeFlipper)){
 }
 
 knitr::kable(rangeFlipper[which.min(RSS_Flip)]
-,caption = "Table 6. Training RSS (Using Flipper Length to Split")
+,caption = "Table 7. Training RSS (Using Flipper Length to Split")
 ```
 
 We should use the splitting rule "Does this penguin have flipper length shorter than 207 mm? ".
@@ -193,7 +195,7 @@ Based on the tree, I would predict a penguin with a flipper length of 210 mm to 
 
 ```{r LSLR2, warning=FALSE}
 LSLR2<-lm(body_mass_g~flipper_length_mm,data = penguins)
-knitr::kable(summary(LSLR2)$coefficients,caption = "Table 7. LSLR Model Table Body Mss vs. Flipper Length")
+knitr::kable(summary(LSLR2)$coefficients,caption = "Table 8. LSLR Model Table Body Mss vs. Flipper Length")
 ```
 
 The fitted regression line for LSLR2 is $$BodyMass_i = -5872.09+50.153Flipper\_length\_mm$$
@@ -225,7 +227,7 @@ yhat_lslr<-predict(LSLR2,newdata = penguins)
 RMSE_LSLR2<-sqrt(mean((penguins$body_mass_g - yhat_lslr)^2))
 
 Tree_vs_LSLR<-data.frame("RMSE_LSLR" = RMSE_LSLR2,"RMSE_Tree" = RMSE_tree2)
-knitr::kable(Tree_vs_LSLR,caption = "Table 8. RMSE of LSLR and Tree(Flipper Length) ")
+knitr::kable(Tree_vs_LSLR,caption = "Table 9. RMSE of LSLR and Tree(Flipper Length) ")
 
 ```
 
@@ -260,17 +262,17 @@ The tree uses species, and sex of the penguins when growing the tree.
 
 *In Tree 4, which feature was able to give us the largest reduction in training RSS in one split?*
 
-
 ```{r, warning=FALSE}
 #One Split
 One_split<-sqrt(mean((penguins$body_mass_g - predict(tree1))^2))
 ##Second Split
 Two_split<-sqrt(mean((penguins$body_mass_g - predict(tree4))^2))
 one_split_vs_two<-data.frame("Root RMSE" = RMSE_root,"One Split RMSE" = One_split,"Two Split RMSE" = Two_split )
-knitr::kable(one_split_vs_two,caption = "Table 9. Penguin Body Mass Prediction RMSE of Root, One Split and Two Splits")
+knitr::kable(one_split_vs_two,caption = "Table 10. Penguin Body Mass Prediction RMSE of Root, One Split and Two Splits")
 ```
-
-The feature that gives us the largest reduction in training RSS in one split is species.
+$$RMSE\ Reduction\ After\ First\ Split= 804.0059-485.8243=345.1816$$
+$$RMSE\ Reduction\ After\ Second\ Split= 458.8243-310.6606=148.1637$$
+The feature that gives us the largest reduction in training RSS in one split is species, since the difference between RMSE of root node and RMSE of first split is larger than it between RMSE of first split and RMSE of second split.
 
 ## Question 21
 
@@ -278,7 +280,7 @@ The feature that gives us the largest reduction in training RSS in one split is 
 
 ```{r, warning=FALSE}
 Third_penguin<-predict(tree4,newdata = penguins[3,])
-knitr::kable(Third_penguin,caption = "Table 10. Predicted Body Mass of 3rd Penguin in Data Set")
+knitr::kable(Third_penguin,caption = "Table 11. Predicted Body Mass of 3rd Penguin in Data Set")
 ```
 
 Based on tree 4, the predicted body mass for the 3rd penguin in the data set is 3419.159 grams.
@@ -288,7 +290,7 @@ Based on tree 4, the predicted body mass for the 3rd penguin in the data set is 
 *Type the code ?rpart.control into a chunk, and hit play, and then put a # in front of the code. What will pop up is the R help page. This page shows all of the stopping criteria you can choose to use when growing a tree. It also shows (in the code at the top) the default stopping criteria that R uses if we don’t specify our own. What is the default number of rows that have to be in a leaf in order for it to split?*
 
 ```{r, warning=FALSE}
-?rpart.control
+#?rpart.control
 ```
 
 The default number of rows that have to be in a leaf in order for split is 20.

@@ -487,7 +487,26 @@ for(i in species){
   preds[leaf2]&lt;-mean2
   RSS[t]&lt;-sum((Y-preds)^2)
   t&lt;-t+1
-}</code></pre>
+}
+RSS_spliting_rules&lt;-data.frame(&quot;Is Adelie/?&quot; = RSS[1],&quot;Is Chinstrap/?&quot; = RSS[2],&quot;Is Gentoo/?&quot; = RSS[3])
+knitr::kable(RSS_spliting_rules,caption = &quot;Table 4.RSS of Each Splitting Rule&quot;)</code></pre>
+<table>
+<caption>Table 4.RSS of Each Splitting Rule</caption>
+<thead>
+<tr class="header">
+<th align="right">Is.Adelie..</th>
+<th align="right">Is.Chinstrap..</th>
+<th align="right">Is.Gentoo..</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">150030047</td>
+<td align="right">196063839</td>
+<td align="right">70103076</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="question-6" class="section level2">
 <h2>Question 6</h2>
@@ -538,9 +557,9 @@ indicator variable for a specific level of a categorical variable, you
 can use, for instance, (species==“Adelie”). The ( ) are
 important.</em></p>
 <pre class="r"><code>LSLR1&lt;-lm(body_mass_g~(species == &quot;Gentoo&quot;),data = penguins)
-knitr::kable(summary(LSLR1)$coefficients,caption = &quot;Table 5. LSLR Model Table with Species = \&quot;Gentoo\&quot;&quot;)</code></pre>
+knitr::kable(summary(LSLR1)$coefficients,caption = &quot;Table 6. LSLR Model Table with Species = \&quot;Gentoo\&quot;&quot;)</code></pre>
 <table>
-<caption>Table 5. LSLR Model Table with Species = “Gentoo”</caption>
+<caption>Table 6. LSLR Model Table with Species = “Gentoo”</caption>
 <colgroup>
 <col width="32%" />
 <col width="12%" />
@@ -617,9 +636,9 @@ for(j in 1:length(rangeFlipper)){
 }
 
 knitr::kable(rangeFlipper[which.min(RSS_Flip)]
-,caption = &quot;Table 6. Training RSS (Using Flipper Length to Split&quot;)</code></pre>
+,caption = &quot;Table 7. Training RSS (Using Flipper Length to Split&quot;)</code></pre>
 <table>
-<caption>Table 6. Training RSS (Using Flipper Length to Split</caption>
+<caption>Table 7. Training RSS (Using Flipper Length to Split</caption>
 <thead>
 <tr class="header">
 <th align="right">x</th>
@@ -653,9 +672,9 @@ fancyRpartPlot(tree2, sub = &quot;Figure 2: One Split with Flipper Length&quot;)
 flipper length as the only feature. Call this model LSLR2 and write out
 the fitted regression line.</em></p>
 <pre class="r"><code>LSLR2&lt;-lm(body_mass_g~flipper_length_mm,data = penguins)
-knitr::kable(summary(LSLR2)$coefficients,caption = &quot;Table 7. LSLR Model Table Body Mss vs. Flipper Length&quot;)</code></pre>
+knitr::kable(summary(LSLR2)$coefficients,caption = &quot;Table 8. LSLR Model Table Body Mss vs. Flipper Length&quot;)</code></pre>
 <table style="width:100%;">
-<caption>Table 7. LSLR Model Table Body Mss vs. Flipper Length</caption>
+<caption>Table 8. LSLR Model Table Body Mss vs. Flipper Length</caption>
 <colgroup>
 <col width="25%" />
 <col width="17%" />
@@ -720,9 +739,9 @@ yhat_lslr&lt;-predict(LSLR2,newdata = penguins)
 RMSE_LSLR2&lt;-sqrt(mean((penguins$body_mass_g - yhat_lslr)^2))
 
 Tree_vs_LSLR&lt;-data.frame(&quot;RMSE_LSLR&quot; = RMSE_LSLR2,&quot;RMSE_Tree&quot; = RMSE_tree2)
-knitr::kable(Tree_vs_LSLR,caption = &quot;Table 8. RMSE of LSLR and Tree(Flipper Length) &quot;)</code></pre>
+knitr::kable(Tree_vs_LSLR,caption = &quot;Table 9. RMSE of LSLR and Tree(Flipper Length) &quot;)</code></pre>
 <table>
-<caption>Table 8. RMSE of LSLR and Tree(Flipper Length)</caption>
+<caption>Table 9. RMSE of LSLR and Tree(Flipper Length)</caption>
 <thead>
 <tr class="header">
 <th align="right">RMSE_LSLR</th>
@@ -771,9 +790,9 @@ One_split&lt;-sqrt(mean((penguins$body_mass_g - predict(tree1))^2))
 ##Second Split
 Two_split&lt;-sqrt(mean((penguins$body_mass_g - predict(tree4))^2))
 one_split_vs_two&lt;-data.frame(&quot;Root RMSE&quot; = RMSE_root,&quot;One Split RMSE&quot; = One_split,&quot;Two Split RMSE&quot; = Two_split )
-knitr::kable(one_split_vs_two,caption = &quot;Table 9. Penguin Body Mass Prediction RMSE of Root, One Split and Two Splits&quot;)</code></pre>
+knitr::kable(one_split_vs_two,caption = &quot;Table 10. Penguin Body Mass Prediction RMSE of Root, One Split and Two Splits&quot;)</code></pre>
 <table>
-<caption>Table 9. Penguin Body Mass Prediction RMSE of Root, One Split
+<caption>Table 10. Penguin Body Mass Prediction RMSE of Root, One Split
 and Two Splits</caption>
 <thead>
 <tr class="header">
@@ -790,17 +809,22 @@ and Two Splits</caption>
 </tr>
 </tbody>
 </table>
-<p>The feature that gives us the largest reduction in training RSS in
-one split is species.</p>
+<p><span class="math display">\[RMSE\ Reduction\ After\ First\ Split=
+804.0059-485.8243=345.1816\]</span> <span class="math display">\[RMSE\
+Reduction\ After\ Second\ Split= 458.8243-310.6606=148.1637\]</span> The
+feature that gives us the largest reduction in training RSS in one split
+is species, since the difference between RMSE of root node and RMSE of
+first split is larger than it between RMSE of first split and RMSE of
+second split.</p>
 </div>
 <div id="question-21" class="section level2">
 <h2>Question 21</h2>
 <p><em>Based on Tree 4, what is the predicted body mass for the 3rd
 penguin in the data set?</em></p>
 <pre class="r"><code>Third_penguin&lt;-predict(tree4,newdata = penguins[3,])
-knitr::kable(Third_penguin,caption = &quot;Table 10. Predicted Body Mass of 3rd Penguin in Data Set&quot;)</code></pre>
+knitr::kable(Third_penguin,caption = &quot;Table 11. Predicted Body Mass of 3rd Penguin in Data Set&quot;)</code></pre>
 <table>
-<caption>Table 10. Predicted Body Mass of 3rd Penguin in Data
+<caption>Table 11. Predicted Body Mass of 3rd Penguin in Data
 Set</caption>
 <thead>
 <tr class="header">
@@ -825,8 +849,7 @@ growing a tree. It also shows (in the code at the top) the default
 stopping criteria that R uses if we don’t specify our own. What is the
 default number of rows that have to be in a leaf in order for it to
 split?</em></p>
-<pre class="r"><code>?rpart.control</code></pre>
-<pre><code>## starting httpd help server ... done</code></pre>
+<pre class="r"><code>#?rpart.control</code></pre>
 <p>The default number of rows that have to be in a leaf in order for
 split is 20.</p>
 </div>
