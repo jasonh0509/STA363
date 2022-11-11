@@ -27,7 +27,7 @@ penguins <- na.omit(penguins)
 ## Question 1
 *Is this an association task or a prediction task?*
 
-This is an association task because the response variable is numeric.
+This is a prediction task.
 
 
 ## Question 2
@@ -54,6 +54,7 @@ RMSE_RSS<-data.frame("RMSE" = RMSE_root,"RSS" = RSS)
 knitr::kable(RMSE_RSS,caption = "Table 2: RMSE and RSS of Root Node")
 ```
 
+The RSS and RMSE in root node is 215259666 and 804.0059, respectively.
 ## Quetion 4
 *With species as a feature, what are all the possible splitting rules we could use to divide the root into two leaves? Note: Order doesn’t matter.*
 
@@ -105,7 +106,9 @@ knitr::kable(RSS_spliting_rules,caption = "Table 4.RSS of Each Splitting Rule")
 knitr::kable(species[which.min(RSS)],caption = "Table 4. Splitting Rule with Lowerst RSS")
 ```
 
-Based on the result of Question 5, I recommend that we use "Is the penguin a Gentoo penguin" to split the root node into 2 trees. 
+$$Reduction\ of\ RSS = \frac{215259666-70103076}{215259666} \approx0.6743 = 67.43$$
+
+Based on the result of Question 5, I recommend that we use "Is the penguin a Gentoo penguin" to split the root node into 2 trees. The percent reduction in RSS is 67.43%.
 
 
 ## Question 7
@@ -169,13 +172,26 @@ for(j in 1:length(rangeFlipper)){
  # t<-t+1
 }
 
-knitr::kable(rangeFlipper[which.min(RSS_Flip)]
-,caption = "Table 7. Training RSS (Using Flipper Length to Split")
+
+
+Splitting_rules_and_Rss<-data.frame("Rules smaller than" = rangeFlipper,"RSS" = RSS_Flip )
+knitr::kable(Splitting_rules_and_Rss,caption = "Table 7. Splitting Rules and RSS")
+
 ```
 
-We should use the splitting rule "Does this penguin have flipper length shorter than 207 mm? ".
+```{r}
+rules_n_training_rss<-data.frame("Rule" = rangeFlipper[which.min(RSS_Flip)],"RSS" = RSS_Flip[which.min(RSS_Flip)])
+
+knitr::kable(rules_n_training_rss
+,caption = "Table 8. Splitting Rule andTraining RSS (Using Flipper Length to Split)")
+
+```
+
+
+We should use the splitting rule "Flipper length <207? ". The training RSS is 74208480.
 
 ## Question 12
+*Create a tree using only flipper length as a feature (this means you should not include species in this tree). Use the maxdepth = 1 stopping criterion to make sure that for the moment, the tree only has one split. Call the tree tree2, and show a visualization of your tree as your answer to this question (Figure 2).*
 
 ```{r, warning=FALSE}
 tree2<- rpart(body_mass_g ~ flipper_length_mm, data = penguins, method = "anova", maxdepth = 1)
@@ -202,6 +218,7 @@ The fitted regression line for LSLR2 is $$BodyMass_i = -5872.09+50.153Flipper\_l
 
 
 ## Question 15
+*Based on your LSLR line, what body mass would you predict for a penguin with a flipper length of 210 mm? How does this compare to what you get from a tree?*
 
 $$BodyMass = -5872.09+50.153\times210 \approx 4660.04$$
 
@@ -215,7 +232,7 @@ Based on the LSLR line, I would predict that the penguin with flipper length of 
 m<-nrow(penguins)
 rss_tree<-rep(0,m)
 for(k in 1:m){
-  tree2CV<-rpart(body_mass_g ~ flipper_length_mm, data = penguins[-k,],cp=0.02, method = "anova", maxdepth = 1)
+  tree2CV<-rpart(body_mass_g ~ flipper_length_mm, data = penguins[-k,],cp=0.02, method = "anova")
   yhat<-predict(tree2CV,newdata = penguins[k,])
   rss_tree[k]<-(penguins$body_mass_g[k]-yhat)^2
 }
@@ -223,7 +240,6 @@ RMSE_tree2<-sqrt(mean(rss_tree))
 
 #RMSE LSLR2
 yhat_lslr<-predict(LSLR2,newdata = penguins)
-##sqrt(mean((penguins$body_mass_g-yhatlslr)^2))
 RMSE_LSLR2<-sqrt(mean((penguins$body_mass_g - yhat_lslr)^2))
 
 Tree_vs_LSLR<-data.frame("RMSE_LSLR" = RMSE_LSLR2,"RMSE_Tree" = RMSE_tree2)
@@ -259,7 +275,6 @@ The tree uses species, and sex of the penguins when growing the tree.
 
 
 ## Question 20
-
 *In Tree 4, which feature was able to give us the largest reduction in training RSS in one split?*
 
 ```{r, warning=FALSE}
@@ -275,7 +290,6 @@ $$RMSE\ Reduction\ After\ Second\ Split= 458.8243-310.6606=148.1637$$
 The feature that gives us the largest reduction in training RSS in one split is species, since the difference between RMSE of root node and RMSE of first split is larger than it between RMSE of first split and RMSE of second split.
 
 ## Question 21
-
 *Based on Tree 4, what is the predicted body mass for the 3rd penguin in the data set?*
 
 ```{r, warning=FALSE}
@@ -286,7 +300,6 @@ knitr::kable(Third_penguin,caption = "Table 11. Predicted Body Mass of 3rd Pengu
 Based on tree 4, the predicted body mass for the 3rd penguin in the data set is 3419.159 grams.
 
 ## Question 22
-
 *Type the code ?rpart.control into a chunk, and hit play, and then put a # in front of the code. What will pop up is the R help page. This page shows all of the stopping criteria you can choose to use when growing a tree. It also shows (in the code at the top) the default stopping criteria that R uses if we don’t specify our own. What is the default number of rows that have to be in a leaf in order for it to split?*
 
 ```{r, warning=FALSE}
@@ -304,9 +317,9 @@ tree5<-rpart(body_mass_g ~ .,data = penguins,cp=0.001)
 prp(tree5,cex=0.7,branch=0.3,type = 2,sub ="Figure 5: Tree 5 with All Features(cp=0.001)" )
 ```
 
-We can see that more splits occurred on the tree, and the tree has grown to large that made it unreadable
+We can see that more splits occurred as we specified the stopping rule, and more leaves were presented.
 
 ## Question 24
 *The client wanted to know what penguin traits were associated with higher body mass. Based on your tree, respond to the client’s question.*
 
-Based on the tree above in Figure 5, we can conclude that female penguins that belongs to Gentoo species, with bill length shorter than 47mm and flipper length shorter than 229 mm tend to have higher body mass.
+Based on the tree above in Figure 5, we can conclude that penguins with higher body mass has the following traits: male,Gentoo species, with bill length longer than 47mm and flipper length longer than 229 mm.
