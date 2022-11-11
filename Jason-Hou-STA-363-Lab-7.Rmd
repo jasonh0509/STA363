@@ -103,7 +103,7 @@ knitr::kable(RSS_spliting_rules,caption = "Table 4.RSS of Each Splitting Rule")
 *Based on this, which splitting rule would you recommend we use to split the root node into two leaves? What is the percent reduction in RSS you get with this split (comparing to the root RSS)?*
 
 ```{r, warning=FALSE}
-knitr::kable(species[which.min(RSS)],caption = "Table 4. Splitting Rule with Lowerst RSS")
+knitr::kable(species[which.min(RSS)],caption = "Table 5. Splitting Rule with Lowerst RSS")
 ```
 
 $$Reduction\ of\ RSS = \frac{215259666-70103076}{215259666} \approx0.6743 = 67.43$$
@@ -211,7 +211,7 @@ Based on the tree, I would predict a penguin with a flipper length of 210 mm to 
 
 ```{r LSLR2, warning=FALSE}
 LSLR2<-lm(body_mass_g~flipper_length_mm,data = penguins)
-knitr::kable(summary(LSLR2)$coefficients,caption = "Table 8. LSLR Model Table Body Mss vs. Flipper Length")
+knitr::kable(summary(LSLR2)$coefficients,caption = "Table 9. LSLR Model Table Body Mss vs. Flipper Length")
 ```
 
 The fitted regression line for LSLR2 is $$BodyMass_i = -5872.09+50.153Flipper\_length\_mm$$
@@ -243,7 +243,7 @@ yhat_lslr<-predict(LSLR2,newdata = penguins)
 RMSE_LSLR2<-sqrt(mean((penguins$body_mass_g - yhat_lslr)^2))
 
 Tree_vs_LSLR<-data.frame("RMSE_LSLR" = RMSE_LSLR2,"RMSE_Tree" = RMSE_tree2)
-knitr::kable(Tree_vs_LSLR,caption = "Table 9. RMSE of LSLR and Tree(Flipper Length) ")
+knitr::kable(Tree_vs_LSLR,caption = "Table 10. RMSE of LSLR and Tree(Flipper Length) ")
 
 ```
 
@@ -283,7 +283,7 @@ One_split<-sqrt(mean((penguins$body_mass_g - predict(tree1))^2))
 ##Second Split
 Two_split<-sqrt(mean((penguins$body_mass_g - predict(tree4))^2))
 one_split_vs_two<-data.frame("Root RMSE" = RMSE_root,"One Split RMSE" = One_split,"Two Split RMSE" = Two_split )
-knitr::kable(one_split_vs_two,caption = "Table 10. Penguin Body Mass Prediction RMSE of Root, One Split and Two Splits")
+knitr::kable(one_split_vs_two,caption = "Table 11. Penguin Body Mass Prediction RMSE of Root, One Split and Two Splits")
 ```
 $$RMSE\ Reduction\ After\ First\ Split= 804.0059-485.8243=345.1816$$
 $$RMSE\ Reduction\ After\ Second\ Split= 458.8243-310.6606=148.1637$$
@@ -294,7 +294,7 @@ The feature that gives us the largest reduction in training RSS in one split is 
 
 ```{r, warning=FALSE}
 Third_penguin<-predict(tree4,newdata = penguins[3,])
-knitr::kable(Third_penguin,caption = "Table 11. Predicted Body Mass of 3rd Penguin in Data Set")
+knitr::kable(Third_penguin,caption = "Table 12. Predicted Body Mass of 3rd Penguin in Data Set")
 ```
 
 Based on tree 4, the predicted body mass for the 3rd penguin in the data set is 3419.159 grams.

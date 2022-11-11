@@ -510,9 +510,9 @@ knitr::kable(RSS_spliting_rules,caption = &quot;Table 4.RSS of Each Splitting Ru
 <p><em>Based on this, which splitting rule would you recommend we use to
 split the root node into two leaves? What is the percent reduction in
 RSS you get with this split (comparing to the root RSS)?</em></p>
-<pre class="r"><code>knitr::kable(species[which.min(RSS)],caption = &quot;Table 4. Splitting Rule with Lowerst RSS&quot;)</code></pre>
+<pre class="r"><code>knitr::kable(species[which.min(RSS)],caption = &quot;Table 5. Splitting Rule with Lowerst RSS&quot;)</code></pre>
 <table>
-<caption>Table 4. Splitting Rule with Lowerst RSS</caption>
+<caption>Table 5. Splitting Rule with Lowerst RSS</caption>
 <thead>
 <tr class="header">
 <th align="left">x</th>
@@ -937,9 +937,9 @@ fancyRpartPlot(tree2, sub = &quot;Figure 2: One Split with Flipper Length&quot;)
 flipper length as the only feature. Call this model LSLR2 and write out
 the fitted regression line.</em></p>
 <pre class="r"><code>LSLR2&lt;-lm(body_mass_g~flipper_length_mm,data = penguins)
-knitr::kable(summary(LSLR2)$coefficients,caption = &quot;Table 8. LSLR Model Table Body Mss vs. Flipper Length&quot;)</code></pre>
+knitr::kable(summary(LSLR2)$coefficients,caption = &quot;Table 9. LSLR Model Table Body Mss vs. Flipper Length&quot;)</code></pre>
 <table style="width:100%;">
-<caption>Table 8. LSLR Model Table Body Mss vs. Flipper Length</caption>
+<caption>Table 9. LSLR Model Table Body Mss vs. Flipper Length</caption>
 <colgroup>
 <col width="25%" />
 <col width="17%" />
@@ -1006,9 +1006,9 @@ yhat_lslr&lt;-predict(LSLR2,newdata = penguins)
 RMSE_LSLR2&lt;-sqrt(mean((penguins$body_mass_g - yhat_lslr)^2))
 
 Tree_vs_LSLR&lt;-data.frame(&quot;RMSE_LSLR&quot; = RMSE_LSLR2,&quot;RMSE_Tree&quot; = RMSE_tree2)
-knitr::kable(Tree_vs_LSLR,caption = &quot;Table 9. RMSE of LSLR and Tree(Flipper Length) &quot;)</code></pre>
+knitr::kable(Tree_vs_LSLR,caption = &quot;Table 10. RMSE of LSLR and Tree(Flipper Length) &quot;)</code></pre>
 <table>
-<caption>Table 9. RMSE of LSLR and Tree(Flipper Length)</caption>
+<caption>Table 10. RMSE of LSLR and Tree(Flipper Length)</caption>
 <thead>
 <tr class="header">
 <th align="right">RMSE_LSLR</th>
@@ -1057,9 +1057,9 @@ One_split&lt;-sqrt(mean((penguins$body_mass_g - predict(tree1))^2))
 ##Second Split
 Two_split&lt;-sqrt(mean((penguins$body_mass_g - predict(tree4))^2))
 one_split_vs_two&lt;-data.frame(&quot;Root RMSE&quot; = RMSE_root,&quot;One Split RMSE&quot; = One_split,&quot;Two Split RMSE&quot; = Two_split )
-knitr::kable(one_split_vs_two,caption = &quot;Table 10. Penguin Body Mass Prediction RMSE of Root, One Split and Two Splits&quot;)</code></pre>
+knitr::kable(one_split_vs_two,caption = &quot;Table 11. Penguin Body Mass Prediction RMSE of Root, One Split and Two Splits&quot;)</code></pre>
 <table>
-<caption>Table 10. Penguin Body Mass Prediction RMSE of Root, One Split
+<caption>Table 11. Penguin Body Mass Prediction RMSE of Root, One Split
 and Two Splits</caption>
 <thead>
 <tr class="header">
@@ -1089,9 +1089,9 @@ second split.</p>
 <p><em>Based on Tree 4, what is the predicted body mass for the 3rd
 penguin in the data set?</em></p>
 <pre class="r"><code>Third_penguin&lt;-predict(tree4,newdata = penguins[3,])
-knitr::kable(Third_penguin,caption = &quot;Table 11. Predicted Body Mass of 3rd Penguin in Data Set&quot;)</code></pre>
+knitr::kable(Third_penguin,caption = &quot;Table 12. Predicted Body Mass of 3rd Penguin in Data Set&quot;)</code></pre>
 <table>
-<caption>Table 11. Predicted Body Mass of 3rd Penguin in Data
+<caption>Table 12. Predicted Body Mass of 3rd Penguin in Data
 Set</caption>
 <thead>
 <tr class="header">
