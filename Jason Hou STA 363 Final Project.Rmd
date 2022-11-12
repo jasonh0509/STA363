@@ -25,17 +25,151 @@ library(corrplot)
 library(RColorBrewer)
 library(glmnet)
 library(xtable)
-
+library(smotefamily)
 ```
 
 ```{r}
 stroke<-read.csv("StrokeData.csv")
-stroke<-na.omit(stroke)
 stroke$bmi<-as.numeric(stroke$bmi)
+stroke<-na.omit(stroke)
 ```
 
 ```{r}
-M<-cor(stroke[-c(1,2,6,7,8,11,12)])
+numericOnly<-stroke[,c(3,9,10,12)]
+```
+
+
+```{r}
+newStroke<-SMOTE(X=numericOnly[,-12],numericOnly$stroke,K=5,dup_size=5)
+strokeDup=newStroke$data
+```
+
+```{r}
+newStroke2<-BLSMOTE(X=numericOnly[,-12],numericOnly$stroke,K=5,C=5,method = "type1",dupSize = 5)
+strokeDupBor=newStroke2$data
+```
+
+
+
+##KNN
+```{r find best k}
+set.seed(114514)
+n<-nrow(stroke)
+nk<-80
+storage_stroke<-data.frame("K"=rep(NA,nk),
+                    "Sensitivity" = rep(NA,nk),
+                    "Specificity" = rep(NA,nk),
+                    "GeoMean" = rep(NA,nk))
+
+stroke_pool<-rep(1:10,491)
+
+stroke_fold<-sample(stroke_pool,4909,replace = FALSE)
+
+#stroke_knnVar<-stroke[,c(2,6,7,8,11)]
+
+for (k in 1:nk){
+  storage_stroke$K[k]<-k
+  storage_inner<-data.frame("Yhat" = rep(NA,n))
+  
+  for(i in 1:10){
+    infold<-which(stroke_fold==i)
+    stroke_train<-stroke[-infold,]
+    stroke_test<-stroke[infold,]
+  
+  kpreds<-knn(stroke_train[,c(3,9,10)],stroke_test[,c(3,9,10)],k=k,cl=stroke_train$stroke)
+  
+  storage_inner$Yhat[infold]<-as.numeric(as.character(kpreds))
+  
+  
+  true1<-which(stroke_test$stroke == 1)
+  true0<-which(stroke_test$stroke == 0)
+  
+  ntrue1<-length(true1)
+  ntrue0<-length(true0)
+  
+  sensitivity<-sum(kpreds[true1] == 1)/ntrue1
+  storage_stroke$Sensitivity[k]<-sensitivity
+  specificity<-sum(kpreds[true0] == 0)/ntrue0
+  storage_stroke$Specificity[k]<-specificity
+  storage_stroke$GeoMean[k]<-sqrt(sensitivity*specificity)
+  
+    
+  }
+  
+}
+
+```
+
+```{r}
+knnplot<-ggplot(storage,aes(K,GeoMean))+
+  geom_line()+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 1",y = " ")+
+  geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
+```
+
+
+#Strokedup 
+```{r find best k}
+set.seed(114514)
+n<-nrow(strokeDupBor)
+nk<-50
+storage_stroke_dup<-data.frame("K"=rep(NA,nk),
+                    "Sensitivity" = rep(NA,nk),
+                    "Specificity" = rep(NA,nk),
+                    "GeoMean" = rep(NA,nk))
+
+stroke_pool<-rep(1:10,ceiling(n/10))
+
+stroke_fold<-sample(stroke_pool,n,replace = FALSE)
+
+#stroke_knnVar<-stroke[,c(2,6,7,8,11)]
+
+for (k in 1:nk){
+  storage_stroke_dup$K[k]<-k
+  storage_inner<-data.frame("Yhat" = rep(NA,n))
+  
+  for(i in 1:10){
+    infold<-which(stroke_fold==i)
+    stroke_train<-strokeDupBor[-infold,]
+    stroke_test<-strokeDupBor[infold,]
+  
+  kpreds<-knn(stroke_train[,c(1,2,3)],stroke_test[,c(1,2,3)],k=k,cl=stroke_train$stroke)
+  
+  storage_inner$Yhat[infold]<-as.numeric(as.character(kpreds))
+  
+  
+  true1<-which(stroke_test$stroke == 1)
+  true0<-which(stroke_test$stroke == 0)
+  
+  ntrue1<-length(true1)
+  ntrue0<-length(true0)
+  
+  sensitivity<-sum(kpreds[true1] == 1)/ntrue1
+  storage_stroke_dup$Sensitivity[k]<-sensitivity
+  specificity<-sum(kpreds[true0] == 0)/ntrue0
+  storage_stroke_dup$Specificity[k]<-specificity
+  storage_stroke_dup$GeoMean[k]<-sqrt(sensitivity*specificity)
+  
+    
+  }
+  
+}
+
+```
+
+
+```{r}
+knnplot<-ggplot(storage_stroke_dup,aes(K,GeoMean))+
+  geom_line()+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage_stroke_dup$GeoMean)),title = "Figure 1",y = " ")+
+  geom_vline(xintercept = which.max(storage_stroke_dup$GeoMean),lty = 2,col="red")
+knnplot
+```
+
+
+# Try to use lasso ridge elastic net
+```{r}
+M<-cor(stroke[,-c(1,2,6,7,8,11,12)])
 corrplot(M, method= "circle",type = "upper",title="Stroke ",mar = c(0,0,2,0))
 ```
 
@@ -48,7 +182,7 @@ XD <- model.matrix(stroke ~., data = stroke)
 #Set seed for random sampling
 set.seed(1)
 #Run cross validation for lambda value from 1 to 50(increment by 0.05 for each run)
-ridge.modFind_Lambda <- cv.glmnet(XD[,-c(1,12)], stroke$stroke , alpha = 1, standardize = TRUE,family = "binomial")
+ridge.modFind_Lambda <- cv.glmnet(XD[,-c(1,12)], stroke$stroke , alpha = 0, standardize = TRUE,family = "binomial")
 ```
 
 ```{r load a function, include=FALSE}
