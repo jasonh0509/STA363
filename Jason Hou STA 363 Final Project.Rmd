@@ -185,6 +185,202 @@ set.seed(1)
 ridge.modFind_Lambda <- cv.glmnet(XD[,-c(1,12)], stroke$stroke , alpha = 0, standardize = TRUE,family = "binomial")
 ```
 
+```{r}
+stroke$stroke <- as.factor(stroke$stroke)
+#stroke_smote<-SMOTE_NC(stroke, "stroke", perc_maj = 20, k = 5)
+```
+
+```{r}
+library(githubinstall)
+#githubinstall("RSBID")
+library(RSBID)
+```
+
+
+```{r}
+get_dist_cat <- function(x, y) {
+  .Call(`_RSBID_get_dist_cat`, x, y)
+}
+
+get_dist_cont <- function(x, y) {
+  .Call(`_RSBID_get_dist_cont`, x, y)
+}
+
+syn_cat <- function(cat_var) {
+
+    freq <- table(cat_var)
+    maxfreq_posi <- which(freq == max(freq))
+    maj_cat <- names(freq)[maxfreq_posi]
+
+    if (length(maj_cat) == 1) {
+        return(maj_cat)
+    } else {
+        return(sample(maj_cat, 1))
+    }
+
+}
+
+## Used in SMOTE and SMOTE-NC functions
+get_syn_size <- function(perc_maj, maj_len, min_len) {
+    syn_total_size <- round(perc_maj * maj_len/100 - min_len)
+    syn_each_size <- round(syn_total_size/min_len)
+    syn_size <- rep(syn_each_size, min_len)
+
+    if ((syn_each_size * min_len) < syn_total_size) {
+
+        syn_more_size <- syn_total_size - syn_each_size * min_len
+        syn_more_ind <- sample(1:min_len, syn_more_size)
+        syn_size[syn_more_ind] <- syn_size[syn_more_ind] + 1
+
+    } else if ((syn_each_size * min_len) > syn_total_size) {
+
+        syn_less_size <- syn_each_size * min_len - syn_total_size
+        syn_less_ind <- sample(1:min_len, syn_less_size)
+        syn_size[syn_less_ind] <- syn_size[syn_less_ind] - 1
+
+    }
+
+    return(syn_size)
+}
+
+SMOTE_NC <- function(data, outcome, perc_maj = 100, k = 5) {
+    datnrow <- nrow(data)
+    if (nrow(na.omit(data)) < datnrow) {
+        stop("Sorry, this dataset has missing value :(")
+    }
+    if (is.character(outcome)) {
+        if (!(outcome %in% colnames(data))) {
+            stop(paste("This dataset doesn't have a variable names", outcome))
+        } else {
+            y_coln <- outcome
+            y_ind <- which(outcome == colnames(data))
+        }
+    } else {
+        if (outcome < 1 | outcome > ncol(data)) {
+            stop(paste("This dataset doesn't have a variable whose column number is", outcome))
+        } else {
+            y_coln <- colnames(data)[outcome]
+            y_ind <- outcome
+        }
+    }
+    y <- data[, outcome]
+
+    if (length(table(y)) != 2) {
+        stop("Sorry, the outcome is not binary, I can't solve this problem :(")
+    }
+    if (table(y)[1] == table(y)[2]) {
+        stop("Sorry, this dataset has been balanced and there is nothing I can do.")
+    }
+    if (!inherits(y, "character") & !inherits(y, "factor")) {
+        warning("The outcome is a binary variable, but not a factor or character.")
+    }
+
+    x_cl <- sapply(data[, -y_ind], class)
+    if (all(x_cl == "numeric" | x_cl == "integer")) {
+        stop("All variables are continuous, please use SMOTE function.")
+
+    } else if (all(x_cl == "character" | x_cl == "factor")) {
+        stop("All variables are categorical, I can't solve this problem :(
+             Maybe you can try to make one hot coding for each variable.")
+
+    } else if ((("character" %in% x_cl) | ("factor" %in% x_cl)) & (("numeric" %in% x_cl) | ("integer" %in% x_cl))) {
+        message("Variables are continous and categorical, SMOTE_NC could be used.")
+
+    } else {
+        stop("The types of variables need to be numeric, integer, character or factor.
+             Please check your dataset again.")
+    }
+
+
+    min_cl_char <- names(table(y))[which.min(table(y))]
+    min_cl <- unique(y[y == min_cl_char])
+
+    min_ind <- which(y == min_cl)
+    maj_ind <- which(y != min_cl)
+
+    cont_posi <- which(x_cl == "numeric" | x_cl == "integer")
+    cat_posi <- which(x_cl == "factor" | x_cl == "character")
+
+    x_min <- data[min_ind, -y_ind]
+    x_coln <- colnames(x_min)
+
+    x_min_cont <- as.data.frame(x_min[, cont_posi])
+    x_min_cat <- as.data.frame(x_min[, cat_posi])
+
+    sd_cont <- apply(x_min_cont, 2, sd)
+    med <- median(sd_cont)
+
+    new_min <- NULL
+
+    syn_size <- get_syn_size(perc_maj, maj_len = length(maj_ind), min_len = length(min_ind))
+
+    pb <- txtProgressBar(min = 1, max = nrow(x_min), initial = 1, style = 3)
+
+    for (i in 1:nrow(x_min)) {
+
+        ind <- (1:nrow(x_min))[-i]
+
+        dist_cont <- get_dist_cont(as.matrix(x_min_cont[i, ], nrow = 1), as.matrix(x_min_cont[-i, ]))
+
+        diff_cat <- get_dist_cat(as.matrix(x_min_cat[i, ], nrow = 1), as.matrix(x_min_cat[-i, ]))
+
+        dist_cat <- med^2 * diff_cat
+
+        dist <- sqrt(dist_cont + dist_cat)
+        dist_ord <- order(dist, decreasing = FALSE)
+
+        knn_ind <- ind[dist_ord[1:k]]
+        # knn_dist <- dist[dist_ord[1:k]]
+
+
+        replacement <- ifelse(syn_size[i] >= k, TRUE, FALSE)
+        ind <- sample(knn_ind, syn_size[i], replace = replacement)
+        if (syn_size[i] == 0)
+            next
+        if (length(cont_posi) == 1) {
+            new_cont <- x_min_cont[i, ] + runif(syn_size[i], 0, 1) * (x_min_cont[ind, ] - x_min_cont[i, ])
+        } else {
+            new_cont <- apply(x_min_cont[ind, ], 1, function(x) x_min_cont[i, ] + runif(syn_size[i], 0, 1) * (x - x_min_cont[i,
+                ]))
+        }
+
+        new_cont <- as.data.frame(matrix(unlist(new_cont), ncol = ncol(x_min_cont), byrow = TRUE))
+
+        cat_knn <- as.data.frame(x_min_cat[knn_ind, ])
+        new_cat <- NULL
+        for (j in 1:syn_size[i]) {
+            if (length(cat_posi) == 1) {
+                new_cat <- rbind(new_cat, syn_cat(cat_knn[, 1]))
+            } else {
+                new_cat <- rbind(new_cat, apply(cat_knn, 2, syn_cat))
+            }
+
+        }
+
+        new_contcat <- as.data.frame(cbind(new_cont, new_cat))
+        colnames(new_contcat) <- x_coln[c(cont_posi, cat_posi)]
+        new_contcat <- new_contcat[, x_coln]
+
+        new_min <- rbind(new_min, new_contcat)
+
+        setTxtProgressBar(pb, i)
+
+
+    }
+    close(pb)
+
+    new_min[, y_coln] <- min_cl
+    new_min <- new_min[, colnames(data)]
+    newdata <- rbind(data, new_min)
+
+    return(newdata)
+
+}
+```
+
+
+
+
 ```{r load a function, include=FALSE}
 ##Load a function for creating the plot of RMSE in response of change in Lambda
 ridgePlot <- function(ridge.mod, metric, title){
@@ -198,7 +394,7 @@ ridgePlot <- function(ridge.mod, metric, title){
   }
   
   if(metric == "RMSE"){
-  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = sqrt(ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test RMSE values for Different Tuning Parameters. Smallest RMSE at lambda = ", smallestLambda), title = title, y = "Test RMSE", x = "Tuning Parameter")
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = sqrt(ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test RMSE values for Different Tuning Parameters. Smallest Deviance at lambda = ", smallestLambda), title = title, y = "Test Deviance", x = "Tuning Parameter")
 
   }
   
