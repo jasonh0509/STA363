@@ -111,8 +111,9 @@ for (k in 1:nk){
   storage_stroke$GeoMean[k]<-sqrt(sensitivity*specificity)
   
   
-  if(k==2)
+  if(k==2){
     yhat_out<-storage_inner$Yhat
+  }
     
   }
   
@@ -222,31 +223,38 @@ knitr::kable(table(yhat_out, newStroke$stroke), caption= "Table 2.2: Confusion M
 
 # Try to use lasso ridge elastic net
 ```{r}
-M<-cor(stroke[,-c(1,2,6,7,8,11,12)])
+M<-cor(newStroke[,-c(1,2,6,7,8,11,12)])
 corrplot(M, method= "circle",type = "upper",title="Stroke ",mar = c(0,0,2,0))
 ```
 
 ```{r creating design matrix ridge}
 # Create the design matrix for ridge regression
-XD <- model.matrix(stroke ~., data = stroke)
+XD <- model.matrix(stroke ~., data = newStroke)
 ```
 
 ```{r cv to find the best lambda}
 #Set seed for random sampling
-set.seed(1)
+set.seed(114514)
 #Run cross validation for lambda value from 1 to 50(increment by 0.05 for each run)
-ridge.modFind_Lambda <- cv.glmnet(XD[,-c(1,12)], stroke$stroke , alpha = 0, standardize = TRUE,family = "binomial")
+ridge.modFind_Lambda <- cv.glmnet(XD[,-c(1,12)], newStroke$stroke , alpha = 0,lambda = seq(from=0, to=50,by=0.005), standardize = TRUE,family = "binomial")
 ```
 
 ```{r}
 stroke$stroke <- as.factor(stroke$stroke)
 #stroke_smote<-SMOTE_NC(stroke, "stroke", perc_maj = 20, k = 5)
+write.csv(stroke,file = "Stroke.csv")
+stroke2<-read.csv("Stroke.csv")
 ```
 
 ```{r}
-library(githubinstall)
+library(devtools)
+#library(githubinstall)
 #githubinstall("RSBID")
+install_github("dongyuanwu/RSBID")
 library(RSBID)
+```
+```{r smotenc}
+#SMOTE_NC(stroke,"stroke",perc_maj = 20)
 ```
 
 
@@ -460,5 +468,41 @@ ridgePlot(ridge.modFind_Lambda, metric = "RMSE" , title ="Figure 3.2 Change of R
 
 ```
 
+```{r}
+CV_result_ridge<-data.frame("Lambda" = ridge.modFind_Lambda$lambda,"Deviance" = ridge.modFind_Lambda$cvm)
+smallestRidge_Deviance<-which.min(CV_result_ridge$Deviance)
+knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Table 3.1 Deviance of Model with Chosen Lambda(Ridge)")
+```
+
+
+```{r}
+ridge.final<-glmnet(XD[,-c(1,12)], newStroke$stroke , alpha = 0,lambda = 0.005	, standardize = TRUE,family = "binomial")
+pred<-predict(ridge.final,newx=XD[,-c(1,12)],s=0.005	,type = "response")
+predicted.Y<-ifelse(pred>0.5,"1","0")
+```
+
+
+```{r cv lasso}
+set.seed(114514)
+lasso.modFind_Lambda <- cv.glmnet(XD[,-c(1,12)], newStroke$stroke , alpha = 1,lambda = seq(from=0, to=50,by=0.005), standardize = TRUE,family = "binomial")
+ridgePlot(lasso.modFind_Lambda,metric = "RMSE",title = "Figure Lasso")
+```
+
+```{r}
+CV_result_lasso<-data.frame("Lambda" = lasso.modFind_Lambda$lambda,"MSE" = lasso.modFind_Lambda$cvm,"RMSE" = sqrt(lasso.modFind_Lambda$cvm))
+smallestLasso_MSE<-which.min(CV_result_lasso$MSE)
+smallestLasso_RMSE<-which.min(CV_result_lasso$RMSE)
+CV_result_lasso[smallestLasso_MSE,]
+CV_result_lasso[smallestLasso_RMSE,]
+knitr::kable(CV_result_lasso[smallestLasso_RMSE,]
+, caption = "Table 4.1 RMSE with Chosen Lambda(Lasso)")
+```
+
+
+```{r}
+lasso.final<-glmnet(XD[,-c(1,12)], newStroke$stroke , alpha = 1,lambda = 0.005	, standardize = TRUE,family = "binomial")
+pred_lasso<-predict(lasso.final,newx=XD[,-c(1,12)],s=0.005,type = "response")
+predicted.Y_lasso<-ifelse(pred>0.5,"1","0")
+```
 
 
