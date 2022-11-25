@@ -1559,8 +1559,8 @@ has 36 features with an RMSE of 59.34.</p>
 <div id="part-6-comparison-and-conclusion" class="section level2">
 <h2>Part 6: Comparison and Conclusion</h2>
 <p>We listed out the coefficient table of three regression method we
-used, and compare predictive metrics and predictive accuracy of the
-three models.</p>
+used, and compare tuning parameter and predictive accuracy of the three
+models.</p>
 <table>
 <caption>Table 6.1 Coefficients of Ridge, Lasso and Elastic Net
 Regression</caption>
@@ -1940,8 +1940,8 @@ at prediction than the other two models. The model fitted with elastic
 net has the lowest RMSE of 59.34 (with <span class="math inline">\(\alpha = 0.15\)</span> and <span class="math inline">\(\lambda = 5\)</span>) among the three models
 fitted model, consider the range the price varies in the data set(from 0
 to 1000), this RMSE of 59.34 indicates a relatively better fit of the
-model to the data points, which lead to a predictive accuracy of the
-model and simultaneously balances bias and variance.</p>
+model to the data points, which lead to a better predictive accuracy of
+the model and simultaneously balances bias and variance.</p>
 <p>While ridge regression allows us to keep all the features provided in
 the model, including all the features in the model could increase
 model’s complexity, making it hard to interpret when compared with lasso
@@ -1949,8 +1949,8 @@ and elastic net. Lasso regression allows us to completely remove
 correlated features instead of shrinking them, but it also imposes
 limitation on the number of features selected, which lead to a lower
 predictive accuracy compared to ridge regression and lasso regression as
-it shown in Table 6.2, where we can see that the elastic net model
-performs better at prediction than the other two models.</p>
+it shown in Table 6.2, where we can see that the elastic net regression
+model performs better at prediction than the other two models.</p>
 <p>Based on the information we have obtained, we conclude that the model
 built with elastic net regression offers the best prediction to the
 price of VRBO rental properties, and we recommend the client to choose
