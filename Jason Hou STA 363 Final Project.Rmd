@@ -29,24 +29,41 @@ library(smotefamily)
 ```
 
 ```{r}
-stroke<-read.csv("StrokeData.csv")
+stroke<-read.csv("Stroke Data.csv")
 stroke$bmi<-as.numeric(stroke$bmi)
 stroke<-na.omit(stroke)
 ```
 
-```{r}
-numericOnly<-stroke[,c(3,9,10,12)]
+```{r downsampling}
+
+
+```
+
+
+```{r downsample2}
+set.seed(114514)
+nonstrokeFrame<-stroke[stroke$stroke==0,]
+nonstrokeFrame_down<-nonstrokeFrame%>%
+  sample_frac(0.4002)
+strokeYes<-stroke[stroke$stroke==1,]
+newStroke<-rbind(strokeYes,nonstrokeFrame_down)
+```
+
+
+
+```{r only numeric}
+numericOnly<-newStroke[,c(3,9,10,12)]
 ```
 
 
 ```{r}
-newStroke<-SMOTE(X=numericOnly[,-12],numericOnly$stroke,K=5,dup_size=5)
-strokeDup=newStroke$data
+#newStroke<-SMOTE(X=numericOnly[,-12],numericOnly$stroke,K=5,dup_size=5)
+#strokeDup=newStroke$data
 ```
 
 ```{r}
-newStroke2<-BLSMOTE(X=numericOnly[,-12],numericOnly$stroke,K=5,C=5,method = "type1",dupSize = 5)
-strokeDupBor=newStroke2$data
+#newStroke2<-BLSMOTE(X=numericOnly[,-12],numericOnly$stroke,K=5,C=5,method = "type1",dupSize = 5)
+#strokeDupBor=newStroke2$data
 ```
 
 
@@ -54,16 +71,16 @@ strokeDupBor=newStroke2$data
 ##KNN
 ```{r find best k}
 set.seed(114514)
-n<-nrow(stroke)
+n<-nrow(numericOnly)
 nk<-80
 storage_stroke<-data.frame("K"=rep(NA,nk),
                     "Sensitivity" = rep(NA,nk),
                     "Specificity" = rep(NA,nk),
                     "GeoMean" = rep(NA,nk))
 
-stroke_pool<-rep(1:10,491)
+stroke_pool<-rep(1:10,209)
 
-stroke_fold<-sample(stroke_pool,4909,replace = FALSE)
+stroke_fold<-sample(stroke_pool,2090,replace = FALSE)
 
 #stroke_knnVar<-stroke[,c(2,6,7,8,11)]
 
@@ -73,10 +90,10 @@ for (k in 1:nk){
   
   for(i in 1:10){
     infold<-which(stroke_fold==i)
-    stroke_train<-stroke[-infold,]
-    stroke_test<-stroke[infold,]
+    stroke_train<-numericOnly[-infold,]
+    stroke_test<-numericOnly[infold,]
   
-  kpreds<-knn(stroke_train[,c(3,9,10)],stroke_test[,c(3,9,10)],k=k,cl=stroke_train$stroke)
+  kpreds<-knn(stroke_train[,c(1,2,3)],stroke_test[,c(1,2,3)],k=k,cl=stroke_train$stroke)
   
   storage_inner$Yhat[infold]<-as.numeric(as.character(kpreds))
   
@@ -93,6 +110,9 @@ for (k in 1:nk){
   storage_stroke$Specificity[k]<-specificity
   storage_stroke$GeoMean[k]<-sqrt(sensitivity*specificity)
   
+  
+  if(k==2)
+    yhat_out<-storage_inner$Yhat
     
   }
   
@@ -101,15 +121,16 @@ for (k in 1:nk){
 ```
 
 ```{r}
-knnplot<-ggplot(storage,aes(K,GeoMean))+
+knnplot<-ggplot(storage_stroke,aes(K,GeoMean))+
   geom_line()+
-  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 1",y = " ")+
-  geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage_stroke$GeoMean)),title = "Figure 1",y = " ")+
+  geom_vline(xintercept = which.max(storage_stroke$GeoMean),lty = 2,col="red")
+knnplot
 ```
 
 
 #Strokedup 
-```{r find best k}
+```{r find best k, eval=FALSE, include=FALSE}
 set.seed(114514)
 n<-nrow(strokeDupBor)
 nk<-50
@@ -158,12 +179,44 @@ for (k in 1:nk){
 ```
 
 
+
+
 ```{r}
-knnplot<-ggplot(storage_stroke_dup,aes(K,GeoMean))+
-  geom_line()+
-  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage_stroke_dup$GeoMean)),title = "Figure 1",y = " ")+
-  geom_vline(xintercept = which.max(storage_stroke_dup$GeoMean),lty = 2,col="red")
-knnplot
+set.seed(114514)
+storage_k2<-data.frame("Yhat" = rep(NA,n))
+  
+for(j in 1:10){
+    infold<-which(stroke_fold==j)
+    stroke_trainK2<-numericOnly[-infold,]
+    stroke_testK2<-numericOnly[infold,]
+  
+  kpreds_k2<-knn(stroke_trainK2[,c(1,2,3)],stroke_testK2[,c(1,2,3)],k=2,cl=stroke_trainK2$stroke)
+  
+  storage_k2$Yhat[infold]<-as.numeric(as.character(kpreds_k2))
+  true1K2<-which(stroke_testK2$stroke == 1)
+  true0K2<-which(stroke_testK2$stroke == 0)
+  
+  ntrue1K2<-length(true1K2)
+  ntrue0K2<-length(true0K2)
+  
+  
+  
+
+
+    
+}
+
+
+
+sensitivityk2<-sum(kpreds_k2[true1K2] == 1)/ntrue1K2
+specificityk2<-sum(kpreds_k2[true0K2] == 0)/ntrue0K2  
+
+
+
+```
+
+```{r}
+knitr::kable(table(yhat_out, newStroke$stroke), caption= "Table 2.2: Confusion Matrix   ", col = c("Not Stroke", "Stroke"))  
 ```
 
 
