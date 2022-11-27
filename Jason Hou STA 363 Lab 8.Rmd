@@ -1,0 +1,114 @@
+---
+title: "Jason Hou STA 363 Lab 8"
+author: "Jason Hou"
+date: '2022-11-17'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r package}
+library(palmerpenguins)
+# Grows the tree
+library(rpart)
+# Allows us to visualize the tree
+library(rattle)
+library(rpart.plot)
+library(dplyr)
+
+library(class)
+library(tidyverse)
+library(gridExtra)
+library(leaps)
+library(glmnet)
+library(randomForest)
+```
+
+```{r data}
+data(penguins)
+penguins <- na.omit(penguins)
+
+```
+
+
+
+## Question 1
+*Grow a classification tree for Y= sex using all the available features. Call this tree tree1. Show your tree as your answer to this question. You are welcome to use the standard stopping rules (meaning you do not have to set your own unless you would like to).*
+
+```{r classification}
+#grow tree1 using all available features and display it
+tree1<-rpart(sex~.,data = penguins)
+fancyRpartPlot(tree1,cex=0.5,sub = "Predicting Sex Using All Features")
+```
+
+
+
+## Question 2
+*What is the Gini Index of the first split of this tree?*
+
+
+## Question 3
+*Using your tree, what sex would you predict for the first penguin in the data set?*
+
+```{r sex first penguin}
+result<-predict(tree1,newdata = penguins[1,])
+sex<-ifelse(max(result),"Male","Female")
+knitr::kable(sex,caption = "Table 1: Predicted Sex of the First Penguin in Data Set")
+```
+
+I predicted the first penguin in the data set to be male.
+
+## Question 4
+*We can use the code predict(tree1)to get predicted probabilities from our tree. What is the predicted probability of being male and of being female for the 3rd penguin in the data set?*
+
+```{r 3rd penguin probability}
+Penguin3<-predict(tree1,newdata = penguins[3,])
+knitr::kable(Penguin3,caption = "Table 2: Predicted Probability of Being Male and Feamle for 3rd Penguin in Data Set")
+```
+The probability of the 3rd penguin being male is approximately 0.024, the probability of the 3rd penguin being female is approximately 0.976.
+
+## Question 5
+
+```{r predicting using class}
+penguin3_class<-predict(tree1,newdata=penguins[3,],type = "class")
+knitr::kable(penguin3_class,caption = "Table 3: Predicted Probability of Being Male and Feamle for 3rd Penguin in Data Set Using Class")
+```
+
+The predicted sex of the 3rd penguin in the data set is female.
+
+## Question 6
+*Create a confusion matrix for tree1. Hint: You may need to refer back to your logistic regression lab for this.*
+
+```{r confusion Matrix}
+pred_t1<-predict(tree1, newdata = penguins,type = "class")
+predicted_sex<-data.frame("Predicted Sex" = pred_t1)
+knitr::kable(table("Prediction" = predicted_sex$Predicted.Sex,"Actual" = penguins$sex),caption = "Table 4: Confusion Matrix of Penguin Gender Prediction")
+```
+
+
+```{r}
+set.seed(363663)
+nsim<-3
+n<-nrow(penguins)
+for(i in 1:nsim){
+  chosen<-sample(1:n,n, replace = TRUE)
+  boostrapRow<-penguins[chosen,]
+  tree<-rpart(sex~.,method = "class",data = boostrapRow)
+  fancyRpartPlot(tree)
+  
+}
+```
+
+```{r}
+bag.penguin<-randomForest(sex~.,data = penguins,mtry=7, importance = TRUE, ntree=1000,compete=FALSE)
+```
+
+```{r}
+predicted.oob<-(bag.penguin$predicted)
+mean((penguins$flipper_length_mm-predicted.oob)^2)
+```
+
+
+
