@@ -40,14 +40,19 @@ penguins <- na.omit(penguins)
 ```{r classification}
 #grow tree1 using all available features and display it
 tree1<-rpart(sex~.,data = penguins)
-fancyRpartPlot(tree1,cex=0.5,sub = "Predicting Sex Using All Features")
+fancyRpartPlot(tree1,cex=0.8,type = 1,sub = "Predicting Sex Using All Features")
 ```
 
 
 
 ## Question 2
-*What is the Gini Index of the first split of this tree?*
+*What is the Gini Index of the first split of this tree?* 
 
+$$Gini_{body\ mass<3713}=1-0.82^2-0.18^2=0.2952$$
+$$Gini_{body\ mass>3713}=1-0.33^2-0.67^2=0.4422$$
+$$Gini\ Index=0.34\times0.2952+0.66\times0.4422\approx0.3922$$
+
+Thus, the Gini Index of the first split of this tree is 0.3922.
 
 ## Question 3
 *Using your tree, what sex would you predict for the first penguin in the data set?*
@@ -67,6 +72,7 @@ I predicted the first penguin in the data set to be male.
 Penguin3<-predict(tree1,newdata = penguins[3,])
 knitr::kable(Penguin3,caption = "Table 2: Predicted Probability of Being Male and Feamle for 3rd Penguin in Data Set")
 ```
+
 The probability of the 3rd penguin being male is approximately 0.024, the probability of the 3rd penguin being female is approximately 0.976.
 
 ## Question 5
@@ -79,14 +85,82 @@ knitr::kable(penguin3_class,caption = "Table 3: Predicted Probability of Being M
 The predicted sex of the 3rd penguin in the data set is female.
 
 ## Question 6
+
 *Create a confusion matrix for tree1. Hint: You may need to refer back to your logistic regression lab for this.*
 
 ```{r confusion Matrix}
 pred_t1<-predict(tree1, newdata = penguins,type = "class")
 predicted_sex<-data.frame("Predicted Sex" = pred_t1)
 knitr::kable(table("Prediction" = predicted_sex$Predicted.Sex,"Actual" = penguins$sex),caption = "Table 4: Confusion Matrix of Penguin Gender Prediction")
+
 ```
 
+$$Sensitivity=\frac{164}{164+4}\approx0.976$$
+$$Specificity=\frac{139}{139+26}\approx0.842$$
+
+##Question 7
+
+*What is the sensitivity of your classification tree? Let 0 = female and 1 = male.*
+
+$$Sensitivity=\frac{164}{164+4}\approx0.976$$
+
+The sensitivity of my classification tree is 0.976.
+
+## Question 8
+
+$$Specificity=\frac{139}{139+26}\approx0.842$$
+
+The specificity of my classification tree is 0.842.
+
+
+## Question 9
+*What percent of penguins in the training data are incorrectly classified by your tree? In other words, what is the classification error rate (CER)?*
+
+$$CER=\frac{26+4}{333}\approx0.09$$
+The classification error rate(CER) of the tree is 0.09.
+
+
+## Question 10
+*What percent of penguins in the training data are correctly classified by your tree? In other words, what is the accuracy?*
+
+$$Accuracy=1-CER=1-0.09=0.91$$
+
+The accuracy of the prediction done by my tree is 0.91.
+
+## Question 11
+
+*Create a single bootstrap sample from the penguins data. Use a random seed of 363663. Once you have your sample, grow a tree on that bootstrap sample. Call this tree tree2. Show the tree as the answer to this question.*
+
+
+```{r}
+pen_rows<-nrow(penguins)
+set.seed(363663)
+boot1_choose<-sample(1:pen_rows,pen_rows,replace = TRUE)
+boot1_rows<-penguins[boot1_choose,]
+tree2<-rpart(sex~.,method = "class",data=boot1_rows)
+prp(tree2,cex=0.7,type = 2,branch=0.9)
+```
+
+
+## Question 12
+*Which rows in the penguins data set are OOB for your bootstrap sample? Would the OOB rows necessarily be the same for a different bootstrap sample?*
+
+```{r}
+penguins[-unique(boot1_choose),]
+```
+
+## Question 13
+
+*Create a confusion matrix for tree2 and show the matrix as part of your answer. Is this the same as the confusion matrix we got from tree1?*
+
+```{r}
+pred_t2<-predict(tree2,type = "class",newdata = penguins)
+knitr::kable(table("Prediction" = pred_t2,"Actual" = penguins$sex))
+```
+
+## Question 14
+
+*Create a for loop that grows and plots a bagged classification forest with 3 trees.*
 
 ```{r}
 set.seed(363663)
