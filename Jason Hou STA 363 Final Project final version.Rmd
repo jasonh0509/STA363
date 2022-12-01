@@ -1,0 +1,286 @@
+---
+title: "smotenc"
+author: "Jueshen Hou"
+date: '2022-11-25'
+output: html_document
+---
+
+```{r load packages, include=FALSE}
+##Here we load the packages needed and install a package that is not on CRAN
+library(ggplot2)
+library(broom)
+library(gridExtra)
+library(dplyr)
+library(class)
+library(tidyverse)
+library(gridExtra)
+library(leaps)
+library(corrplot)
+library(RColorBrewer)
+library(glmnet)
+library(xtable)
+library(RSBID)
+library(randomForest)
+library(pROC)
+#library(smotefamily)
+library(devtools)
+devtools::install_github("dongyuanwu/RSBID")
+library(RSBID)
+library(UpSetR)
+library(naniar)
+library(report)
+```
+
+## Abstract
+
+## Section 1: Data and Motivation
+
+## Section 2: Data Cleaning and EDA
+
+```{r load data}
+originalStroke<-read.csv("healthcare-dataset-stroke-data.csv")
+```
+
+```{r dealing with missing data}
+originalStroke$bmi<-as.numeric(originalStroke$bmi)
+stroke<-na.omit(originalStroke)
+```
+
+```{r change data type}
+stroke <- as.data.frame(unclass(stroke),stringsAsFactors=TRUE)
+```
+
+```{r dealing with imbalance of data set}
+#Utilizing smote_nc to synthesize additional data points for the minority class in the data set.
+set.seed(114514)
+test<-SMOTE_NC(stroke,"stroke",perc_maj = 25,5)
+#write.csv(test, file = "Smote0.25.csv")
+```
+
+## Section 3: Method 1:
+
+### Section 3.1: Introduction
+
+### Section 3.2: Method
+
+```{r KNN Data}
+#Create a data set with only numeric features for the KNN
+numericOnly<-test[,c(3,9,10,12)]
+```
+
+```{r 10 fold CV determine best k }
+set.seed(114514)
+n<-nrow(numericOnly)
+nk<-50
+storage<-data.frame("K"=rep(NA,nk),
+                    "Sensitivity" = rep(NA,nk),
+                    "Specificity" = rep(NA,nk),
+                    "GeoMean" = rep(NA,nk))
+
+#Set a seed for sampling and create a pool and set fold for K fold CV
+set.seed(114514)
+pool<-rep(1:10,ceiling(n/10))
+
+fold<-sample(pool,n,replace = FALSE)
+
+#Outer loop for increment k 
+for(k in 1:nk){
+  storage$K[k]<-k
+  
+  storage_inner<-data.frame("YHat" = rep(NA,n))
+  #Inner loop for 10 fold CV
+  for(i in 1:10){
+    #Find data in each fold
+    infold<-which(fold == i)
+    
+    #Create training and testing sets
+    Train_Stroke<-numericOnly[-infold,]
+    Test_Stroke<-numericOnly[infold,]
+   (set.seed(114514))
+    #Run Knn
+    k_preds<-knn(Train_Stroke[,c(1,2,3)],Test_Stroke[,c(1,2,3)],k=k,cl=Train_Stroke$stroke)
+    
+    #store predicted result from each fold to storage_inner and obtain predictions to     the full data set 
+    storage_inner$YHat[infold]<-as.numeric(as.character(k_preds))
+  }
+    #Find rows with positive and negative result
+    true1K<-which(numericOnly$stroke == 1)
+    true0K<-which(numericOnly$stroke == 0)
+    
+    #Compute the amount of rows corresponding to each result
+    ntrue1K<-length(true1K)
+    ntrue0K<-length(true0K)
+    #Compute sensitivity and specificity, as well as GeoMetric Mean for determining the best value for k
+    sensitivity<-sum(storage_inner$YHat[true1K] == 1)/ntrue1K
+    storage$Sensitivity[k]<-sensitivity
+    specificity<-sum(storage_inner$YHat[true0K] == 0)/ntrue0K
+    storage$Specificity[k]<-specificity
+    storage$GeoMean[k]<-sqrt(sensitivity*specificity)
+    
+    #if(k==8){
+     # YHatOut <- storage_inner$YHat
+    #}
+   
+}
+
+```
+
+```{r find best k}
+#Create plot to find the best k for KNN 
+knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
+  geom_line()+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 2.3: GeoMean Graph of KNN with Best k Shown
+  (10 Fold Cross Validation)",y = " ")+
+  geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
+#Show Plot
+knnActualPlot
+```
+
+### Section 3.3: Results
+
+## Section 4: Method 2:
+
+### Section 4.1: Introduction
+
+### Section 4.2: Method
+
+```{r}
+
+```
+
+```{r}
+test_noID<-test[,-1]
+```
+
+```{r creating design matrix ridge}
+# Create the design matrix for ridge regression
+XD <- model.matrix(stroke ~., data = test_noID)
+```
+
+```{r cv to find the best lambda}
+#Set seed for random sampling
+set.seed(114514)
+#Run cross validation for lambda value from 1 to 50(increment by 0.05 for each run)
+ridge.modFind_Lambda <- cv.glmnet(XD[,-11], test_noID$stroke , alpha = 0,standardize = TRUE,family = "binomial")
+```
+
+```{r}
+CV_result_ridge<-data.frame("Lambda" = ridge.modFind_Lambda$lambda,"Deviance" = ridge.modFind_Lambda$cvm)
+smallestRidge_Deviance<-which.min(CV_result_ridge$Deviance)
+knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Table 3.1 Deviance of Model with Chosen Lambda(Ridge)")
+```
+
+```{r ridge final and pred}
+ridge.final<-glmnet(XD[,-11], test_noID$stroke , alpha = 0,lambda = 0.0181107	, standardize = TRUE,family = "binomial")
+pred<-predict(ridge.final,newx=XD[,-11],type = "response")
+predicted.Y<-ifelse(pred>0.5,"1","0")
+predicted.ridge<-as.data.frame(predicted.Y)
+```
+
+```{r ridge mtx2}
+knitr::kable(table("Prediction" = predicted.ridge$s0,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Ridge")
+```
+
+```{r AUC}
+rocObj<-roc(test$stroke,pred)
+plot(rocObj)
+auc(rocObj)
+holder <- data.frame("Threshold" = rocObj$thresholds, "Sensivity" = rocObj$sensitivities, "Spec" = rocObj$specificities, "GMean" = sqrt(rocObj$sensitivities*rocObj$specificities))
+which.max(holder$GMean)
+holder[3843,]
+```
+
+```{r}
+pred_new_thre<-predict(ridge.final,newx = XD[,-11],type = "response")
+pred_lasso_new_thre<-ifelse(pred_new_thre>0.2311398,"1","0")
+table("Prediction" = pred_lasso_new_thre,"Actual"=test_noID$stroke)
+```
+
+## Lasso
+
+```{r}
+lasso.modFind_Lambda <- cv.glmnet(XD[,-11], test_noID$stroke , alpha = 1, standardize = TRUE,family = "binomial")
+
+
+```
+
+```{r}
+CV_result_lasso<-data.frame("Lambda" = lasso.modFind_Lambda$lambda,"Deviance" = lasso.modFind_Lambda$cvm)
+smallestLasso_Deviance<-which.min(CV_result_lasso$Deviance)
+knitr::kable(CV_result_lasso[smallestLasso_Deviance,],caption = "Table 3.1 Deviance of Model with Chosen Lambda(Lasso)")
+```
+
+```{r lasso final and pred}
+lasso.final<-glmnet(XD[,-11], test_noID$stroke , alpha = 1,lambda = 0.0015729	, standardize = TRUE,family = "binomial")
+pred<-predict(lasso.final,newx=XD[,-11],type = "response")
+predicted.Y_L<-ifelse(pred>0.5,"1","0")
+predicted.lasso<-as.data.frame(predicted.Y)
+```
+
+```{r ridge mtx}
+knitr::kable(table("Prediction" = predicted.ridge$s0,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Ridge")
+```
+
+### Section 4.3: Results:
+
+## Section 5: Method 3
+
+### Section 5.1: Introduction
+
+### Section 5.2: Method
+
+```{r bagged forest}
+#Set seed 
+set.seed(100)
+set_for_forest<-test[,-1]
+bagged<-randomForest(stroke~.,data=test,mtry=10,importance=TRUE,ntree=1000,compete=FALSE)
+```
+
+```{r bagged prediction}
+#bag forest prediction
+for_predict<-test[,-c(1,12)]
+pred_bag<-predict(bagged)
+table(pred_bag)
+table("Prediction"= pred_bag,"Actual" = test$stroke)
+```
+
+```{r random forest}
+set.seed(100)
+random<-randomForest(stroke~.,data=test,mtry=sqrt(10),importance=TRUE,ntree=1000,compete=FALSE)
+```
+
+```{r}
+bagged
+random
+```
+
+```{r bagged confusion matrix}
+knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Bagged Forest")
+```
+
+$$Sensitivity=\frac{845}{330+845}\approx0.719$$
+$$Specificity=\frac{4616}{4616+84}\approx0.982$$ $$Accuracy=\frac{4616+845}{5875}\approx0.93$$
+
+$$CER=1-Accuracy=0.07$$
+
+```{r Random Forest Confusion Matrix}
+knitr::kable(table("Prediction"=random$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Random Forest")
+
+
+```
+
+$$Sensitivity=\frac{805}{370+805}\approx0.69$$
+
+$$Specificity=\frac{4637}{4637+63}\approx0.987$$
+
+$$Accuracy=\frac{4637+805}{5875}\approx0.926$$ $$CER=1-Accuracy=1-0.926=0.074$$
+
+
+
+## Works Cited
+
+Fedesoriano. "Stroke Prediction Dataset." Kaggle, 26 Jan. 2021, <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset/code>.
+
+RolandRoland.“Convert All Data Frame Character Columns to Factors.” Stack Overflow, 17 Dec. 2013, https://stackoverflow.com/questions/20637360/convert-all-data-frame-character-columns-to-factors.
+
+Wu, Dongyuan. “Dongyuanwu/RSBID: Resampling Strategies for Binary Imbalanced Datasets Version 0.0.2.0000 from Github.” Version 0.0.2.0000 from GitHub, 18 July 2022, https://rdrr.io/github/dongyuanwu/RSBID/. 
