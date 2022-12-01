@@ -448,7 +448,8 @@ SMOTE_NC <- function(data, outcome, perc_maj = 100, k = 5) {
 ```
 
 ```{r smotenc}
-test<-SMOTE_NC(stroke,"stroke",perc_maj = 20,5)
+
+test<-SMOTE_NC(stroke,"stroke",perc_maj = 25,5)
 ```
 
 

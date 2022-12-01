@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r package}
+```{r package, include=FALSE}
 library(palmerpenguins)
 # Grows the tree
 library(rpart)
@@ -26,10 +26,10 @@ library(glmnet)
 library(randomForest)
 ```
 
-```{r data}
+```{r data, include=FALSE}
+#Load data
 data(penguins)
 penguins <- na.omit(penguins)
-
 ```
 
 
@@ -39,8 +39,9 @@ penguins <- na.omit(penguins)
 
 ```{r classification}
 #grow tree1 using all available features and display it
+set.seed(363663)
 tree1<-rpart(sex~.,data = penguins)
-fancyRpartPlot(tree1,cex=0.8,type = 1,sub = "Predicting Sex Using All Features")
+fancyRpartPlot(tree1,cex=0.8,type = 1,sub = "Figure 1. Tree1 Predicting Sex Using All Features")
 ```
 
 
@@ -48,9 +49,9 @@ fancyRpartPlot(tree1,cex=0.8,type = 1,sub = "Predicting Sex Using All Features")
 ## Question 2
 *What is the Gini Index of the first split of this tree?* 
 
-$$Gini_{body\ mass<3713}=1-0.82^2-0.18^2=0.2952$$
-$$Gini_{body\ mass>3713}=1-0.33^2-0.67^2=0.4422$$
-$$Gini\ Index=0.34\times0.2952+0.66\times0.4422\approx0.3922$$
+$$Gini_{body\ mass<3713(Leaf\ 1)}=1-0.82^2-0.18^2=0.2952$$
+$$Gini_{body\ mass>3713(Leaf \ 2)}=1-0.33^2-0.67^2=0.4422$$
+$$Gini\ Index_{(First \ Split)}=0.34\times0.2952+0.66\times0.4422\approx0.3922$$
 
 Thus, the Gini Index of the first split of this tree is 0.3922.
 
@@ -77,6 +78,8 @@ The probability of the 3rd penguin being male is approximately 0.024, the probab
 
 ## Question 5
 
+*We can use the code predict(tree1, type = "class")to get predicted values of sex for each penguin. What is the predicted sex of the 3rd penguin in the data set? Note: this code chooses the class associated with the highest predicted probability.*
+
 ```{r predicting using class}
 penguin3_class<-predict(tree1,newdata=penguins[3,],type = "class")
 knitr::kable(penguin3_class,caption = "Table 3: Predicted Probability of Being Male and Feamle for 3rd Penguin in Data Set Using Class")
@@ -95,10 +98,7 @@ knitr::kable(table("Prediction" = predicted_sex$Predicted.Sex,"Actual" = penguin
 
 ```
 
-$$Sensitivity=\frac{164}{164+4}\approx0.976$$
-$$Specificity=\frac{139}{139+26}\approx0.842$$
-
-##Question 7
+## Question 7
 
 *What is the sensitivity of your classification tree? Let 0 = female and 1 = male.*
 
@@ -107,6 +107,8 @@ $$Sensitivity=\frac{164}{164+4}\approx0.976$$
 The sensitivity of my classification tree is 0.976.
 
 ## Question 8
+
+*What is the specificity of your classification tree? Let 0 = female and 1 = male.*
 
 $$Specificity=\frac{139}{139+26}\approx0.842$$
 
@@ -138,7 +140,7 @@ set.seed(363663)
 boot1_choose<-sample(1:pen_rows,pen_rows,replace = TRUE)
 boot1_rows<-penguins[boot1_choose,]
 tree2<-rpart(sex~.,method = "class",data=boot1_rows)
-prp(tree2,cex=0.7,type = 2,branch=0.9)
+prp(tree2,cex=0.7,type = 2,branch=0.9, sub = "Figure 2. Tree 2 For Penguins Data")
 ```
 
 
@@ -146,23 +148,25 @@ prp(tree2,cex=0.7,type = 2,branch=0.9)
 *Which rows in the penguins data set are OOB for your bootstrap sample? Would the OOB rows necessarily be the same for a different bootstrap sample?*
 
 ```{r}
-penguins[-unique(boot1_choose),]
+knitr::kable(c(1:pen_rows)[-unique(boot1_choose)],caption = "Table 5: OOB Rows of Bootstrap Sample")
 ```
 
 ## Question 13
 
-*Create a confusion matrix for tree2 and show the matrix as part of your answer. Is this the same as the confusion matrix we got from tree1?*
+*Create a confusion matrix for tree 2 and show the matrix as part of your answer. Is this the same as the confusion matrix we got from tree 1?*
 
 ```{r}
 pred_t2<-predict(tree2,type = "class",newdata = penguins)
-knitr::kable(table("Prediction" = pred_t2,"Actual" = penguins$sex))
+knitr::kable(table("Prediction" = pred_t2,"Actual" = penguins$sex),caption = "Table 6: Confusion Matrix of Tree 2")
 ```
+
+No, the confusion matrix of Tree 2 is not the same as the confusion matrix we got from Tree 1.
 
 ## Question 14
 
 *Create a for loop that grows and plots a bagged classification forest with 3 trees.*
 
-```{r}
+```{r 3trees}
 set.seed(363663)
 nsim<-3
 n<-nrow(penguins)
@@ -170,19 +174,68 @@ for(i in 1:nsim){
   chosen<-sample(1:n,n, replace = TRUE)
   boostrapRow<-penguins[chosen,]
   tree<-rpart(sex~.,method = "class",data = boostrapRow)
-  fancyRpartPlot(tree)
+  prp(tree,cex=0.7,type = 1,sub = "Figure 3. Bagged Classification Forest with 3 Trees Trees",i)
+  
   
 }
 ```
 
-```{r}
-bag.penguin<-randomForest(sex~.,data = penguins,mtry=7, importance = TRUE, ntree=1000,compete=FALSE)
-```
+
+## Question 15
+*Using the package, grow a forest with B=1000 trees and call it forest1. Use the random seed 363663. When you look at the output, you will see OOB estimate of error rate. This is the OOB estimate of the CER. State this CER value as your answer to this question.*
 
 ```{r}
-predicted.oob<-(bag.penguin$predicted)
-mean((penguins$flipper_length_mm-predicted.oob)^2)
+set.seed(363663)
+forest1<-randomForest(sex~.,data = penguins,mtry=7, importance = TRUE, ntree=1000,compete=FALSE)
+forest1
 ```
 
+The CER of forest 1 is 0.0811.
 
 
+
+## Question 16
+
+*What is the OOB estimate of the sensitivity?*
+
+```{r}
+knitr::kable(forest1$confusion,caption = "Table 7 :Confusion Matrix of Forest 1" )
+```
+
+$$OOB\ Estimate\ Sensitivity = \frac{155}{155+14} = 0.917$$
+
+
+## Question 17
+
+*Which feature is most important in the forest? How can you tell?*
+
+```{r}
+# Load the library to make the graph
+suppressMessages(library(lattice))
+
+# Plot the importance
+barchart(sort(randomForest::importance(forest1)[,3]),
+xlab = "Percent Increase in OOB CER",
+main = "Figure 4: Importance")
+```
+
+The body_mass_g is the most important feature in the forest, since the percent increase in OOB CER of this feature is the highest after the order of the rows in features were randomly permuted.
+
+
+## Question 18
+
+*Which feature is least important in the forest? How can you tell?*
+
+The island is the least important feature in the forest, because the percent increase in OOB CER of this feature is the lowest after the order of the rows in features were randomly permuted.
+
+
+## Question 19
+
+*By how much (by what percent) does the OOB CER (remember, this means test CER) get worse if we permute the values of species?*
+
+```{r}
+OOB_CER_Table<-randomForest::importance(forest1)[,3]
+knitr::kable(OOB_CER_Table,caption = "Table 8: Percent Increase in OOB CER of Each Feature(Forest 1)")
+```
+
+The OOB CER gets worse for 27.349 if we permute the values of species.
