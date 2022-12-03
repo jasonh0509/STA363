@@ -156,8 +156,8 @@ knitr::kable(c(1:pen_rows)[-unique(boot1_choose)],caption = "Table 5: OOB Rows o
 *Create a confusion matrix for tree 2 and show the matrix as part of your answer. Is this the same as the confusion matrix we got from tree 1?*
 
 ```{r}
-pred_t2<-predict(tree2,type = "class",newdata = penguins)
-knitr::kable(table("Prediction" = pred_t2,"Actual" = penguins$sex),caption = "Table 6: Confusion Matrix of Tree 2")
+pred_t2<-predict(tree2,type = "class")
+knitr::kable(table("Prediction" = pred_t2,"Actual" = boot1_rows$sex),caption = "Table 6: Confusion Matrix of Tree 2")
 ```
 
 No, the confusion matrix of Tree 2 is not the same as the confusion matrix we got from Tree 1.

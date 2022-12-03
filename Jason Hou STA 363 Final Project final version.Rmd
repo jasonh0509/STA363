@@ -1,5 +1,5 @@
 ---
-title: "smotenc"
+title: "Jason Hou STA 363 Final Project"
 author: "Jueshen Hou"
 date: '2022-11-25'
 output: html_document
@@ -34,7 +34,7 @@ library(report)
 ## Abstract
 
 ## Section 1: Data and Motivation
-
+The data that we are dealing on is a data consist of 5110 rows and 12 columns.The data set record the 12 features that  includes physical measures, stroke status and related personal information of 5110 suspected stroke patients. We have the information on the patient's biological gender, the age of each patient,whether a patient has heart disease/hypertension 
 ## Section 2: Data Cleaning and EDA
 
 ```{r load data}
@@ -57,9 +57,10 @@ test<-SMOTE_NC(stroke,"stroke",perc_maj = 25,5)
 #write.csv(test, file = "Smote0.25.csv")
 ```
 
-## Section 3: Method 1:
+## Section 3: Method 1:K Nearest Neighbor
 
 ### Section 3.1: Introduction
+We begin by implementing a technique called K-Nearest Neighbor(KNN) to predict the stroke status of the patients.It  
 
 ### Section 3.2: Method
 
@@ -167,59 +168,135 @@ ridge.modFind_Lambda <- cv.glmnet(XD[,-11], test_noID$stroke , alpha = 0,standar
 ```{r}
 CV_result_ridge<-data.frame("Lambda" = ridge.modFind_Lambda$lambda,"Deviance" = ridge.modFind_Lambda$cvm)
 smallestRidge_Deviance<-which.min(CV_result_ridge$Deviance)
-knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Table 3.1 Deviance of Model with Chosen Lambda(Ridge)")
+knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Table 4.x Deviance of Model with Chosen Lambda(Ridge)")
 ```
 
 ```{r ridge final and pred}
 ridge.final<-glmnet(XD[,-11], test_noID$stroke , alpha = 0,lambda = 0.0181107	, standardize = TRUE,family = "binomial")
-pred<-predict(ridge.final,newx=XD[,-11],type = "response")
-predicted.Y<-ifelse(pred>0.5,"1","0")
-predicted.ridge<-as.data.frame(predicted.Y)
+pred_ridge<-predict(ridge.final,newx=XD[,-11],type = "response")
+```
+
+
+```{r ROCAUC ridge}
+roc_ridge<-roc(test$stroke,pred_ridge)
+plot(roc_ridge)
+knitr::kable(auc(roc_ridge))
+holder <- data.frame("Threshold" = roc_ridge$thresholds, "Sensivity" = roc_ridge$sensitivities, "Spec" = roc_ridge$specificities, "GMean" = sqrt(roc_ridge$sensitivities*roc_ridge$specificities))
+holder[which.max(holder$GMean),]
+```
+
+```{r prediction with adjuste threshold}
+pred_ridge_Y<-ifelse(pred_ridge>holder[which.max(holder$GMean),]$Threshold,"1","0")
 ```
 
 ```{r ridge mtx2}
-knitr::kable(table("Prediction" = predicted.ridge$s0,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Ridge")
+knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = "Table 4.x Confusion Matrix for Prediction of Stroke Via Ridge")
 ```
 
-```{r AUC}
-rocObj<-roc(test$stroke,pred)
-plot(rocObj)
-auc(rocObj)
-holder <- data.frame("Threshold" = rocObj$thresholds, "Sensivity" = rocObj$sensitivities, "Spec" = rocObj$specificities, "GMean" = sqrt(rocObj$sensitivities*rocObj$specificities))
-which.max(holder$GMean)
-holder[3843,]
-```
 
-```{r}
-pred_new_thre<-predict(ridge.final,newx = XD[,-11],type = "response")
-pred_lasso_new_thre<-ifelse(pred_new_thre>0.2311398,"1","0")
-table("Prediction" = pred_lasso_new_thre,"Actual"=test_noID$stroke)
-```
 
 ## Lasso
 
-```{r}
+```{r find best lambda}
 lasso.modFind_Lambda <- cv.glmnet(XD[,-11], test_noID$stroke , alpha = 1, standardize = TRUE,family = "binomial")
-
-
 ```
 
 ```{r}
 CV_result_lasso<-data.frame("Lambda" = lasso.modFind_Lambda$lambda,"Deviance" = lasso.modFind_Lambda$cvm)
 smallestLasso_Deviance<-which.min(CV_result_lasso$Deviance)
-knitr::kable(CV_result_lasso[smallestLasso_Deviance,],caption = "Table 3.1 Deviance of Model with Chosen Lambda(Lasso)")
+knitr::kable(CV_result_lasso[smallestLasso_Deviance,],caption = "Table 4.x Deviance of Model with Chosen Lambda(Lasso)")
 ```
 
-```{r lasso final and pred}
+```{r lasso final}
 lasso.final<-glmnet(XD[,-11], test_noID$stroke , alpha = 1,lambda = 0.0015729	, standardize = TRUE,family = "binomial")
-pred<-predict(lasso.final,newx=XD[,-11],type = "response")
-predicted.Y_L<-ifelse(pred>0.5,"1","0")
-predicted.lasso<-as.data.frame(predicted.Y)
+pred_lasso<-predict(lasso.final,newx=XD[,-11],type = "response")
+
 ```
 
-```{r ridge mtx}
-knitr::kable(table("Prediction" = predicted.ridge$s0,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Ridge")
+```{r ROC AUC Lasso}
+roc_lasso<-roc(test$stroke,pred_lasso)
+plot(roc_lasso)
+auc(roc_lasso)
+holder_lasso <- data.frame("Threshold" = roc_lasso$thresholds, "Sensivity" = roc_lasso$sensitivities, "Spec" = roc_lasso$specificities, "GMean" = sqrt(roc_lasso$sensitivities*roc_lasso$specificities))
 ```
+
+
+```{r lasso prediction with adjusted threshold}
+predicted.Y_lasso<-ifelse(pred_lasso>holder_lasso[which.max(holder_lasso$GMean),]
+$Threshold,"1","0")
+
+```
+
+
+
+
+```{r lasso mtx}
+knitr::kable(table("Prediction" = predicted.Y_lasso,"Actual"= test$stroke),caption = "Table 4.x Confusion Matrix for Prediction of Stroke Via Lasso")
+```
+
+```{r adjusted metrics lasso}
+knitr::kable(holder_lasso[which.max(holder_lasso$GMean),],caption = "Table 4.x ")
+```
+
+
+```{r find alpha and lambda with smallest deviance elastic net}
+#Set a sequence of numbers from 0 to 1, increment by 0.01 each time 
+seq_alpha<-seq(from = 0, to = 1, by = 0.01)
+#Create empty data frame to hold alpha, lambda and RMSE of each model fitted with corresponding tuning parameter
+storageElastic<-data.frame("Alpha" = rep(NA,length(seq_alpha)), "Lambda" = rep(NA,length(seq_alpha)),"Deviance" = rep(NA, length(seq_alpha)))
+
+aph=1
+#Set seed for random sampling 
+set.seed(1)
+#Loop to test each lambda and alpha and save MSE, RMSE with corresponding lambda and alpha to a dataframe
+for(i in seq_alpha){
+  Elastic.modFind.ideal<-cv.glmnet(XD[,-11], test_noID$stroke,alpha = i,family="binomial")
+  storageElastic$Lambda[aph]<-Elastic.modFind.ideal$lambda.min
+  storageElastic$Alpha[aph]<-i
+  storageElastic$Deviance[aph]<-min(Elastic.modFind.ideal$cvm)
+  aph=aph+1
+}
+
+```
+
+```{r elastic metrics}
+#Get the smallest RMSE value as well as corresponding lambda and alpha
+smallestElastic_Deviance<-which.min(storageElastic$Deviance)
+knitr::kable(storageElastic[smallestElastic_Deviance,],caption = "Table 5.1 Smallest Deviance with Corresponding Alpha and Lambda")
+
+```
+
+```{r}
+ideal_set<-storageElastic[smallestElastic_Deviance,]
+alpha_chosen<-ideal_set$Alpha
+lambda_chosen<-ideal_set$Lambda
+```
+
+
+
+```{r elastic net finla model}
+Elastic.Final.Model<-glmnet(XD[,-11], test_noID$stroke,alpha = alpha_chosen,lambda = lambda_chosen,family="binomial")
+```
+
+```{r elastic net prediction}
+pred_elastic<-predict(Elastic.Final.Model,newx = XD[,-11],type = "response")
+```
+
+```{r ROCAUC elastic net}
+roc_elastic<-roc(test$stroke,pred_elastic)
+plot(roc_elastic)
+auc(roc_elastic)
+holder_elastic <- data.frame("Threshold" = roc_elastic$thresholds, "Sensivity" = roc_elastic$sensitivities, "Spec" = roc_elastic$specificities, "GMean" = sqrt(roc_elastic$sensitivities*roc_elastic$specificities))
+which.max(holder_elastic$GMean)
+holder_elastic[3715,]
+```
+
+```{r elastic net prediction with adjusted threshold}
+#Make prediction with adjusted threshold and create confusion matrix for it
+pred_Y_elastic<-ifelse(pred_elastic>holder_elastic[3715,]$Threshold,"1","0")
+knitr::kable(table("Prediction" = pred_Y_elastic,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Elastic Net")
+```
+
 
 ### Section 4.3: Results:
 
@@ -249,33 +326,33 @@ set.seed(100)
 random<-randomForest(stroke~.,data=test,mtry=sqrt(10),importance=TRUE,ntree=1000,compete=FALSE)
 ```
 
-```{r}
-bagged
-random
-```
 
 ```{r bagged confusion matrix}
+#Formatted Confusion Matrix for bagge forest
 knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Bagged Forest")
 ```
 
+
 $$Sensitivity=\frac{845}{330+845}\approx0.719$$
-$$Specificity=\frac{4616}{4616+84}\approx0.982$$ $$Accuracy=\frac{4616+845}{5875}\approx0.93$$
+$$Specificity=\frac{4616}{4616+84}\approx0.982$$ 
+$$Accuracy=\frac{4616+845}{5875}\approx0.93$$
 
 $$CER=1-Accuracy=0.07$$
 
 ```{r Random Forest Confusion Matrix}
 knitr::kable(table("Prediction"=random$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Random Forest")
-
-
 ```
 
 $$Sensitivity=\frac{805}{370+805}\approx0.69$$
 
 $$Specificity=\frac{4637}{4637+63}\approx0.987$$
 
-$$Accuracy=\frac{4637+805}{5875}\approx0.926$$ $$CER=1-Accuracy=1-0.926=0.074$$
+$$Accuracy=\frac{4637+805}{5875}\approx0.926$$ 
+$$CER=1-Accuracy=1-0.926=0.074$$
 
 
+
+## Conclusion
 
 ## Works Cited
 
