@@ -34,19 +34,67 @@ library(report)
 ## Abstract
 
 ## Section 1: Data and Motivation
-The data that we are dealing on is a data consist of 5110 rows and 12 columns.The data set record the 12 features that  includes physical measures, stroke status and related personal information of 5110 suspected stroke patients. We have the information on the patient's biological gender, the age of each patient,whether a patient has heart disease/hypertension 
+
+
+
+The data that we are dealing on is a data consist of 5110 rows and 12 columns.The data set record the 12 features of 5110 suspected stroke patients. We have the information on the patient's biological gender, the age of each patient in years,whether a patient has heart disease/hypertension, marital status, smoking status, stroke status and other related information. For other features not mentioned, please refer to the following link for a detailed description of features in this data set.(Fedesoriano)
+Link: https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset
+
+Our goal is to build a classifier that helps to predict stroke event based on the health conditions and related information provided. 
 ## Section 2: Data Cleaning and EDA
+
 
 ```{r load data}
 originalStroke<-read.csv("healthcare-dataset-stroke-data.csv")
 ```
 
+```{r include=FALSE}
+glimpse(originalStroke)
+```
+
 ```{r dealing with missing data}
-originalStroke$bmi<-as.numeric(originalStroke$bmi)
+# Check missing data
+knitr::kable(sum(is.na(originalStroke))
+,caption = "Table 2.1 Number of Missing Values")
+## Remove NAs
 stroke<-na.omit(originalStroke)
 ```
 
 ```{r change data type}
+stroke$bmi<-as.numeric(stroke$bmi)
+stroke$stroke<-as.factor(stroke$stroke)
+```
+
+
+
+```{r}
+#View Classese of stroke
+stroke_classes<-ggplot(data = stroke, mapping = aes(x=stroke,fill=stroke))+
+  geom_bar(xlab="Stroke Status")+
+  xlab("Stroke Status")+
+  ggtitle("Figure 2.1 Classes of Stroke")
+  
+  
+stroke_classes
+```
+
+We can see from Figure 2.1 that the class of stroke status was imbalanced, therefore, we utilized the technique called Synthetic Minority Oversampling Technique(SMOTE) to synthesize data points for the minority class, therefore increase the proportion of the minority class in the data set.
+
+The SMOTE technique 
+(Wijaya)
+
+An experimental pacakge from github was utilized to conduct SMOTE for our datat set that consists of both categorical and numeric features(Wu).
+
+
+```{r dealing with missing data}
+#load original data set
+originalStroke$bmi<-as.numeric(originalStroke$bmi)
+## Remove NAs
+stroke<-na.omit(originalStroke)
+```
+
+```{r change data type}
+#Change all categorical data that are in character type to factor type
 stroke <- as.data.frame(unclass(stroke),stringsAsFactors=TRUE)
 ```
 
@@ -56,6 +104,15 @@ set.seed(114514)
 test<-SMOTE_NC(stroke,"stroke",perc_maj = 25,5)
 #write.csv(test, file = "Smote0.25.csv")
 ```
+
+
+```{r collapsing }
+stroke<-stroke%>%
+  transmute(
+    
+  )
+```
+
 
 ## Section 3: Method 1:K Nearest Neighbor
 
@@ -357,6 +414,8 @@ $$CER=1-Accuracy=1-0.926=0.074$$
 ## Works Cited
 
 Fedesoriano. "Stroke Prediction Dataset." Kaggle, 26 Jan. 2021, <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset/code>.
+
+Wijaya, Cornellius Yudha. “5 Smote Techniques for Oversampling Your Imbalance Data.” Medium, Towards Data Science, 24 May 2022, https://towardsdatascience.com/5-smote-techniques-for-oversampling-your-imbalance-data-b8155bdbe2b5. 
 
 RolandRoland.“Convert All Data Frame Character Columns to Factors.” Stack Overflow, 17 Dec. 2013, https://stackoverflow.com/questions/20637360/convert-all-data-frame-character-columns-to-factors.
 
