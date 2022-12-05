@@ -484,22 +484,22 @@ random<-randomForest(stroke~.,data=test,mtry=sqrt(10),importance=TRUE,ntree=1000
 knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Bagged Forest")
 ```
 
-$$Sensitivity=\frac{768}{407+768}\approx0.654$$
-$$Specificity=\frac{4493}{4493+207}\approx0.956$$ 
-$$Accuracy=\frac{4493+768}{5875}\approx0.895$$
+$$Sensitivity=\frac{785}{390+785}\approx0.668$$
+$$Specificity=\frac{4511}{4511+189}\approx0.960$$ 
+$$Accuracy=\frac{4511+785}{5875}\approx0.901$$
 
-$$CER=1-Accuracy=0.105$$
+$$CER=1-Accuracy=0.099$$
 
 ```{r Random Forest Confusion Matrix}
 knitr::kable(table("Prediction"=random$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Random Forest")
 ```
 
-$$Sensitivity=\frac{721}{454+721}\approx0.614$$
+$$Sensitivity=\frac{750}{425+750}\approx0.638$$
 
-$$Specificity=\frac{4531}{4531+169}\approx0.964$$
+$$Specificity=\frac{4532}{4532+168}\approx0.964$$
 
-$$Accuracy=\frac{4531+721}{5875}\approx0.894$$ 
-$$CER=1-Accuracy=1-0.894=0.106$$
+$$Accuracy=\frac{4532+750}{5875}\approx0.899$$ 
+$$CER=1-Accuracy=1-0.899=0.101$$
 
 ## Conclusion
 
