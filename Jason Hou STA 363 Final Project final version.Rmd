@@ -241,31 +241,40 @@ prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
 
 ### Section 3.1: Introduction
 
-We begin building the classifier by implementing a technique called K-Nearest Neighbor(KNN) to predict the stroke status of the patients.It uses the stroke status of the k nearest neighbor data points to predict the stroke status of any given data point in the data set. Figure 3.1 is an illustration of this technique.
+We begin building the classifier by implementing a technique called K-Nearest Neighbor(KNN) to predict the stroke status of the patients.It uses the stroke status of the k nearest neighbor data points to predict the stroke status of any given data point in the data set. We employed this technique to predict patients' stroke status since it does not have explicit training before making predictions, therefore allowing the data of new patients to be added without the need of training the model again(Kumar).
 
-```{r}
+### Sectio 3.2 Method
+
+Figure 3.2.1 is an illustration of this technique with only age and bmi as the features utilized in kNN, where 0 = the patient have not had stroke, 1 =  the patient had stroke(For demonstration purpose, we only sampled 400 rows of data from the cleaned stroke data set).
+
+```{r demo set}
 set.seed(114514)
 numRow<-nrow(test)
-chosenDemo<-sample(1:numRow,200,replace = FALSE)
+chosenDemo<-sample(1:numRow,400,replace = FALSE)
 set_demo<-test[chosenDemo,]
 ```
 
 
 ```{r knn demo illustration}
 demo_data<-data.frame("Age"= rep(NA,1),"BMI"=rep(NA,1),"Stroke"=rep(NA,1))
-demo_data$Age[1]<-69
-demo_data$BMI[1]<-22.8
+demo_data$Age[1]<-63
+demo_data$BMI[1]<-24
 demo_data$Stroke<-1
 
 #demoTest<-example_data%>%
  # mutate(dengue_status_test=as.character(dengue_status))
 ggplot()+
   geom_point(data = set_demo,aes(x=age,y=bmi,col=stroke),size=2,alpha=0.9,shape=19)+
-  geom_point(data =demo_data,aes(x=Age,y=BMI),size=2,alpha=0.9,shape=4)
+  geom_point(data =demo_data,aes(x=Age,y=BMI),size=2,alpha=0.9,shape=19)+
+  geom_segment(aes(x=63,xend=66.5,y=24,yend=23.9))+
+  geom_segment(aes(x=63,xend=66,y=24,yend=24.5))+
+  geom_segment(aes(x=63,xend=65.,y=24,yend=27))+
+  ggtitle("Figure 3.2.1 Illustration of KNN")
+  
 ```
 
+In figure 3.1, we have a new data point representing a patient who is 63 years old with BMI equals to 24(shown as the black dot on the graph).If we set the k value for k Nearest Neighbors as 3. The kNN algorithm will find the stroke status of the 3 nearest data point to the data point of this patient, as shown in Figure 3.1 with black line segments connecting 3 neighbor points and the black dot. The algorithm the assigns the stroke status of majority of the 3 neighbor points as the predicted stroke status of this patient. Since 2 of the 3 neighbor points has 0 as their stroke status, this patient was predicted that he/she/them does not have stroke.
 
-### Section 3.2: Method
 
 ```{r KNN Data}
 #Create a data set with only numeric features for the KNN
@@ -333,7 +342,7 @@ for(k in 1:nk){
 #Create plot to find the best k for KNN 
 knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
   geom_line()+
-  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 2.3: GeoMean Graph of KNN with Best k Shown
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 3.2.2 GeoMean Graph of KNN with Best k Shown
   (10 Fold Cross Validation)",y = " ")+
   geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
 #Show Plot
@@ -341,6 +350,8 @@ knnActualPlot
 ```
 
 ### Section 3.3: Results
+
+
 
 ## Section 4: Method 2: Penalized Regression(Ridge, Lasso and Elastic Net)
 
@@ -554,3 +565,5 @@ Wu, Dongyuan. "Dongyuanwu/RSBID: Resampling Strategies for Binary Imbalanced Dat
 Singh, Deepika. “Deepika Singh.” Pluralsight, 12 Nov. 2019, https://www.pluralsight.com/guides/finding-relationships-data-with-r. 
 
 Reka Solymosi (maintained and updated by David Buil-Gil and Nicolas Trajtenberg). “Making Sense of Crim Data.” Chapter 3 Week 3, 8 Nov. 2022, https://maczokni.github.io/MSCD_labs/week3.html. 
+
+Kumar, Naresh. “Advantages and Disadvantages of KNN Algorithm in Machine Learning.” Advantages and Disadvantages of KNN Algorithm in Machine Learning, http://theprofessionalspoint.blogspot.com/2019/02/advantages-and-disadvantages-of-knn.html. 
