@@ -19,7 +19,6 @@ library(corrplot)
 library(RColorBrewer)
 library(glmnet)
 library(xtable)
-library(RSBID)
 library(randomForest)
 library(pROC)
 #library(smotefamily)
@@ -306,7 +305,7 @@ knnActualPlot
 
 ### Section 3.3: Results
 
-## Section 4: Method 2:
+## Section 4: Method 2: Penalized Regression(Ridge, Lasso and Elastic Net)
 
 ### Section 4.1: Introduction
 
