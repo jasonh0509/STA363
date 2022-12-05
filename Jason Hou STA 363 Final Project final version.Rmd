@@ -275,6 +275,7 @@ ggplot()+
 
 In figure 3.1, we have a new data point representing a patient who is 63 years old with BMI equals to 24(shown as the black dot on the graph).If we set the k value for k Nearest Neighbors as 3. The kNN algorithm will find the stroke status of the 3 nearest data point to the data point of this patient, as shown in Figure 3.1 with black line segments connecting 3 neighbor points and the black dot. The algorithm the assigns the stroke status of majority of the 3 neighbor points as the predicted stroke status of this patient. Since 2 of the 3 neighbor points has 0 as their stroke status, this patient was predicted that he/she/them does not have stroke.
 
+We utilized 10-fold Cross Validation to assess the predictive accuracy of kNN on predict stroke of patients in the stroke data set. To do this we randomly divided the stroke data set into 10 folds with equal size, where each fold contains $\frac{1}{10}$ of the rows in stroke data set. We then started with treating fold 1 as the new test set of stroke data and the remaining 9 folds as the training data. We repeated this process for 10 times to train the model and obtain predictions on the training data. This method was used along with the process of determine the best k value for kNN.That is, we conduct 10-fold Cross Validation for each k value, and calculate the sensitivity, specificity and the geometric mean of them. The k value that provides the largest geometric mean is regarded as the best k value for this prediction through kNN. A line graph of geometric mean respect to each k value was used to indicate the best k value for our prediction.
 
 ```{r KNN Data}
 #Create a data set with only numeric features for the KNN
@@ -349,13 +350,29 @@ knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
 knnActualPlot
 ```
 
+Figure 3.2.2 shows that k=5 is the best k value for the 10-fold Cross Validation, as it provides the largest geometric mean in k values from 1-50, therefore providing the most balance between sensitivity(true positive rate) and specificity(true negative rate) of the prediction.
+
 ### Section 3.3: Results
 
+Below is a confusion matrix of the prediction using kNN with k value equals to 8. 
 
+```{r}
+knitr::kable(table("Prediction" = storage_inner$YHat,"Actual" = numericOnly$stroke),caption = "Tabl 3.3.1 Confusion Matrix of Predicting Stroke(10-fold Cross Validation with k=5")
+```
+
+From Table 3.3.1, we have:
+$$Sensitivity=\frac{697}{697+478}\approx0.407$$
+$$Specificity=\frac{4399}{4399+301}\approx0.936$$
+$$Accuracy=\frac{4399+478}{5875}\approx0.83$$
+$$CER=1-Accuracy=1-0.83=0.17$$
+
+According to the result obtained from 10-fold Cross Validation, kNN allowed us to reach a sensitivity allowed us to reach a sensitivity of 0.407 and a specificity of 0.936, and an overall accuracy of 0.83 on predicting the stroke status of patients in the stroke data set. Despite the accuracy of 0.83 that indicates we made accurate predictions on stroke status of 83% of the patients, the sensitivity of our prediction revealed that we only predicted accurately on 40.7% of the stroke event in patient.
 
 ## Section 4: Method 2: Penalized Regression(Ridge, Lasso and Elastic Net)
 
-Figure 2.1 indicated that the correlations between numeric and categorical features exists, therefore, we decide to implement penalized regression models to mitigate this situation, since 
+Figure 2.1 indicated that the correlations between numeric and categorical features exists, therefore, we decide to implement penalized regression models to mitigate this situation, since
+
+knn only accept numeric value but we have more categorical features.
 
 ### Section 4.1: Introduction
 
