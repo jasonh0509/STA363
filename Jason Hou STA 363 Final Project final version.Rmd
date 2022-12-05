@@ -35,89 +35,199 @@ library(report)
 
 ## Section 1: Data and Motivation
 
+The data that we are dealing on is a data consist of 5110 rows and 12 columns.The data set record the 12 features of 5110 suspected stroke patients. We have the information on the patient's biological gender, the age of each patient in years,whether a patient has heart disease/hypertension, marital status, smoking status, stroke status and other related information. For other features not mentioned, please refer to the following link for a detailed description of features in this data set.(Fedesoriano) Link: <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset>
 
+Our goal is to build a classifier that helps to predict stroke event based on the health condition, health measures and related information provided. This classifier can be utilized to assist the diagnosis of stroke event along with other testing techniques.
 
-The data that we are dealing on is a data consist of 5110 rows and 12 columns.The data set record the 12 features of 5110 suspected stroke patients. We have the information on the patient's biological gender, the age of each patient in years,whether a patient has heart disease/hypertension, marital status, smoking status, stroke status and other related information. For other features not mentioned, please refer to the following link for a detailed description of features in this data set.(Fedesoriano)
-Link: https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset
-
-Our goal is to build a classifier that helps to predict stroke event based on the health conditions and related information provided. 
 ## Section 2: Data Cleaning and EDA
-
 
 ```{r load data}
 originalStroke<-read.csv("healthcare-dataset-stroke-data.csv")
 ```
 
-```{r include=FALSE}
+```{r take a look}
 glimpse(originalStroke)
 ```
 
-```{r dealing with missing data}
+
+```{r include=FALSE}
+v1<-class(originalStroke$hypertension)
+v2<-class(originalStroke$heart_disease)
+v3<-class(originalStroke$stroke)
+columns_to_convert<-c(v1,v2,v3)
+features<-c("hypertension","heart_disease","stroke")
+features_to_convert<-data.frame("Features" = features,"Type" = columns_to_convert)
+```
+
+
+We started with converting the data types of several features to more appropriate type. We found three features that need to be converted from numeric data to categorical data, which are hypertension, heart_disease, and stroke. These three features were converted from numeric type to categorical type. Other categorical features that are originally in character type were also converted into factor type for the model building later.
+
+```{r change data type}
+originalStroke$bmi<-as.numeric(originalStroke$bmi)
+originalStroke$stroke<-as.factor(originalStroke$stroke)
+originalStroke$hypertension<-as.factor(originalStroke$hypertension)
+originalStroke$heart_disease<-as.factor(originalStroke$heart_disease)
+
+#originalStroke$stroke<-as.factor(originalStroke$stroke)
+```
+
+```{r mutate variable, eval=FALSE, include=FALSE}
+## mutate smoking status
+originalStroke<-originalStroke%>%
+    mutate(smoking_status=case_when(smoking_status=="formerly smoked"~"1",                        smoking_status=="smokes"~"1",  smoking_status=="never smoked"~"0",smoking_status=="Unknown"~"0"))
+```
+
+```{r change data type2}
+#Change all categorical data that are in character type to factor type
+originalStroke <- as.data.frame(unclass(originalStroke),stringsAsFactors=TRUE)
+```
+
+
+We then check for NA's in the data set. The result was shown in the table below.
+
+
+
+```{r check NA after conversion}
 # Check missing data
 knitr::kable(sum(is.na(originalStroke))
 ,caption = "Table 2.1 Number of Missing Values")
+```
+
+```{r show where NA is}
+NA_plot<-vis_miss(originalStroke)
+NA_plot+
+  ggtitle("Figure 2.1 Graph of NA in Each Column")
+```
+
+```{r bmi na row}
+bmi_na_row<-which(is.na(originalStroke$bmi))
+```
+
+```{r missing value row stroke status}
+knitr::kable(table(originalStroke$stroke[bmi_na_row]),caption = "Table 2.2 Stroke Status of Rows with Missing Value")
+```
+
+Table 2.1 and Figure 2.1 show that 201 rows of missing values were found from the data set, which were only present in the column "bmi". According to Table 2.2, there are 161 patients who had stroke and 40 patients who have not had stroke in patients with their BMI value missing. We decide to remove these rows with missing values in BMI.
+
+```{r dealing with missing data}
 ## Remove NAs
 stroke<-na.omit(originalStroke)
 ```
 
-```{r change data type}
-stroke$bmi<-as.numeric(stroke$bmi)
-stroke$stroke<-as.factor(stroke$stroke)
-```
-
-
-
-```{r}
+```{r stroke class}
 #View Classese of stroke
-stroke_classes<-ggplot(data = stroke, mapping = aes(x=stroke,fill=stroke))+
+stroke_classes<-ggplot(data = originalStroke, mapping = aes(x=stroke,fill=stroke))+
   geom_bar(xlab="Stroke Status")+
   xlab("Stroke Status")+
-  ggtitle("Figure 2.1 Classes of Stroke")
-  
+  ggtitle("Figure 2.2 Classes of Stroke")
   
 stroke_classes
 ```
 
-We can see from Figure 2.1 that the class of stroke status was imbalanced, therefore, we utilized the technique called Synthetic Minority Oversampling Technique(SMOTE) to synthesize data points for the minority class, therefore increase the proportion of the minority class in the data set.
-
-The SMOTE technique 
-(Wijaya)
-
-An experimental pacakge from github was utilized to conduct SMOTE for our datat set that consists of both categorical and numeric features(Wu).
 
 
-```{r dealing with missing data}
-#load original data set
-originalStroke$bmi<-as.numeric(originalStroke$bmi)
-## Remove NAs
-stroke<-na.omit(originalStroke)
-```
-
-```{r change data type}
-#Change all categorical data that are in character type to factor type
-stroke <- as.data.frame(unclass(stroke),stringsAsFactors=TRUE)
-```
 
 ```{r dealing with imbalance of data set}
 #Utilizing smote_nc to synthesize additional data points for the minority class in the data set.
 set.seed(114514)
 test<-SMOTE_NC(stroke,"stroke",perc_maj = 25,5)
 #write.csv(test, file = "Smote0.25.csv")
+#test <- as.data.frame(unclass(test),stringsAsFactors=TRUE)
+
+```
+
+We can see from Figure 2.2 that the class of stroke status was imbalanced, therefore, we utilized the technique called Synthetic Minority Oversampling Technique(SMOTE) to synthesize data points for the minority class, therefore increase the proportion of the minority class in the data set and enable us to build an usable classifier
+
+The SMOTE technique is an oversampling technique that utilizes the technique called K-Nearest Neighbor algorithm to synthesize data.The SMOTE randomly choose K rows of data from the minority class in the data set and synthesize new data points on the line segment between each of the two data points.
+
+This technique allows us to mitigate the imbalance in the data set with less concern on the issue of overfitting in regular oversampling, which make the model giving accurate predictions on training data but unable to making correct prediction on new data provided(Wijaya).
+
+An experimental package from github was utilized to conduct SMOTE for our datat set that consists of both categorical and numeric features(Wu).
+
+
+
+
+
+### EDA
+
+```{r correlation plot for numeric features}
+M<-cor(test[,c(3,9,10)])
+#Create correlation plot
+corrplot(M, method= "circle",type = "upper",title="Figure 2.x Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
+```
+
+We can see from the Figure 2.3 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models(ridge, lasso, elastic net) were appropriate for the data set.
+
+```{r empirical logit function, include=FALSE}
+#Load function for empirical logit plot
+emplogitPlot <- function(x, y, binsize = NULL, ci = FALSE, probit = FALSE,
+prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
+  
+  if(class(y) =="character"){
+   y <- as.numeric(as.factor(y))-1
+   }
+  
+  if (length(x) != length(y))
+    stop("x and y lengths differ")
+  if (any(y < 0 | y > 1))
+    stop("y not between 0 and 1")
+  if (length(x) < 100 & is.null(binsize))
+    stop("Less than 100 observations: specify binsize manually")
+  
+  if (is.null(binsize)) binsize = min(round(length(x)/10), 50)
+  
+  if (probit){
+    link = qnorm
+    if (is.null(main)) main = "Empirical probits"
+  } else {
+    link = function(x) log(x/(1-x))
+    if (is.null(main)) main = "Empirical logits"
+  }
+  
+  sort = order(x)
+  x = x[sort]
+  y = y[sort]
+  a = seq(1, length(x), by=binsize)
+  b = c(a[-1] - 1, length(x))
+  
+  prob = xmean = ns = rep(0, length(a)) # ns is for CIs
+  for (i in 1:length(a)){
+    range = (a[i]):(b[i])
+    prob[i] = mean(y[range])
+    xmean[i] = mean(x[range])
+    ns[i] = b[i] - a[i] + 1 # for CI 
+  }
+  
+  extreme = (prob == 1 | prob == 0)
+  prob[prob == 0] = min(prob[!extreme])
+  prob[prob == 1] = max(prob[!extreme])
+  
+  g = link(prob) # logits (or probits if probit == TRUE)
+  
+  linear.fit = lm(g[!extreme] ~ xmean[!extreme])
+  b0 = linear.fit$coef[1]
+  b1 = linear.fit$coef[2]
+  
+  loess.fit = loess(g[!extreme] ~ xmean[!extreme])
+  
+  plot(xmean, g, main=main, xlab=xlab, ylab=ylab)
+  abline(b0,b1)
+  if(lowess.in ==TRUE){
+  lines(loess.fit$x, loess.fit$fitted, lwd=2, lty=2)
+  }
+}
 ```
 
 
-```{r collapsing }
-stroke<-stroke%>%
-  transmute(
-    
-  )
-```
+
+
 
 
 ## Section 3: Method 1:K Nearest Neighbor
 
 ### Section 3.1: Introduction
-We begin by implementing a technique called K-Nearest Neighbor(KNN) to predict the stroke status of the patients.It  
+
+We begin by implementing a technique called K-Nearest Neighbor(KNN) to predict the stroke status of the patients.It
 
 ### Section 3.2: Method
 
@@ -154,7 +264,7 @@ for(k in 1:nk){
     #Create training and testing sets
     Train_Stroke<-numericOnly[-infold,]
     Test_Stroke<-numericOnly[infold,]
-   (set.seed(114514))
+   #(set.seed(114514))
     #Run Knn
     k_preds<-knn(Train_Stroke[,c(1,2,3)],Test_Stroke[,c(1,2,3)],k=k,cl=Train_Stroke$stroke)
     
@@ -202,9 +312,6 @@ knnActualPlot
 
 ### Section 4.2: Method
 
-```{r}
-
-```
 
 ```{r}
 test_noID<-test[,-1]
@@ -229,10 +336,9 @@ knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Table 4.x Devia
 ```
 
 ```{r ridge final and pred}
-ridge.final<-glmnet(XD[,-11], test_noID$stroke , alpha = 0,lambda = 0.0181107	, standardize = TRUE,family = "binomial")
+ridge.final<-glmnet(XD[,-11], test_noID$stroke , alpha = 0,lambda = CV_result_ridge[smallestRidge_Deviance,]$Lambda	, standardize = TRUE,family = "binomial")
 pred_ridge<-predict(ridge.final,newx=XD[,-11],type = "response")
 ```
-
 
 ```{r ROCAUC ridge}
 roc_ridge<-roc(test$stroke,pred_ridge)
@@ -250,8 +356,6 @@ pred_ridge_Y<-ifelse(pred_ridge>holder[which.max(holder$GMean),]$Threshold,"1","
 knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = "Table 4.x Confusion Matrix for Prediction of Stroke Via Ridge")
 ```
 
-
-
 ## Lasso
 
 ```{r find best lambda}
@@ -265,7 +369,7 @@ knitr::kable(CV_result_lasso[smallestLasso_Deviance,],caption = "Table 4.x Devia
 ```
 
 ```{r lasso final}
-lasso.final<-glmnet(XD[,-11], test_noID$stroke , alpha = 1,lambda = 0.0015729	, standardize = TRUE,family = "binomial")
+lasso.final<-glmnet(XD[,-11], test_noID$stroke , alpha = 1,lambda = CV_result_lasso[which.min(CV_result_lasso$Deviance),]$Lambda	, standardize = TRUE,family = "binomial")
 pred_lasso<-predict(lasso.final,newx=XD[,-11],type = "response")
 
 ```
@@ -277,15 +381,11 @@ auc(roc_lasso)
 holder_lasso <- data.frame("Threshold" = roc_lasso$thresholds, "Sensivity" = roc_lasso$sensitivities, "Spec" = roc_lasso$specificities, "GMean" = sqrt(roc_lasso$sensitivities*roc_lasso$specificities))
 ```
 
-
 ```{r lasso prediction with adjusted threshold}
 predicted.Y_lasso<-ifelse(pred_lasso>holder_lasso[which.max(holder_lasso$GMean),]
 $Threshold,"1","0")
 
 ```
-
-
-
 
 ```{r lasso mtx}
 knitr::kable(table("Prediction" = predicted.Y_lasso,"Actual"= test$stroke),caption = "Table 4.x Confusion Matrix for Prediction of Stroke Via Lasso")
@@ -294,7 +394,6 @@ knitr::kable(table("Prediction" = predicted.Y_lasso,"Actual"= test$stroke),capti
 ```{r adjusted metrics lasso}
 knitr::kable(holder_lasso[which.max(holder_lasso$GMean),],caption = "Table 4.x ")
 ```
-
 
 ```{r find alpha and lambda with smallest deviance elastic net}
 #Set a sequence of numbers from 0 to 1, increment by 0.01 each time 
@@ -329,8 +428,6 @@ alpha_chosen<-ideal_set$Alpha
 lambda_chosen<-ideal_set$Lambda
 ```
 
-
-
 ```{r elastic net finla model}
 Elastic.Final.Model<-glmnet(XD[,-11], test_noID$stroke,alpha = alpha_chosen,lambda = lambda_chosen,family="binomial")
 ```
@@ -344,16 +441,15 @@ roc_elastic<-roc(test$stroke,pred_elastic)
 plot(roc_elastic)
 auc(roc_elastic)
 holder_elastic <- data.frame("Threshold" = roc_elastic$thresholds, "Sensivity" = roc_elastic$sensitivities, "Spec" = roc_elastic$specificities, "GMean" = sqrt(roc_elastic$sensitivities*roc_elastic$specificities))
-which.max(holder_elastic$GMean)
-holder_elastic[3715,]
+
+holder_elastic[which.max(holder_elastic$GMean),]
 ```
 
 ```{r elastic net prediction with adjusted threshold}
 #Make prediction with adjusted threshold and create confusion matrix for it
-pred_Y_elastic<-ifelse(pred_elastic>holder_elastic[3715,]$Threshold,"1","0")
+pred_Y_elastic<-ifelse(pred_elastic>holder_elastic[which.max(holder_elastic$GMean),]$Threshold,"1","0")
 knitr::kable(table("Prediction" = pred_Y_elastic,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Elastic Net")
 ```
-
 
 ### Section 4.3: Results:
 
@@ -383,31 +479,27 @@ set.seed(100)
 random<-randomForest(stroke~.,data=test,mtry=sqrt(10),importance=TRUE,ntree=1000,compete=FALSE)
 ```
 
-
 ```{r bagged confusion matrix}
 #Formatted Confusion Matrix for bagge forest
 knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Bagged Forest")
 ```
 
+$$Sensitivity=\frac{768}{407+768}\approx0.654$$
+$$Specificity=\frac{4493}{4493+207}\approx0.956$$ 
+$$Accuracy=\frac{4493+768}{5875}\approx0.895$$
 
-$$Sensitivity=\frac{845}{330+845}\approx0.719$$
-$$Specificity=\frac{4616}{4616+84}\approx0.982$$ 
-$$Accuracy=\frac{4616+845}{5875}\approx0.93$$
-
-$$CER=1-Accuracy=0.07$$
+$$CER=1-Accuracy=0.105$$
 
 ```{r Random Forest Confusion Matrix}
 knitr::kable(table("Prediction"=random$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Random Forest")
 ```
 
-$$Sensitivity=\frac{805}{370+805}\approx0.69$$
+$$Sensitivity=\frac{721}{454+721}\approx0.614$$
 
-$$Specificity=\frac{4637}{4637+63}\approx0.987$$
+$$Specificity=\frac{4531}{4531+169}\approx0.964$$
 
-$$Accuracy=\frac{4637+805}{5875}\approx0.926$$ 
-$$CER=1-Accuracy=1-0.926=0.074$$
-
-
+$$Accuracy=\frac{4531+721}{5875}\approx0.894$$ 
+$$CER=1-Accuracy=1-0.894=0.106$$
 
 ## Conclusion
 
@@ -415,8 +507,8 @@ $$CER=1-Accuracy=1-0.926=0.074$$
 
 Fedesoriano. "Stroke Prediction Dataset." Kaggle, 26 Jan. 2021, <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset/code>.
 
-Wijaya, Cornellius Yudha. “5 Smote Techniques for Oversampling Your Imbalance Data.” Medium, Towards Data Science, 24 May 2022, https://towardsdatascience.com/5-smote-techniques-for-oversampling-your-imbalance-data-b8155bdbe2b5. 
+Wijaya, Cornellius Yudha. "5 Smote Techniques for Oversampling Your Imbalance Data." Medium, Towards Data Science, 24 May 2022, <https://towardsdatascience.com/5-smote-techniques-for-oversampling-your-imbalance-data-b8155bdbe2b5>.
 
-RolandRoland.“Convert All Data Frame Character Columns to Factors.” Stack Overflow, 17 Dec. 2013, https://stackoverflow.com/questions/20637360/convert-all-data-frame-character-columns-to-factors.
+RolandRoland."Convert All Data Frame Character Columns to Factors." Stack Overflow, 17 Dec. 2013, <https://stackoverflow.com/questions/20637360/convert-all-data-frame-character-columns-to-factors>.
 
-Wu, Dongyuan. “Dongyuanwu/RSBID: Resampling Strategies for Binary Imbalanced Datasets Version 0.0.2.0000 from Github.” Version 0.0.2.0000 from GitHub, 18 July 2022, https://rdrr.io/github/dongyuanwu/RSBID/. 
+Wu, Dongyuan. "Dongyuanwu/RSBID: Resampling Strategies for Binary Imbalanced Datasets Version 0.0.2.0000 from Github." Version 0.0.2.0000 from GitHub, 18 July 2022, <https://rdrr.io/github/dongyuanwu/RSBID/>.
