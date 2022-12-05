@@ -155,7 +155,22 @@ M<-cor(test[,c(3,9,10)])
 corrplot(M, method= "circle",type = "upper",title="Figure 2.x Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
 ```
 
+```{r}
+heart_smoking<-table(test$heart_disease,test$smoking_status)
+heart_smoking
+```
+
+```{r}
+prop.table(heart_smoking)
+```
+```{r}
+prop.table(heart_smoking,1)
+```
+
 We can see from the Figure 2.3 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models(ridge, lasso, elastic net) were appropriate for the data set.
+
+
+
 
 ```{r empirical logit function, include=FALSE}
 #Load function for empirical logit plot
@@ -226,7 +241,29 @@ prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
 
 ### Section 3.1: Introduction
 
-We begin by implementing a technique called K-Nearest Neighbor(KNN) to predict the stroke status of the patients.It
+We begin building the classifier by implementing a technique called K-Nearest Neighbor(KNN) to predict the stroke status of the patients.It uses the stroke status of the k nearest neighbor data points to predict the stroke status of any given data point in the data set. Figure 3.1 is an illustration of this technique.
+
+```{r}
+set.seed(114514)
+numRow<-nrow(test)
+chosenDemo<-sample(1:numRow,200,replace = FALSE)
+set_demo<-test[chosenDemo,]
+```
+
+
+```{r knn demo illustration}
+demo_data<-data.frame("Age"= rep(NA,1),"BMI"=rep(NA,1),"Stroke"=rep(NA,1))
+demo_data$Age[1]<-69
+demo_data$BMI[1]<-22.8
+demo_data$Stroke<-1
+
+#demoTest<-example_data%>%
+ # mutate(dengue_status_test=as.character(dengue_status))
+ggplot()+
+  geom_point(data = set_demo,aes(x=age,y=bmi,col=stroke),size=2,alpha=0.9,shape=19)+
+  geom_point(data =demo_data,aes(x=Age,y=BMI),size=2,alpha=0.9,shape=4)
+```
+
 
 ### Section 3.2: Method
 
@@ -306,6 +343,8 @@ knnActualPlot
 ### Section 3.3: Results
 
 ## Section 4: Method 2: Penalized Regression(Ridge, Lasso and Elastic Net)
+
+Figure 2.1 indicated that the correlations between numeric and categorical features exists, therefore, we decide to implement penalized regression models to mitigate this situation, since 
 
 ### Section 4.1: Introduction
 
@@ -511,3 +550,7 @@ Wijaya, Cornellius Yudha. "5 Smote Techniques for Oversampling Your Imbalance Da
 RolandRoland."Convert All Data Frame Character Columns to Factors." Stack Overflow, 17 Dec. 2013, <https://stackoverflow.com/questions/20637360/convert-all-data-frame-character-columns-to-factors>.
 
 Wu, Dongyuan. "Dongyuanwu/RSBID: Resampling Strategies for Binary Imbalanced Datasets Version 0.0.2.0000 from Github." Version 0.0.2.0000 from GitHub, 18 July 2022, <https://rdrr.io/github/dongyuanwu/RSBID/>.
+
+Singh, Deepika. “Deepika Singh.” Pluralsight, 12 Nov. 2019, https://www.pluralsight.com/guides/finding-relationships-data-with-r. 
+
+Reka Solymosi (maintained and updated by David Buil-Gil and Nicolas Trajtenberg). “Making Sense of Crim Data.” Chapter 3 Week 3, 8 Nov. 2022, https://maczokni.github.io/MSCD_labs/week3.html. 
