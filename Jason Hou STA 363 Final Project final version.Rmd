@@ -118,7 +118,7 @@ stroke<-na.omit(originalStroke)
 ```{r stroke class}
 #View Classese of stroke
 stroke_classes<-ggplot(data = originalStroke, mapping = aes(x=stroke,fill=stroke))+
-  geom_bar(xlab="Stroke Status")+
+  geom_bar()+
   xlab("Stroke Status")+
   ggtitle("Figure 2.2 Classes of Stroke")
   
@@ -139,7 +139,7 @@ test<-SMOTE_NC(stroke,"stroke",perc_maj = 25,5)
 
 We can see from Figure 2.2 that the class of stroke status was imbalanced, therefore, we utilized the technique called Synthetic Minority Oversampling Technique(SMOTE) to synthesize data points for the minority class, therefore increase the proportion of the minority class in the data set and enable us to build an usable classifier
 
-The SMOTE technique is an oversampling technique that utilizes the technique called K-Nearest Neighbor algorithm to synthesize data.The SMOTE randomly choose K rows of data from the minority class in the data set and synthesize new data points on the line segment between each of the two data points.
+The SMOTE technique is an oversampling technique that utilizes the technique called k-Nearest Neighbor algorithm to synthesize data.The SMOTE randomly choose K rows of data from the minority class in the data set and synthesize new data points on the line segment between each of the two data points.
 
 This technique allows us to mitigate the imbalance in the data set with less concern on the issue of overfitting in regular oversampling, which make the model giving accurate predictions on training data but unable to making correct prediction on new data provided(Wijaya).
 
@@ -151,24 +151,59 @@ An experimental package from github was utilized to conduct SMOTE for our datat 
 
 ### EDA
 
+```{r remove ID}
+test<-test[,-1]
+```
+
+We found out that 
+
+
 ```{r correlation plot for numeric features}
-M<-cor(test[,c(3,9,10)])
+M<-cor(test[,c(2,8,9)])
 #Create correlation plot
-corrplot(M, method= "circle",type = "upper",title="Figure 2.x Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
+corrplot(M, method= "circle",type = "upper",title="Figure 2.3 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
+```
+
+```{r stroke across gender}
+positive_stroke<-test$stroke==1
+positive_stroke_set<-data.frame("Stroke"=as.factor(positive_stroke),"Gender"=test$gender)
+
+stroke_gender<-positive_stroke_set%>%
+  group_by(Gender)%>%
+  summarise(n = n()) %>%
+  ggplot(aes(x = Gender, y = n,fill=Gender))+
+  geom_col()+
+  labs(y="Count of Stroke Events")+
+  ggtitle("Figure 2.4 Stroke Event Across Gender")
+stroke_gender
+
+
+
+
+```
+
+```{r stroke and work type}
+
+positive_stroke_work<-data.frame("Stroke"=as.factor(positive_stroke),"Work"=test$work_type)
+
+stroke_work<-positive_stroke_work%>%
+  group_by(Work)%>%
+  summarise(n = n()) %>%
+  ggplot(aes(x = Work, y = n,fill=Work))+
+  geom_col()+
+  labs(y="Count of Stroke Events")+
+  ggtitle("Figure 2.5 Stroke Event Across Work Type")
+stroke_work
+```
+
+```{r}
+ggplot(data=test,aes(x=avg_glucose_level))+
+  geom_boxplot()
 ```
 
 
-```{r}
-heart_smoking<-table(test$heart_disease,test$smoking_status)
-heart_smoking
-```
+We can see from  Figure 2.4 that there are more female patients among all patients who had stroke.  
 
-```{r}
-prop.table(heart_smoking)
-```
-```{r}
-prop.table(heart_smoking,1)
-```
 
 We can see from the Figure 2.3 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models(ridge, lasso, elastic net) were appropriate for the data set.
 
@@ -282,7 +317,7 @@ We utilized 10-fold Cross Validation to assess the predictive accuracy of kNN on
 
 ```{r KNN Data}
 #Create a data set with only numeric features for the KNN
-numericOnly<-test[,c(3,9,10,12)]
+numericOnly<-test[,c(2,8,9,11)]
 ```
 
 ```{r 10 fold CV determine best k }
@@ -379,29 +414,39 @@ According to the result obtained from 10-fold Cross Validation, kNN allowed us t
 
 ### Section 4.1: Introduction
 
-Figure 2.1 indicated that the correlations between numeric and categorical features exists, therefore, we decide to implement penalized regression models to mitigate this situation, since
+Figure 2.1 indicated that the correlations between features exists, therefore, we decide to implement penalized regression models to mitigate this situation.
 
-Additionally, since the kNN algorithm we used would only accept numeric features, the 8 remaining categorical features were not used for the prediction. Therefore, we decided to implement penalized regression techniques to build the second classifier that not only utilizes both numeric and categorical features on making prediction, but also mitigate the impact of multicolinearity in the prediction.
+Additionally, since the kNN algorithm we used would only accept numeric features, the 8 remaining categorical features were not used for the prediction. Therefore, we decided to implement penalized regression techniques, along with logistic regression, to build the second classifier that not only utilizes both numeric and categorical features on making prediction, but also mitigate the impact of multicolinearity in the prediction.
 
 
 ### Section 4.2: Method
 
+Firstly, we tried to use ridge regression to create the model for classification, as it provides the effect of shrinkage. In other words, shrinking the coefficients of correlated features towards 0, thus restrains the impact from them and mitigates the effect caused by multicollinearity(correlated features in the data set). To do this we need to find the tuning parameter that provides the best shrinking effect.
+
+The general form of our model is the following:
+
+$$\boldsymbol{Y}=\boldsymbol{X_D\beta+\epsilon}$$
+
+$$RSS=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^\mathbf{T}(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})$$
+
+$$RSS + \lambda
+\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
 
 ```{r}
 #Remove the ID column from data set
-test_noID<-test[,-1]
+#test_noID<-test[,-1]
 ```
 
 ```{r creating design matrix ridge}
 # Create the design matrix for ridge regression
-XD <- model.matrix(stroke ~., data = test_noID)
+XD <- model.matrix(stroke ~., data = test)
 ```
 
 ```{r cv to find the best lambda}
 #Set seed for random sampling
 set.seed(114514)
 #Run cross validation for lambda value from 1 to 50(increment by 0.05 for each run)
-ridge.modFind_Lambda <- cv.glmnet(XD[,-11], test_noID$stroke , alpha = 0,standardize = TRUE,family = "binomial")
+ridge.modFind_Lambda <- cv.glmnet(XD[,-1], test$stroke , alpha = 0,standardize = TRUE,family = "binomial")
 ```
 
 ```{r}
@@ -411,9 +456,17 @@ knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Table 4.x Devia
 ```
 
 ```{r ridge final and pred}
-ridge.final<-glmnet(XD[,-11], test_noID$stroke , alpha = 0,lambda = CV_result_ridge[smallestRidge_Deviance,]$Lambda	, standardize = TRUE,family = "binomial")
-pred_ridge<-predict(ridge.final,newx=XD[,-11],type = "response")
+ridge.final<-glmnet(XD[,-1], test$stroke , alpha = 0,lambda = CV_result_ridge[smallestRidge_Deviance,]$Lambda	, standardize = TRUE,family = "binomial")
+pred_ridge<-predict(ridge.final,newx=XD[,-1],type = "response")
 ```
+
+```{r beta ridge}
+beta_ridge<-as.numeric(coefficients(ridge.final))
+coef_ridge<-data.frame("Coef"=beta_ridge,"Selecting Status" = ifelse(beta_ridge==0,"Removed",""))
+rownames(coef_ridge)<-colnames(XD)
+knitr::kable(coef_ridge)
+```
+
 
 ```{r ROCAUC ridge}
 roc_ridge<-roc(test$stroke,pred_ridge)
@@ -433,8 +486,12 @@ knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = 
 
 ## Lasso
 
+$$RSS+\lambda||\boldsymbol{\hat{\beta}}||_1 +
+=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})+\lambda\sum|\hat{\beta_j}|$$
+
 ```{r find best lambda}
-lasso.modFind_Lambda <- cv.glmnet(XD[,-11], test_noID$stroke , alpha = 1, standardize = TRUE,family = "binomial")
+set.seed(114514)
+lasso.modFind_Lambda <- cv.glmnet(XD[,-1], test$stroke , alpha = 1, standardize = TRUE,family = "binomial")
 ```
 
 ```{r}
@@ -444,10 +501,18 @@ knitr::kable(CV_result_lasso[smallestLasso_Deviance,],caption = "Table 4.x Devia
 ```
 
 ```{r lasso final}
-lasso.final<-glmnet(XD[,-11], test_noID$stroke , alpha = 1,lambda = CV_result_lasso[which.min(CV_result_lasso$Deviance),]$Lambda	, standardize = TRUE,family = "binomial")
-pred_lasso<-predict(lasso.final,newx=XD[,-11],type = "response")
+lasso.final<-glmnet(XD[,-1], test$stroke , alpha = 1,lambda = CV_result_lasso[which.min(CV_result_lasso$Deviance),]$Lambda	, standardize = TRUE,family = "binomial")
+pred_lasso<-predict(lasso.final,newx=XD[,-1],type = "response")
 
 ```
+
+```{r beta lasso}
+beta_lasso<-as.numeric(coefficients(lasso.final))
+coef_lasso<-data.frame("Coef"=beta_lasso,"Selecting Status" = ifelse(beta_lasso==0,"Removed",""))
+rownames(coef_lasso)<-colnames(XD)
+knitr::kable(coef_lasso)
+```
+
 
 ```{r ROC AUC Lasso}
 roc_lasso<-roc(test$stroke,pred_lasso)
@@ -470,6 +535,11 @@ knitr::kable(table("Prediction" = predicted.Y_lasso,"Actual"= test$stroke),capti
 knitr::kable(holder_lasso[which.max(holder_lasso$GMean),],caption = "Table 4.x ")
 ```
 
+### Elastic Net
+
+$$RSS + \lambda
+\sum((1-\alpha)\hat{\beta_j^2}+\alpha|\hat{\beta_j}|)$$
+
 ```{r find alpha and lambda with smallest deviance elastic net}
 #Set a sequence of numbers from 0 to 1, increment by 0.01 each time 
 seq_alpha<-seq(from = 0, to = 1, by = 0.01)
@@ -481,7 +551,7 @@ aph=1
 set.seed(1)
 #Loop to test each lambda and alpha and save MSE, RMSE with corresponding lambda and alpha to a dataframe
 for(i in seq_alpha){
-  Elastic.modFind.ideal<-cv.glmnet(XD[,-11], test_noID$stroke,alpha = i,family="binomial")
+  Elastic.modFind.ideal<-cv.glmnet(XD[,-1], test$stroke,alpha = i,family="binomial")
   storageElastic$Lambda[aph]<-Elastic.modFind.ideal$lambda.min
   storageElastic$Alpha[aph]<-i
   storageElastic$Deviance[aph]<-min(Elastic.modFind.ideal$cvm)
@@ -504,11 +574,11 @@ lambda_chosen<-ideal_set$Lambda
 ```
 
 ```{r elastic net finla model}
-Elastic.Final.Model<-glmnet(XD[,-11], test_noID$stroke,alpha = alpha_chosen,lambda = lambda_chosen,family="binomial")
+Elastic.Final.Model<-glmnet(XD[,-1], test$stroke,alpha = alpha_chosen,lambda = lambda_chosen,family="binomial")
 ```
 
 ```{r elastic net prediction}
-pred_elastic<-predict(Elastic.Final.Model,newx = XD[,-11],type = "response")
+pred_elastic<-predict(Elastic.Final.Model,newx = XD[,-1],type = "response")
 ```
 
 ```{r ROCAUC elastic net}
@@ -537,13 +607,13 @@ knitr::kable(table("Prediction" = pred_Y_elastic,"Actual"= test$stroke),caption 
 ```{r bagged forest}
 #Set seed 
 set.seed(100)
-set_for_forest<-test[,-1]
+set_for_forest<-test
 bagged<-randomForest(stroke~.,data=test,mtry=10,importance=TRUE,ntree=1000,compete=FALSE)
 ```
 
 ```{r bagged prediction}
 #bag forest prediction
-for_predict<-test[,-c(1,12)]
+for_predict<-test[,-11]
 pred_bag<-predict(bagged)
 table(pred_bag)
 table("Prediction"= pred_bag,"Actual" = test$stroke)
