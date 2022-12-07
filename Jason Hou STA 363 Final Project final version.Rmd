@@ -34,7 +34,7 @@ library(report)
 
 ## Section 1: Data and Motivation
 
-Our goal of this project is to build a classifier that helps to predict potential stroke event based on the health condition, health measures and related information provided. This classifier can be utilized to assist the prevention of stroke event along with other testing techniques, and facilitate the diagnosis process through providing a preliminary screening, which can help medical professionals to identify people who are more likely to suffer stroke.
+Our goal of this project is to build a classifier that helps to predict whether someone is more likely or less likely to have stroke based on the health condition, health measures and related information provided. This classifier can be utilized to assist the prevention of stroke event along with other testing techniques, and facilitate the diagnosis process through providing a preliminary screening, which can help medical professionals to identify people who are more likely to suffer stroke, and implement preventive care if needed.
 
 The data that we are dealing on is a data consist of 5110 rows and 12 columns.The data set record the 12 features(4 numeric features and 8 categorical features) of 5110 patients who have either had or have not had stroke. We have the information on the patient's biological gender, the age of each patient in years,whether a patient has heart disease/hypertension, marital status, smoking status, stroke status and other related information. For other features not mentioned, please refer to the following link for a detailed description of features in this data set.(Fedesoriano) Link: <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset>
 
@@ -151,18 +151,22 @@ An experimental package from github was utilized to conduct SMOTE for our datat 
 
 ### EDA
 
+
 ```{r remove ID}
 test<-test[,-1]
 ```
 
-We found out that 
+We decided to remove the feature "ID" since this feature has 5875 unique levels, and is merely the identification label for each patient that would not help on predicting the stroke risk status.
 
 
 ```{r correlation plot for numeric features}
 M<-cor(test[,c(2,8,9)])
 #Create correlation plot
-corrplot(M, method= "circle",type = "upper",title="Figure 2.3 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
+corrplot(M, method= "number",type = "upper",title="Figure 2.3 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
 ```
+
+We can see from the Figure 2.3 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models(ridge, lasso, elastic net) were appropriate for the data set.
+
 
 ```{r stroke across gender}
 positive_stroke<-test$stroke==1
@@ -182,6 +186,9 @@ stroke_gender
 
 ```
 
+We can see from  Figure 2.4 that there are more female patients among all patients who had stroke.  
+
+
 ```{r stroke and work type}
 
 positive_stroke_work<-data.frame("Stroke"=as.factor(positive_stroke),"Work"=test$work_type)
@@ -192,9 +199,11 @@ stroke_work<-positive_stroke_work%>%
   ggplot(aes(x = Work, y = n,fill=Work))+
   geom_col()+
   labs(y="Count of Stroke Events")+
-  ggtitle("Figure 2.5 Stroke Event Across Work Type")
+  ggtitle("Figure 2.5 Stroke Event Across Work Type" ) + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 stroke_work
 ```
+
+
 
 ```{r}
 ggplot(data=test,aes(x=avg_glucose_level))+
@@ -202,10 +211,8 @@ ggplot(data=test,aes(x=avg_glucose_level))+
 ```
 
 
-We can see from  Figure 2.4 that there are more female patients among all patients who had stroke.  
 
 
-We can see from the Figure 2.3 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models(ridge, lasso, elastic net) were appropriate for the data set.
 
 
 
@@ -408,7 +415,7 @@ $$Accuracy=\frac{4399+478}{5875}\approx0.83$$
 $$CER=1-Accuracy=1-0.83=0.17$$
 
 
-According to the result obtained from 10-fold Cross Validation, kNN allowed us to reach a sensitivity of 0.407 and a specificity of 0.936, and an overall accuracy of 0.83 on predicting the stroke status of patients in the stroke data set. Despite the accuracy of 0.83 that indicates we made accurate predictions on stroke status of 83% of the patients, the sensitivity of our prediction revealed that we only predicted accurately on 40.7% of the stroke event in patient.
+According to the result obtained from 10-fold Cross Validation, kNN allowed us to reach a sensitivity of 0.407 and a specificity of 0.936, and an overall accuracy of 0.83 on predicting for patients in the stroke data set on whether each of them are more likely or less likely to have stroke. Despite the accuracy of 0.83 that indicates we made accurate predictions on 83% of the patients, the sensitivity of our prediction revealed that we only predicted accurately on 40.7% of the patients regarding their risk of stroke 
 
 ## Section 4: Method 2: Penalized Regression(Ridge, Lasso and Elastic Net)
 
@@ -425,12 +432,12 @@ Firstly, we tried to use ridge regression to create the model for classification
 
 The general form of our model is the following:
 
-$$\boldsymbol{Y}=\boldsymbol{X_D\beta+\epsilon}$$
+$$log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})=\boldsymbol{X_D\beta+\epsilon}$$
 
-$$RSS=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^\mathbf{T}(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})$$
+$$Deviance+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
 
-$$RSS + \lambda
-\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
+$$Deviance + \lambda
+\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}}-X_\mathbf{D}\hat{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
 
 ```{r}
 #Remove the ID column from data set
@@ -486,8 +493,8 @@ knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = 
 
 ## Lasso
 
-$$RSS+\lambda||\boldsymbol{\hat{\beta}}||_1 +
-=(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{Y-X_\mathbf{D}\hat{\beta}})+\lambda\sum|\hat{\beta_j}|$$
+$$Deviance+\lambda||\boldsymbol{\hat{\beta}}||_1 +
+=(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})+\lambda\sum|\hat{\beta_j}|$$
 
 ```{r find best lambda}
 set.seed(114514)
@@ -537,7 +544,7 @@ knitr::kable(holder_lasso[which.max(holder_lasso$GMean),],caption = "Table 4.x "
 
 ### Elastic Net
 
-$$RSS + \lambda
+$$Deviance + \lambda
 \sum((1-\alpha)\hat{\beta_j^2}+\alpha|\hat{\beta_j}|)$$
 
 ```{r find alpha and lambda with smallest deviance elastic net}
@@ -608,6 +615,8 @@ knitr::kable(table("Prediction" = pred_Y_elastic,"Actual"= test$stroke),caption 
 #Set seed 
 set.seed(100)
 set_for_forest<-test
+#set_for_forest$hypertension <- as.numeric(set_for_forest$hypertension)
+#set_for_forest$heart_disease <- as.numeric(set_for_forest$heart_disease)
 bagged<-randomForest(stroke~.,data=test,mtry=10,importance=TRUE,ntree=1000,compete=FALSE)
 ```
 
@@ -615,7 +624,7 @@ bagged<-randomForest(stroke~.,data=test,mtry=10,importance=TRUE,ntree=1000,compe
 #bag forest prediction
 for_predict<-test[,-11]
 pred_bag<-predict(bagged)
-table(pred_bag)
+#table(pred_bag)
 table("Prediction"= pred_bag,"Actual" = test$stroke)
 ```
 
@@ -629,7 +638,8 @@ random<-randomForest(stroke~.,data=test,mtry=sqrt(10),importance=TRUE,ntree=1000
 knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Bagged Forest")
 ```
 
-$$Sensitivity=\frac{785}{390+785}\approx0.668$$
+$$Sensitivity=\frac{679}{496+679}\approx0.578$$
+
 $$Specificity=\frac{4511}{4511+189}\approx0.960$$ 
 $$Accuracy=\frac{4511+785}{5875}\approx0.901$$
 
