@@ -51,6 +51,12 @@ glimpse(originalStroke)
 ```
 
 
+```{r}
+originalStroke<-originalStroke[,-1]
+```
+
+
+
 ```{r include=FALSE}
 v1<-class(originalStroke$hypertension)
 v2<-class(originalStroke$heart_disease)
@@ -63,7 +69,7 @@ features_to_convert
 ```
 
 
-We started with converting the data types of several features to more appropriate type. We found three features that need to be converted from numeric data to categorical data, which are hypertension, heart_disease, and stroke. These three features were converted from numeric type to categorical type. Other categorical features that are originally in character type were also converted into factor type for the model building later.
+We started with converting the data types of several features to more appropriate type. There are three features that need to be converted from numeric data to categorical data, which are hypertension, heart_disease, and stroke. These three features were converted from numeric type to categorical type. Other categorical features that are originally in character type were also converted into factor type for the model building later.
 
 ```{r change data type}
 originalStroke$bmi<-as.numeric(originalStroke$bmi)
@@ -140,40 +146,45 @@ test<-SMOTE_NC(stroke,"stroke",perc_maj = 25,5)
 
 ```
 
-We can see from Figure 2.2 that the class of stroke status was imbalanced, therefore, we utilized the technique called Synthetic Minority Oversampling Technique(SMOTE) to synthesize data points for the minority class, therefore increase the proportion of the minority class in the data set and enable us to build an usable classifier
+We can see from Figure 2.2 that the class of stroke status was imbalanced, therefore, we utilized the technique called Synthetic Minority Oversampling Technique(SMOTE) to synthesize data points for the minority class, therefore increase the proportion of the minority class in the data set and enable us to build an usable classifier.
 
-The SMOTE technique is an oversampling technique that utilizes the technique called k-Nearest Neighbor algorithm to synthesize data.The SMOTE randomly choose K rows of data from the minority class in the data set and synthesize new data points on the line segment between each of the two data points.
+The SMOTE technique is an oversampling technique that utilizes the technique called k-Nearest Neighbor algorithm to synthesize data.In this project we choose to use SMOTE_NC, which is a modification of SMOTE that is able to handle data set with both categorical and numeric features.For numeric features in the data set, SMOTE_NC randomly choose k data points from the minority class in the data set and synthesize new data points on the line segment between each of the two data points. For categorical features, SMOTE_NC selects the most frequent category of the nearest neighbor data points and assign it to the new synthesized data point. (Imbalanced learn)
 
 This technique allows us to mitigate the imbalance in the data set with less concern on the issue of overfitting in regular oversampling, which make the model giving accurate predictions on training data but unable to making correct prediction on new data provided(Wijaya).
 
-An experimental package from github was utilized to conduct SMOTE for our datat set that consists of both categorical and numeric features(Wu).
+An experimental package created by Dongyuan Wu from github was utilized to conduct SMOTE_NC for our data set that consists of both categorical and numeric features(Wu).
 
+```{r bmi distribution}
+ggplot(data=test,aes(x=bmi))+
+  geom_boxplot()+
+  ggtitle("Figure 2.3 Distribution of BMI")
+```
 
 ```{r}
+sum(test$bmi>75)
+```
+
+
+```{r remove BMI larger than 75}
 test<-test%>%
   subset(bmi<75)
 ```
 
+We can see from Figure 2.3 that extreme values of BMI exist in the data set. We decided to remove 3 observations with BMI larger than 75 since it might be unreasonable for people to have such high BMI.
 
 
 
 ### EDA
 
 
-```{r remove ID}
-test<-test[,-1]
-```
-
-We decided to remove the feature "ID" since this feature has 5875 unique levels, and is merely the identification label for each patient that would not help on predicting the stroke risk status.
-
 
 ```{r correlation plot for numeric features}
 M<-cor(test[,c(2,8,9)])
 #Create correlation plot
-corrplot(M, method= "number",type = "upper",title="Figure 2.3 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
+corrplot(M, method= "number",type = "upper",title="Figure 2.4 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
 ```
 
-We can see from the Figure 2.3 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models(ridge, lasso, elastic net) were appropriate for the data set.
+We can see from the Figure 2.4 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models(ridge, lasso, elastic net) were appropriate for the data set.
 
 
 ```{r stroke across gender}
@@ -186,7 +197,7 @@ stroke_gender<-positive_stroke_set%>%
   ggplot(aes(x = Gender, y = n,fill=Gender))+
   geom_col()+
   labs(y="Count of Stroke Events")+
-  ggtitle("Figure 2.4 Stroke Event Across Gender")
+  ggtitle("Figure 2.5 Stroke Event Across Gender")
 stroke_gender
 
 
@@ -207,19 +218,19 @@ stroke_work<-positive_stroke_work%>%
   ggplot(aes(x = Work, y = n,fill=Work))+
   geom_col()+
   labs(y="Count of Stroke Events")+
-  ggtitle("Figure 2.5 Stroke Event Across Work Type" ) + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+  ggtitle("Figure 2.6 Stroke Event Across Work Type" ) + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 stroke_work
 ```
 
-
+We can see from Figure 2.6 that their are more patients who had stroke that has private as their work type.
 
 ```{r}
 ggplot(data=test,aes(x=avg_glucose_level))+
-  geom_boxplot()
+  geom_boxplot()+
+  ggtitle("Figure 2.7 Distribution of Average Glucose Level")
 ```
 
-
-
+We can see from figure 2.7 that the distribution of average glucose level of patients is rightly skewed.
 
 
 
@@ -288,9 +299,7 @@ prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
 
 
 
-
-
-## Section 3: Method 1:K Nearest Neighbor
+## Section 3: Method 1:k Nearest Neighbor(KNN)
 
 ### Section 3.1: Introduction
 
@@ -319,9 +328,9 @@ demo_data$Stroke<-1
 ggplot()+
   geom_point(data = set_demo,aes(x=age,y=bmi,col=stroke),size=2,alpha=0.9,shape=19)+
   geom_point(data =demo_data,aes(x=Age,y=BMI),size=2,alpha=0.9,shape=19)+
-  geom_segment(aes(x=63,xend=66.5,y=24,yend=23.9))+
-  geom_segment(aes(x=63,xend=66,y=24,yend=24.5))+
-  geom_segment(aes(x=63,xend=65.,y=24,yend=27))+
+  geom_segment(aes(x=63,xend=63,y=24,yend=26))+
+  geom_segment(aes(x=63,xend=64,y=24,yend=27))+
+  geom_segment(aes(x=63,xend=66.,y=24,yend=24.5))+
   ggtitle("Figure 3.2.1 Illustration of KNN")
   
 ```
@@ -338,7 +347,7 @@ numericOnly<-test[,c(2,8,9,11)]
 ```{r 10 fold CV determine best k }
 set.seed(114514)
 n<-nrow(numericOnly)
-nk<-25
+nk<-30
 storage<-data.frame("K"=rep(NA,nk),
                     "Sensitivity" = rep(NA,nk),
                     "Specificity" = rep(NA,nk),
@@ -499,56 +508,13 @@ pred_ridge_Y<-ifelse(pred_ridge>holder[which.max(holder$GMean),]$Threshold,"1","
 knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = "Table 4.x Confusion Matrix for Prediction of Stroke Via Ridge")
 ```
 
-## Lasso
-
-$$Deviance+\lambda||\boldsymbol{\hat{\beta}}||_1 +
-=(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})+\lambda\sum|\hat{\beta_j}|$$
-
-```{r find best lambda}
-set.seed(114514)
-lasso.modFind_Lambda <- cv.glmnet(XD[,-1], test$stroke , alpha = 1, standardize = TRUE,family = "binomial")
-```
-
-```{r}
-CV_result_lasso<-data.frame("Lambda" = lasso.modFind_Lambda$lambda,"Deviance" = lasso.modFind_Lambda$cvm)
-smallestLasso_Deviance<-which.min(CV_result_lasso$Deviance)
-knitr::kable(CV_result_lasso[smallestLasso_Deviance,],caption = "Table 4.x Deviance of Model with Chosen Lambda(Lasso)")
-```
-
-```{r lasso final}
-lasso.final<-glmnet(XD[,-1], test$stroke , alpha = 1,lambda = CV_result_lasso[which.min(CV_result_lasso$Deviance),]$Lambda	, standardize = TRUE,family = "binomial")
-pred_lasso<-predict(lasso.final,newx=XD[,-1],type = "response")
-
-```
-
-```{r beta lasso}
-beta_lasso<-as.numeric(coefficients(lasso.final))
-coef_lasso<-data.frame("Coef"=beta_lasso,"Selecting Status" = ifelse(beta_lasso==0,"Removed",""))
-rownames(coef_lasso)<-colnames(XD)
-knitr::kable(coef_lasso)
-```
 
 
-```{r ROC AUC Lasso}
-roc_lasso<-roc(test$stroke,pred_lasso)
-plot(roc_lasso)
-auc(roc_lasso)
-holder_lasso <- data.frame("Threshold" = roc_lasso$thresholds, "Sensivity" = roc_lasso$sensitivities, "Spec" = roc_lasso$specificities, "GMean" = sqrt(roc_lasso$sensitivities*roc_lasso$specificities))
-```
 
-```{r lasso prediction with adjusted threshold}
-predicted.Y_lasso<-ifelse(pred_lasso>holder_lasso[which.max(holder_lasso$GMean),]
-$Threshold,"1","0")
 
-```
 
-```{r lasso mtx}
-knitr::kable(table("Prediction" = predicted.Y_lasso,"Actual"= test$stroke),caption = "Table 4.x Confusion Matrix for Prediction of Stroke Via Lasso")
-```
 
-```{r adjusted metrics lasso}
-knitr::kable(holder_lasso[which.max(holder_lasso$GMean),],caption = "Table 4.x ")
-```
+
 
 ### Elastic Net
 
@@ -557,7 +523,7 @@ $$Deviance + \lambda
 
 ```{r find alpha and lambda with smallest deviance elastic net}
 #Set a sequence of numbers from 0 to 1, increment by 0.01 each time 
-seq_alpha<-seq(from = 0, to = 1, by = 0.01)
+seq_alpha<-seq(from = 0, to = 1, by = 0.1)
 #Create empty data frame to hold alpha, lambda and RMSE of each model fitted with corresponding tuning parameter
 storageElastic<-data.frame("Alpha" = rep(NA,length(seq_alpha)), "Lambda" = rep(NA,length(seq_alpha)),"Deviance" = rep(NA, length(seq_alpha)))
 
@@ -669,6 +635,8 @@ $$CER=1-Accuracy=1-0.899=0.101$$
 ## Works Cited
 
 Fedesoriano. "Stroke Prediction Dataset." Kaggle, 26 Jan. 2021, <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset/code>.
+
+Imbalaced Learn. “2. Over-Sampling#.” 2. Over-Sampling - Version 0.10.0.dev0, https://imbalanced-learn.org/dev/over_sampling.html#smote-variants. 
 
 Wijaya, Cornellius Yudha. "5 Smote Techniques for Oversampling Your Imbalance Data." Medium, Towards Data Science, 24 May 2022, <https://towardsdatascience.com/5-smote-techniques-for-oversampling-your-imbalance-data-b8155bdbe2b5>.
 
