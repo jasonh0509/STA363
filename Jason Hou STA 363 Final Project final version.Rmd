@@ -307,7 +307,7 @@ We begin building the classifier by implementing a technique called K-Nearest Ne
 
 ### Sectio 3.2 Method
 
-Figure 3.2.1 is an illustration of this technique with only age and bmi as the features utilized in kNN, where 0 = the patient have not had stroke, 1 =  the patient had stroke(For demonstration purpose, we only sampled 400 rows of data from the cleaned stroke data set).
+Figure 3.2.1 is an illustration of the kNN technique with only age and bmi as the features utilized in kNN, where 0 = the patient have not had stroke, 1 =  the patient had stroke(For demonstration purpose, we only sampled 400 rows of data from the cleaned stroke data set).
 
 ```{r demo set}
 set.seed(114514)
@@ -426,39 +426,67 @@ knitr::kable(table("Prediction" = storage_inner$YHat,"Actual" = numericOnly$stro
 ```
 
 From Table 3.3.1, we have:
-$$Sensitivity=\frac{697}{697+478}\approx0.407$$
-$$Specificity=\frac{4399}{4399+301}\approx0.936$$
-$$Accuracy=\frac{4399+478}{5875}\approx0.83$$
-$$CER=1-Accuracy=1-0.83=0.17$$
+$$Sensitivity=\frac{505}{670+505}\approx0.514$$
+$$Specificity=\frac{4325}{4325+372}\approx0.928$$
+$$Accuracy=\frac{4325+505}{5872}\approx0.823$$
+$$CER=1-Accuracy=1-0.823=0.177$$
 
 
-According to the result obtained from 10-fold Cross Validation, kNN allowed us to reach a sensitivity of 0.407 and a specificity of 0.936, and an overall accuracy of 0.83 on predicting for patients in the stroke data set on whether each of them are more likely or less likely to have stroke. Despite the accuracy of 0.83 that indicates we made accurate predictions on 83% of the patients, the sensitivity of our prediction revealed that we only predicted accurately on 40.7% of the patients regarding their risk of stroke 
+According to the result obtained from 10-fold Cross Validation, kNN allowed us to reach a sensitivity of 0.514 and a specificity of 0.928, and an overall accuracy of 0.823 on predicting for patients in the stroke data set on whether each of them are more likely or less likely to have stroke. Despite the accuracy of 0.83 that indicates we made accurate predictions on 83% of the patients, the sensitivity of our prediction revealed that we only predicted accurately on 51.4% of the patients regarding their risk of suffering from stroke.
 
-## Section 4: Method 2: Penalized Regression(Ridge, Lasso and Elastic Net)
+## Section 4: Method 2: Ridge Regression
 
 ### Section 4.1: Introduction
 
-Figure 2.1 indicated that the correlations between features exists, therefore, we decide to implement penalized regression models to mitigate this situation.
+The kNN algorithm we used in section 3 would only accept numeric features, the 8 remaining categorical features were not used for the prediction. Therefore, we decided to implement penalized regression techniques, along with logistic regression, to build the second classifier that not only utilizes both numeric and categorical features on making prediction, but also mitigate the impact of multicolinearity in the prediction.
 
-Additionally, since the kNN algorithm we used would only accept numeric features, the 8 remaining categorical features were not used for the prediction. Therefore, we decided to implement penalized regression techniques, along with logistic regression, to build the second classifier that not only utilizes both numeric and categorical features on making prediction, but also mitigate the impact of multicolinearity in the prediction.
+Additionally, figure 2.1 indicated that the correlations between features exists, therefore, we decide to implement penalized regression models to mitigate this situation.
+
 
 
 ### Section 4.2: Method
 
-Firstly, we tried to use ridge regression to create the model for classification, as it provides the effect of shrinkage. In other words, shrinking the coefficients of correlated features towards 0, thus restrains the impact from them and mitigates the effect caused by multicollinearity(correlated features in the data set). To do this we need to find the tuning parameter that provides the best shrinking effect.
+We used ridge regression to create the model for classification, as it provides the effect of shrinkage. In other words, shrinking the coefficients of correlated features towards 0, thus restrains the impact from them and mitigates the effect caused by multicollinearity(correlated features in the data set). To do this we need to find the tuning parameter that provides the best shrinking effect.
 
 The general form of our model is the following:
 
 $$log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})=\boldsymbol{X_D\beta+\epsilon}$$
+, where XD is our design matrix that consists of all the features remained in the data set after data cleaning.
+
+The deviance of the logistic regression model is defined as a measurement of how much the fitted logistic regression model deviates from a model that perfectly predicts each of the observation. In other words, deviance refers to the goodness of fit. Therefore, the smaller the deviance is, the better the model fits on the observed response(Kjytay and Kjytay).
+
+For using ridge regression along with logistic regression, we uses Deviance, plus the penalty term $\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$, which constrains the regression coefficient when correlated feature exist.
+
 
 $$Deviance+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
 
-$$Deviance + \lambda
-\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}}-X_\mathbf{D}\hat{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
+Our goal is to find $\boldsymbol{\beta}$ coefficients that minimizes the following:
 
-```{r}
-#Remove the ID column from data set
-#test_noID<-test[,-1]
+$$Deviance + \lambda
+\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
+
+In order to implement ridge regression ,we need to find the value of tuning parameter $\lambda$ that provides the most ideal shrinkage to the regression. We use the deviance to assess the predictive accuracy of the models that uses different values of $\lambda$. The logistic regression is said to be more accurate when has smaller deviance. The model with smaller deviance will perform better on predicting observed response, therefore lead to a higher predictive accuracy(Kjytay and Kjytay).
+
+
+```{r load a function, include=FALSE}
+##Load a function for creating the plot of RMSE in response of change in Lambda
+ridgePlot <- function(ridge.mod, metric, title){
+  library(ggplot2)
+  
+  smallestLambda <- ridge.mod$lambda[which.min(ridge.mod$cvm)] 
+  
+  if(metric == "MSE"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = (ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test MSE values for Different Tuning Parameters. Smallest MSE at lambda = ", smallestLambda), title = title, y = "Test MSE", x = "Tuning Parameter")
+  
+  }
+  
+  if(metric == "Deviance"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = sqrt(ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test RMSE values for Different Tuning Parameters. Smallest RMSE at lambda = ", smallestLambda), title = title, y = "Test RMSE", x = "Tuning Parameter")
+
+  }
+  
+  g1
+}
 ```
 
 ```{r creating design matrix ridge}
@@ -473,24 +501,47 @@ set.seed(114514)
 ridge.modFind_Lambda <- cv.glmnet(XD[,-1], test$stroke , alpha = 0,standardize = TRUE,family = "binomial")
 ```
 
+
+```{r}
+ridgePlot(ridge.modFind_Lambda, metric = "Deviance" , title ="Figure 4.2.1 Change of Deviance in Response to  Change of Lambda(Ridge)" )
+```
+
+
 ```{r}
 CV_result_ridge<-data.frame("Lambda" = ridge.modFind_Lambda$lambda,"Deviance" = ridge.modFind_Lambda$cvm)
 smallestRidge_Deviance<-which.min(CV_result_ridge$Deviance)
-knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Table 4.x Deviance of Model with Chosen Lambda(Ridge)")
+knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Table 4.2.1 Deviance of Model with Chosen Lambda(Ridge)")
 ```
+
+We can see from Figure 4.2.1 and Table 4.2.1 that the lowest deviance(0.69) occurred when the model is using $\lambda=0.0182421$ as the tuning parameter the ridge regression model. Therefore, we select $\lambda = 0.0182421$
+The final ridge regression model.
 
 ```{r ridge final and pred}
 ridge.final<-glmnet(XD[,-1], test$stroke , alpha = 0,lambda = CV_result_ridge[smallestRidge_Deviance,]$Lambda	, standardize = TRUE,family = "binomial")
 pred_ridge<-predict(ridge.final,newx=XD[,-1],type = "response")
 ```
 
-```{r beta ridge}
+```{r beta ridge, eval=FALSE, include=FALSE}
 beta_ridge<-as.numeric(coefficients(ridge.final))
 coef_ridge<-data.frame("Coef"=beta_ridge,"Selecting Status" = ifelse(beta_ridge==0,"Removed",""))
 rownames(coef_ridge)<-colnames(XD)
 knitr::kable(coef_ridge)
 ```
 
+
+```{r unadjusted pred}
+unadjusted_pred_ridge<-ifelse(pred_ridge>0.5,"1","0")
+
+knitr::kable(table("Prediction" = unadjusted_pred_ridge,"Actual"= test$stroke),caption = "Table 4.2.2 Confusion Matrix for Prediction of Stroke Via Ridge(Unadjusted)")
+```
+
+$$Sensitivity=\frac{430}{745+430}\approx0.366$$
+$$Specificity=\frac{4525}{4525+172}\approx0.963$$
+$$Accuracy=\frac{4525+430}{5872}=0.844$$
+$$CER=1-Accuracy=0.156$$
+
+We can see from Table 4.2.2 that although our ridge regression model reaches an overall predictive accuracy of 0.844, we only reached a sensitivity of 0.366, meaning that among all of the patients who had stroke, we are only able to accurately predict 36.6 % them on their higher risk of suffering from stroke. This is caused by the imbalanced nature of our data set.
+If we uses the default setting 0.5 as the threshold used on predicting whether a patient has higher risk of suffering from stroke,the sensitivity(true positive rate) of our prediction model is going to be low while the specificity is going to be high since majority of the observations consist of patients who have not had stroke. To mitigate the issue and reach our goal of predicting if a patient has higher risk of suffering from stroke, we utilizes ROC curve to find the ideal threshold of the prediction.
 
 ```{r ROCAUC ridge}
 roc_ridge<-roc(test$stroke,pred_ridge)
@@ -505,7 +556,7 @@ pred_ridge_Y<-ifelse(pred_ridge>holder[which.max(holder$GMean),]$Threshold,"1","
 ```
 
 ```{r ridge mtx2}
-knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = "Table 4.x Confusion Matrix for Prediction of Stroke Via Ridge")
+knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = "Table 4.2.3 Confusion Matrix for Prediction of Stroke Via Ridge(threshold adjusted")
 ```
 
 
@@ -516,66 +567,6 @@ knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = 
 
 
 
-### Elastic Net
-
-$$Deviance + \lambda
-\sum((1-\alpha)\hat{\beta_j^2}+\alpha|\hat{\beta_j}|)$$
-
-```{r find alpha and lambda with smallest deviance elastic net}
-#Set a sequence of numbers from 0 to 1, increment by 0.01 each time 
-seq_alpha<-seq(from = 0, to = 1, by = 0.1)
-#Create empty data frame to hold alpha, lambda and RMSE of each model fitted with corresponding tuning parameter
-storageElastic<-data.frame("Alpha" = rep(NA,length(seq_alpha)), "Lambda" = rep(NA,length(seq_alpha)),"Deviance" = rep(NA, length(seq_alpha)))
-
-aph=1
-#Set seed for random sampling 
-set.seed(1)
-#Loop to test each lambda and alpha and save MSE, RMSE with corresponding lambda and alpha to a dataframe
-for(i in seq_alpha){
-  Elastic.modFind.ideal<-cv.glmnet(XD[,-1], test$stroke,alpha = i,family="binomial")
-  storageElastic$Lambda[aph]<-Elastic.modFind.ideal$lambda.min
-  storageElastic$Alpha[aph]<-i
-  storageElastic$Deviance[aph]<-min(Elastic.modFind.ideal$cvm)
-  aph=aph+1
-}
-
-```
-
-```{r elastic metrics}
-#Get the smallest RMSE value as well as corresponding lambda and alpha
-smallestElastic_Deviance<-which.min(storageElastic$Deviance)
-knitr::kable(storageElastic[smallestElastic_Deviance,],caption = "Table 5.1 Smallest Deviance with Corresponding Alpha and Lambda")
-
-```
-
-```{r}
-ideal_set<-storageElastic[smallestElastic_Deviance,]
-alpha_chosen<-ideal_set$Alpha
-lambda_chosen<-ideal_set$Lambda
-```
-
-```{r elastic net finla model}
-Elastic.Final.Model<-glmnet(XD[,-1], test$stroke,alpha = alpha_chosen,lambda = lambda_chosen,family="binomial")
-```
-
-```{r elastic net prediction}
-pred_elastic<-predict(Elastic.Final.Model,newx = XD[,-1],type = "response")
-```
-
-```{r ROCAUC elastic net}
-roc_elastic<-roc(test$stroke,pred_elastic)
-plot(roc_elastic)
-auc(roc_elastic)
-holder_elastic <- data.frame("Threshold" = roc_elastic$thresholds, "Sensivity" = roc_elastic$sensitivities, "Spec" = roc_elastic$specificities, "GMean" = sqrt(roc_elastic$sensitivities*roc_elastic$specificities))
-
-holder_elastic[which.max(holder_elastic$GMean),]
-```
-
-```{r elastic net prediction with adjusted threshold}
-#Make prediction with adjusted threshold and create confusion matrix for it
-pred_Y_elastic<-ifelse(pred_elastic>holder_elastic[which.max(holder_elastic$GMean),]$Threshold,"1","0")
-knitr::kable(table("Prediction" = pred_Y_elastic,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Elastic Net")
-```
 
 ### Section 4.3: Results:
 
@@ -649,3 +640,5 @@ Singh, Deepika. “Deepika Singh.” Pluralsight, 12 Nov. 2019, https://www.plur
 Reka Solymosi (maintained and updated by David Buil-Gil and Nicolas Trajtenberg). “Making Sense of Crim Data.” Chapter 3 Week 3, 8 Nov. 2022, https://maczokni.github.io/MSCD_labs/week3.html. 
 
 Kumar, Naresh. “Advantages and Disadvantages of KNN Algorithm in Machine Learning.” Advantages and Disadvantages of KNN Algorithm in Machine Learning, http://theprofessionalspoint.blogspot.com/2019/02/advantages-and-disadvantages-of-knn.html. 
+
+Kjytay, and Kjytay. “What Is Deviance?” Statistical Odds &amp; Ends, 27 Mar. 2019, https://statisticaloddsandends.wordpress.com/2019/03/27/what-is-deviance/. 
