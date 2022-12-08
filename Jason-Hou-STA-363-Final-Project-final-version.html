@@ -1158,15 +1158,16 @@ reaches an overall predictive accuracy of 0.844, we only reached a
 sensitivity of 0.366, meaning that among all of the patients who had
 stroke, we are only able to accurately predict 36.6 % them on their
 higher risk of suffering from stroke. This is caused by the imbalanced
-nature of our data set.</p>
+nature of our data set(Brownlee).</p>
 <p>If we uses the default setting 0.5 as the threshold used on
 predicting whether a patient has higher risk of suffering from
 stroke,the sensitivity(true positive rate) of our prediction model is
 going to be low while the specificity is going to be high since majority
 of the observations we use to build the model consist of patients who
-have not suffered from stroke. To mitigate the issue and reach our goal
-of predicting if a patient has higher risk of suffering from stroke, we
-utilizes ROC curve to find the ideal threshold of the prediction.</p>
+have not suffered from stroke(Brownlee). To mitigate the issue and reach
+our goal of predicting if a patient has higher risk of suffering from
+stroke, we utilizes ROC curve to find the ideal threshold of the
+prediction(Google Developers Machine Learning Crash Course).</p>
 <pre class="r"><code>roc_ridge&lt;-roc(test$stroke,pred_ridge)</code></pre>
 <pre><code>## Setting levels: control = 0, case = 1</code></pre>
 <pre><code>## Warning in roc.default(test$stroke, pred_ridge): Deprecated use a matrix as
@@ -1342,6 +1343,10 @@ Machine Learning.” Advantages and Disadvantages of KNN Algorithm in
 Machine Learning, <a href="http://theprofessionalspoint.blogspot.com/2019/02/advantages-and-disadvantages-of-knn.html" class="uri">http://theprofessionalspoint.blogspot.com/2019/02/advantages-and-disadvantages-of-knn.html</a>.</p>
 <p>Kjytay, and Kjytay. “What Is Deviance?” Statistical Odds &amp; Ends,
 27 Mar. 2019, <a href="https://statisticaloddsandends.wordpress.com/2019/03/27/what-is-deviance/" class="uri">https://statisticaloddsandends.wordpress.com/2019/03/27/what-is-deviance/</a>.</p>
+<p>Brownlee, Jason. “A Gentle Introduction to Threshold-Moving for
+Imbalanced Classification.” MachineLearningMastery.com, 4 Jan. 2021, <a href="https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/" class="uri">https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/</a>.</p>
+<p>“Classification: Roc Curve and AUC  |  Machine Learning  |  Google
+Developers.” Google, Google, <a href="https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc#" class="uri">https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc#</a>:~:text=An%20ROC%20curve%20(receiver%20operating,False%20Positive%20Rate.</p>
 </div>
 
 
