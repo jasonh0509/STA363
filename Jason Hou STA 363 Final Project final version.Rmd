@@ -36,7 +36,7 @@ library(report)
 
 Our goal of this project is to build a classifier that helps to predict whether someone is more likely or less likely to have stroke based on the health condition, health measures and related information provided. This classifier can be utilized to assist the prevention of stroke event along with other testing techniques, and facilitate the diagnosis process through providing a preliminary screening, which can help medical professionals to identify people who are more likely to suffer stroke, and implement preventive care if needed.
 
-The data that we are dealing on is a data consist of 5110 rows and 12 columns.The data set record the 12 features(4 numeric features and 8 categorical features) of 5110 patients who have either had or have not had stroke. We have the information on the patient's biological gender, the age of each patient in years,whether a patient has heart disease/hypertension, marital status, smoking status, stroke status and other related information. For other features not mentioned, please refer to the following link for a detailed description of features in this data set.(Fedesoriano) Link: <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset>
+The data that we are dealing on is a data consist of 5110 rows and 12 columns.The data set record the 12 features(4 numeric features and 8 categorical features) of 5110 patients who have either had suffered or have not suffered from stroke. We have the information on the patient's biological gender, the age of each patient in years,whether a patient has heart disease/hypertension, marital status, smoking status, stroke status and other related information. For other features not mentioned, please refer to the following link for a detailed description of features in this data set.(Fedesoriano) Link: <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset>
 
 
 
@@ -116,7 +116,7 @@ bmi_na_row<-which(is.na(originalStroke$bmi))
 knitr::kable(table(originalStroke$stroke[bmi_na_row]),caption = "Table 2.2 Stroke Status of Rows with Missing Value")
 ```
 
-Table 2.1 and Figure 2.1 show that 201 rows of missing values were found from the data set, which were only present in the column "bmi". According to Table 2.2, there are 161 patients who had stroke and 40 patients who have not had stroke in patients with their BMI value missing. We decide to remove these rows with missing values in BMI.
+Table 2.1 and Figure 2.1 show that 201 rows of missing values were found from the data set, which were only present in the column "bmi". According to Table 2.2, there are 161 patients who suffered from stroke and 40 patients who did not suffer from stroke in patients with their BMI value missing. We decide to remove these rows with missing values in BMI.
 
 ```{r dealing with missing data}
 ## Remove NAs
@@ -150,7 +150,7 @@ We can see from Figure 2.2 that the class of stroke status was imbalanced, there
 
 The SMOTE technique is an oversampling technique that utilizes the technique called k-Nearest Neighbor algorithm to synthesize data.In this project we choose to use SMOTE_NC, which is a modification of SMOTE that is able to handle data set with both categorical and numeric features.For numeric features in the data set, SMOTE_NC randomly choose k data points from the minority class in the data set and synthesize new data points on the line segment between each of the two data points. For categorical features, SMOTE_NC selects the most frequent category of the nearest neighbor data points and assign it to the new synthesized data point. (Imbalanced learn)
 
-This technique allows us to mitigate the imbalance in the data set with less concern on the issue of overfitting in regular oversampling, which make the model giving accurate predictions on training data but unable to making correct prediction on new data provided(Wijaya).
+This technique allows us to mitigate the imbalance in the data set with less concern on the issue of overfitting in regular oversampling, which make the model giving better predictions on training data but also able to making correct prediction on new data provided(Wijaya).
 
 An experimental package created by Dongyuan Wu from github was utilized to conduct SMOTE_NC for our data set that consists of both categorical and numeric features(Wu).
 
@@ -235,7 +235,6 @@ We can see from figure 2.7 that the distribution of average glucose level of pat
 
 
 
-
 ```{r empirical logit function, include=FALSE}
 #Load function for empirical logit plot
 emplogitPlot <- function(x, y, binsize = NULL, ci = FALSE, probit = FALSE,
@@ -307,7 +306,7 @@ We begin building the classifier by implementing a technique called K-Nearest Ne
 
 ### Sectio 3.2 Method
 
-Figure 3.2.1 is an illustration of the kNN technique with only age and bmi as the features utilized in kNN, where 0 = the patient have not had stroke, 1 =  the patient had stroke(For demonstration purpose, we only sampled 400 rows of data from the cleaned stroke data set).
+Figure 3.2.1 is an illustration of the kNN technique with only age and bmi as the features utilized in kNN, where 0 = the patient had a stroke, 1 =  the patient have not had stroke(For demonstration purpose, we only sampled 400 rows of data from the cleaned stroke data set).
 
 ```{r demo set}
 set.seed(114514)
@@ -335,9 +334,9 @@ ggplot()+
   
 ```
 
-In figure 3.1, we have a new data point representing a patient who is 63 years old with BMI equals to 24(shown as the black dot on the graph).If we set the k value for k Nearest Neighbors as 3. The kNN algorithm will find the stroke status of the 3 nearest data point to the data point of this patient, as shown in Figure 3.1 with black line segments connecting 3 neighbor points and the black dot. The algorithm the assigns the stroke status of majority of the 3 neighbor points as the predicted stroke status of this patient. Since 2 of the 3 neighbor points has 0 as their stroke status, this patient was predicted that he/she/them does not have stroke.
+In figure 3.1, we have a new data point representing a patient who is 63 years old with BMI equals to 24(shown as the black dot on the graph).If we set the k value for k Nearest Neighbors as 3. The kNN algorithm will find the stroke status of the 3 nearest data point to the data point of this patient, as shown in Figure 3.1 with black line segments connecting 3 neighbor points and the black dot. The algorithm the assigns the stroke status of majority of the 3 neighbor points as the predicted stroke status of this patient. Since 2 of the 3 neighbor points has 0 as their stroke status, this patient was predicted that he/she/them have not had a stroke.
 
-We utilized 10-fold Cross Validation to assess the predictive accuracy of kNN on predict stroke of patients in the stroke data set. To do this we randomly divided the stroke data set into 10 folds with equal size, where each fold contains $\frac{1}{10}$ of the rows in stroke data set. We then started with treating fold 1 as the new test set of stroke data and the remaining 9 folds as the training data. We repeated this process for 10 times to train the model and obtain predictions on the training data. This method was used along with the process of determine the best k value for kNN.That is, we conduct 10-fold Cross Validation for each k value, and calculate the sensitivity, specificity and the geometric mean of them. The k value that provides the largest geometric mean is regarded as the best k value for this prediction through kNN. A line graph of geometric mean respect to each k value was used to indicate the best k value for our prediction.
+We utilized 10-fold Cross Validation to assess the predictive accuracy of kNN on predict stroke of patients in the stroke data set. To do this we randomly divided the stroke data set into 10 folds with equal size, where each fold contains $\frac{1}{10}$ of the rows in stroke data set. We then started with treating fold 1 as the new test set of stroke data and the remaining 9 folds as the training data. We repeated this process for 10 times to train the model and obtain predictions on the training data. This method was used along with the process of determine the best k value for kNN.That is, we conduct 10-fold Cross Validation for each k value, and calculate the sensitivity(true positive rate,percent of patients who had strokes that we correctly predicted), specificity(true negative rate, percent of patients who have not had stroke that we correctly predicted) and the geometric mean of them.The geometric mean is calculated through taking the square root of sensitivity and specificity, the closer the two metrics are, the larger the geometric mean. The k value that provides the largest geometric mean is regarded as the best k value for this prediction through kNN. A line graph of geometric mean respect to each k value was used to indicate the best k value for our prediction.
 
 ```{r KNN Data}
 #Create a data set with only numeric features for the KNN
@@ -418,7 +417,7 @@ Figure 3.2.2 shows that k=5 is the best k value for the 10-fold Cross Validation
 
 Below is a confusion matrix of the prediction using kNN with k value equals to 8. 
 
-We assesses the predictive accuracy of kNN through the following predictive metric: sensitivity(true positive rate),specificity(true negative rate), accuracy, and classification error rate(CER). The sensitivity indicates the percentage of patients who had stroke that were correctly predicted in all patients who had suffered from stroke. The specificity indicates the percentage of patients who have not had stroke and were correctly predicted in all patients who have not had suffered from stroke. Accuracy indicates the percentage of stroke patients we correctly predicted in all patients. CER indicates the percentage of patients that we failed to make correct prediction on stroke event in all patients.
+We assesses the predictive accuracy of kNN through the following predictive metric: sensitivity(true positive rate),specificity(true negative rate), accuracy, and classification error rate(CER). The sensitivity indicates the percentage of patients who had stroke that were correctly predicted in all patients who had suffered from stroke. The specificity indicates the percentage of patients who have not suffered from stroke and were correctly predicted in all patients who have not suffered from stroke. Accuracy indicates the percentage of stroke patients we correctly predicted in all patients. CER indicates the percentage of patients that we failed to make correct prediction on whether they had stroke in all patients.
 
 
 ```{r}
@@ -514,7 +513,7 @@ knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Table 4.2.1 Dev
 ```
 
 We can see from Figure 4.2.1 and Table 4.2.1 that the lowest deviance(0.69) occurred when the model is using $\lambda=0.0182421$ as the tuning parameter the ridge regression model. Therefore, we select $\lambda = 0.0182421$
-The final ridge regression model.
+and fit the the final ridge regression model.
 
 ```{r ridge final and pred}
 ridge.final<-glmnet(XD[,-1], test$stroke , alpha = 0,lambda = CV_result_ridge[smallestRidge_Deviance,]$Lambda	, standardize = TRUE,family = "binomial")
@@ -541,15 +540,21 @@ $$Accuracy=\frac{4525+430}{5872}=0.844$$
 $$CER=1-Accuracy=0.156$$
 
 We can see from Table 4.2.2 that although our ridge regression model reaches an overall predictive accuracy of 0.844, we only reached a sensitivity of 0.366, meaning that among all of the patients who had stroke, we are only able to accurately predict 36.6 % them on their higher risk of suffering from stroke. This is caused by the imbalanced nature of our data set.
-If we uses the default setting 0.5 as the threshold used on predicting whether a patient has higher risk of suffering from stroke,the sensitivity(true positive rate) of our prediction model is going to be low while the specificity is going to be high since majority of the observations consist of patients who have not had stroke. To mitigate the issue and reach our goal of predicting if a patient has higher risk of suffering from stroke, we utilizes ROC curve to find the ideal threshold of the prediction.
+
+If we uses the default setting 0.5 as the threshold used on predicting whether a patient has higher risk of suffering from stroke,the sensitivity(true positive rate) of our prediction model is going to be low while the specificity is going to be high since majority of the observations we use to build the model consist of patients who have not suffered from stroke. To mitigate the issue and reach our goal of predicting if a patient has higher risk of suffering from stroke, we utilizes ROC curve to find the ideal threshold of the prediction.
 
 ```{r ROCAUC ridge}
 roc_ridge<-roc(test$stroke,pred_ridge)
-plot(roc_ridge)
-knitr::kable(auc(roc_ridge))
+plot(roc_ridge,main="Figure 4.2.2 ROC Curve Ridge Regression")
+
+#knitr::kable(auc(roc_ridge))
 holder <- data.frame("Threshold" = roc_ridge$thresholds, "Sensivity" = roc_ridge$sensitivities, "Spec" = roc_ridge$specificities, "GMean" = sqrt(roc_ridge$sensitivities*roc_ridge$specificities))
-holder[which.max(holder$GMean),]
+knitr::kable(holder[which.max(holder$GMean),]
+,caption = "Table 4.2.3 Threshold With Ideally Balanced Sensitivity and Specificity and Largest Geometric Mean ")
 ```
+
+We can see from Table 4.2.3 that threshold = 0.191465 provides us a balance between sensitivity and specificity of the prediction model, since it has the largest largest geometric mean that indicate the ideal balance between sensitivity and specificity of the prediction model.
+
 
 ```{r prediction with adjuste threshold}
 pred_ridge_Y<-ifelse(pred_ridge>holder[which.max(holder$GMean),]$Threshold,"1","0")
@@ -570,11 +575,15 @@ knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = 
 
 ### Section 4.3: Results:
 
+
+
 ## Section 5: Method 3
 
 ### Section 5.1: Introduction
 
+
 ### Section 5.2: Method
+
 
 ```{r bagged forest}
 #Set seed 
