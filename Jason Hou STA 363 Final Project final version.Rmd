@@ -80,11 +80,7 @@ originalStroke$heart_disease<-as.factor(originalStroke$heart_disease)
 #originalStroke$stroke<-as.factor(originalStroke$stroke)
 ```
 
-```{r mutate variable, eval=FALSE, include=FALSE}
-## mutate smoking status
-originalStroke<-originalStroke%>%
-    mutate(smoking_status=case_when(smoking_status=="formerly smoked"~"1",                        smoking_status=="smokes"~"1",  smoking_status=="never smoked"~"0",smoking_status=="Unknown"~"0"))
-```
+
 
 ```{r change data type2}
 #Change all categorical data that are in character type to factor type
@@ -116,7 +112,7 @@ bmi_na_row<-which(is.na(originalStroke$bmi))
 knitr::kable(table(originalStroke$stroke[bmi_na_row]),caption = "Table 2.2 Stroke Status of Rows with Missing Value")
 ```
 
-Table 2.1 and Figure 2.1 show that 201 rows of missing values were found from the data set, which were only present in the column "bmi". According to Table 2.2, there are 161 patients who suffered from stroke and 40 patients who did not suffer from stroke in patients with their BMI value missing. We decide to remove these rows with missing values in BMI.
+Table 2.1 and Figure 2.1 show that 201 rows of missing values were found from the data set, which were only present in the column "bmi". According to Table 2.2, there are 161 patients who suffered from stroke and 40 patients who did not suffer from stroke in patients with their BMI value missing(Here, 0 = the patient had stroke, 1 =  the patient have not had stroke). We decide to remove these rows with missing values in BMI.
 
 ```{r dealing with missing data}
 ## Remove NAs
@@ -154,23 +150,9 @@ This technique allows us to mitigate the imbalance in the data set with less con
 
 An experimental package created by Dongyuan Wu from github was utilized to conduct SMOTE_NC for our data set that consists of both categorical and numeric features(Wu).
 
-```{r bmi distribution}
-ggplot(data=test,aes(x=bmi))+
-  geom_boxplot()+
-  ggtitle("Figure 2.3 Distribution of BMI")
-```
-
-```{r}
-sum(test$bmi>75)
-```
 
 
-```{r remove BMI larger than 75}
-test<-test%>%
-  subset(bmi<75)
-```
 
-We can see from Figure 2.3 that extreme values of BMI exist in the data set. We decided to remove 3 observations with BMI larger than 75 since it might be unreasonable for people to have such high BMI.
 
 
 
@@ -181,11 +163,19 @@ We can see from Figure 2.3 that extreme values of BMI exist in the data set. We 
 ```{r correlation plot for numeric features}
 M<-cor(test[,c(2,8,9)])
 #Create correlation plot
-corrplot(M, method= "number",type = "upper",title="Figure 2.4 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
+corrplot(M, method= "number",type = "upper",title="Figure 2.3 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
 ```
 
-We can see from the Figure 2.4 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models(ridge, lasso, elastic net) were appropriate for the data set.
+We can see from the Figure 2.3 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models(ridge, lasso, elastic net) were appropriate for the data set.
 
+
+```{r bmi distribution}
+ggplot(data=test,aes(x=bmi))+
+  geom_boxplot()+
+  ggtitle("Figure 2.4 Distribution of BMI")
+```
+
+We can see from Figure 2.4 that the distribution of patients' BMI is rightly skewed.
 
 ```{r stroke across gender}
 positive_stroke<-test$stroke==1
@@ -321,20 +311,19 @@ demo_data<-data.frame("Age"= rep(NA,1),"BMI"=rep(NA,1),"Stroke"=rep(NA,1))
 demo_data$Age[1]<-63
 demo_data$BMI[1]<-24
 demo_data$Stroke<-1
-
 #demoTest<-example_data%>%
  # mutate(dengue_status_test=as.character(dengue_status))
 ggplot()+
   geom_point(data = set_demo,aes(x=age,y=bmi,col=stroke),size=2,alpha=0.9,shape=19)+
   geom_point(data =demo_data,aes(x=Age,y=BMI),size=2,alpha=0.9,shape=19)+
-  geom_segment(aes(x=63,xend=63,y=24,yend=26))+
-  geom_segment(aes(x=63,xend=64,y=24,yend=27))+
-  geom_segment(aes(x=63,xend=66.,y=24,yend=24.5))+
+  geom_segment(aes(x=63,xend=62.2,y=24,yend=28))+
+  geom_segment(aes(x=63,xend=66,y=24,yend=24.5))+
+  geom_segment(aes(x=63,xend=65.,y=24,yend=27))+
   ggtitle("Figure 3.2.1 Illustration of KNN")
   
 ```
 
-In figure 3.1, we have a new data point representing a patient who is 63 years old with BMI equals to 24(shown as the black dot on the graph).If we set the k value for k Nearest Neighbors as 3. The kNN algorithm will find the stroke status of the 3 nearest data point to the data point of this patient, as shown in Figure 3.1 with black line segments connecting 3 neighbor points and the black dot. The algorithm the assigns the stroke status of majority of the 3 neighbor points as the predicted stroke status of this patient. Since 2 of the 3 neighbor points has 0 as their stroke status, this patient was predicted that he/she/them have not had a stroke.
+In figure 3.1, we have a new data point representing a patient who is 63 years old with BMI equals to 24(shown as the black dot on the graph).If we set the k value for k Nearest Neighbors as 3. The kNN algorithm will find the stroke status of the 3 nearest data point to the data point of this patient, as shown in Figure 3.1 with black line segments connecting 3 neighbor points and the black dot. The algorithm the assigns the stroke status of majority of the 3 neighbor points as the predicted stroke status of this patient. Since all 3 neighbor points has 0 as their stroke status, this patient was predicted that he/she/them have not had a stroke.
 
 We utilized 10-fold Cross Validation to assess the predictive accuracy of kNN on predict stroke of patients in the stroke data set. To do this we randomly divided the stroke data set into 10 folds with equal size, where each fold contains $\frac{1}{10}$ of the rows in stroke data set. We then started with treating fold 1 as the new test set of stroke data and the remaining 9 folds as the training data. We repeated this process for 10 times to train the model and obtain predictions on the training data. This method was used along with the process of determine the best k value for kNN.That is, we conduct 10-fold Cross Validation for each k value, and calculate the sensitivity(true positive rate,percent of patients who had strokes that we correctly predicted), specificity(true negative rate, percent of patients who have not had stroke that we correctly predicted) and the geometric mean of them.The geometric mean is calculated through taking the square root of sensitivity and specificity, the closer the two metrics are, the larger the geometric mean. The k value that provides the largest geometric mean is regarded as the best k value for this prediction through kNN. A line graph of geometric mean respect to each k value was used to indicate the best k value for our prediction.
 
@@ -411,13 +400,13 @@ knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
 knnActualPlot
 ```
 
-Figure 3.2.2 shows that k=5 is the best k value for the 10-fold Cross Validation, as it provides the largest geometric mean in k values from 1-50, therefore providing the most balance between sensitivity(true positive rate) and specificity(true negative rate) of the prediction.
+Figure 3.2.2 shows that k=5 is the best k value for the 10-fold Cross Validation, as it provides the largest geometric mean in k values from 1-30, therefore providing the most balance between sensitivity(true positive rate) and specificity(true negative rate) of the prediction.
 
 ### Section 3.3: Results
 
-Below is a confusion matrix of the prediction using kNN with k value equals to 8. 
+Below is a confusion matrix of the prediction using kNN with k value equals to 5. 
 
-We assesses the predictive accuracy of kNN through the following predictive metric: sensitivity(true positive rate),specificity(true negative rate), accuracy, and classification error rate(CER). The sensitivity indicates the percentage of patients who had stroke that were correctly predicted in all patients who had suffered from stroke. The specificity indicates the percentage of patients who have not suffered from stroke and were correctly predicted in all patients who have not suffered from stroke. Accuracy indicates the percentage of stroke patients we correctly predicted in all patients. CER indicates the percentage of patients that we failed to make correct prediction on whether they had stroke in all patients.
+We assesses the predictive accuracy of kNN through the following predictive metric: sensitivity(true positive rate),specificity(true negative rate), accuracy, and classification error rate(CER). The sensitivity indicates the percentage of patients who had stroke that we correctly predicted on their elevated risk of having stroke in all patients who had stroke. The specificity indicates the percentage of patients who have not had stroke that we correctly predicted on their lower risk of having stroke in all patients who have not suffered from stroke. Accuracy indicates the percentage of patients we correctly predicted on in all patients. CER indicates the percentage of patients that we failed to make correct prediction on whether they had stroke in all patients.
 
 
 ```{r}
@@ -425,13 +414,13 @@ knitr::kable(table("Prediction" = storage_inner$YHat,"Actual" = numericOnly$stro
 ```
 
 From Table 3.3.1, we have:
-$$Sensitivity=\frac{505}{670+505}\approx0.514$$
+$$Sensitivity=\frac{604}{604+571}\approx0.514$$
 $$Specificity=\frac{4325}{4325+372}\approx0.928$$
-$$Accuracy=\frac{4325+505}{5872}\approx0.823$$
-$$CER=1-Accuracy=1-0.823=0.177$$
+$$Accuracy=\frac{4325+505}{5872}\approx0.844$$
+$$CER=1-Accuracy=1-0.844=0.156$$
 
 
-According to the result obtained from 10-fold Cross Validation, kNN allowed us to reach a sensitivity of 0.514 and a specificity of 0.928, and an overall accuracy of 0.823 on predicting for patients in the stroke data set on whether each of them are more likely or less likely to have stroke. Despite the accuracy of 0.83 that indicates we made accurate predictions on 83% of the patients, the sensitivity of our prediction revealed that we only predicted accurately on 51.4% of the patients regarding their risk of suffering from stroke.
+According to the result obtained from 10-fold Cross Validation, kNN allowed us to reach a sensitivity of 0.514 and a specificity of 0.928, and an overall accuracy of 0.844 on predicting for patients in the cleaned data set on whether each of them are more likely or less likely to have stroke. Despite the accuracy of 0.83 that indicates we made accurate predictions on 83% of the patients on their risk of having stroke, the sensitivity of our prediction revealed that we only predicted accurately for 51.4% of the patients on their elevated risk of having stroke.
 
 ## Section 4: Method 2: Ridge Regression
 
@@ -445,7 +434,7 @@ Additionally, figure 2.1 indicated that the correlations between features exists
 
 ### Section 4.2: Method
 
-We used ridge regression to create the model for classification, as it provides the effect of shrinkage. In other words, shrinking the coefficients of correlated features towards 0, thus restrains the impact from them and mitigates the effect caused by multicollinearity(correlated features in the data set). To do this we need to find the tuning parameter that provides the best shrinking effect.
+We used ridge regression to create the model for classification, as it provides the effect of shrinkage. In other words, shrinking the coefficients of correlated features towards 0 while still maintaining all the features in the cleaned data set when building the model, thus restrains the impact from them and mitigates the effect caused by multicollinearity(correlated features in the data set). To do this we need to find the tuning parameter that provides the best shrinking effect.
 
 The general form of our model is the following:
 
@@ -475,12 +464,12 @@ ridgePlot <- function(ridge.mod, metric, title){
   smallestLambda <- ridge.mod$lambda[which.min(ridge.mod$cvm)] 
   
   if(metric == "MSE"){
-  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = (ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test MSE values for Different Tuning Parameters. Smallest MSE at lambda = ", smallestLambda), title = title, y = "Test MSE", x = "Tuning Parameter")
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = (ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test MSE values for Different Tuning Parameters. Smallest MSE at lambda = ", smallestLambda), title = title, y = "Deviance", x = "Tuning Parameter")
   
   }
   
   if(metric == "Deviance"){
-  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = sqrt(ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test RMSE values for Different Tuning Parameters. Smallest RMSE at lambda = ", smallestLambda), title = title, y = "Test RMSE", x = "Tuning Parameter")
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = sqrt(ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test RMSE values for Different Tuning Parameters. Smallest RMSE at lambda = ", smallestLambda), title = title, y = "Deviance", x = "Tuning Parameter")
 
   }
   
@@ -498,6 +487,11 @@ XD <- model.matrix(stroke ~., data = test)
 set.seed(114514)
 #Run cross validation for lambda value from 1 to 50(increment by 0.05 for each run)
 ridge.modFind_Lambda <- cv.glmnet(XD[,-1], test$stroke , alpha = 0,standardize = TRUE,family = "binomial")
+```
+
+
+```{r}
+#plot(ridge.modFind_Lambda)
 ```
 
 
@@ -534,7 +528,7 @@ unadjusted_pred_ridge<-ifelse(pred_ridge>0.5,"1","0")
 knitr::kable(table("Prediction" = unadjusted_pred_ridge,"Actual"= test$stroke),caption = "Table 4.2.2 Confusion Matrix for Prediction of Stroke Via Ridge(Unadjusted)")
 ```
 
-$$Sensitivity=\frac{430}{745+430}\approx0.366$$
+$$Sensitivity=\frac{431}{744+431}\approx0.367$$
 $$Specificity=\frac{4525}{4525+172}\approx0.963$$
 $$Accuracy=\frac{4525+430}{5872}=0.844$$
 $$CER=1-Accuracy=0.156$$
@@ -565,7 +559,10 @@ knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = 
 ```
 
 
-
+$$Sensitivity=\frac{1011}{1011+164}=0.8604$$
+$$Specificity=\frac{3317}{3317+1383}=0.706$$
+$$Accuracy=\frac{3317+1011}{5875}=0.737$$
+$$CER=1-Accuracy=0.263$$
 
 
 
@@ -599,7 +596,7 @@ bagged<-randomForest(stroke~.,data=test,mtry=10,importance=TRUE,ntree=1000,compe
 for_predict<-test[,-11]
 pred_bag<-predict(bagged)
 #table(pred_bag)
-table("Prediction"= pred_bag,"Actual" = test$stroke)
+#table("Prediction"= pred_bag,"Actual" = test$stroke)
 ```
 
 ```{r random forest}
@@ -609,26 +606,28 @@ random<-randomForest(stroke~.,data=test,mtry=sqrt(10),importance=TRUE,ntree=1000
 
 ```{r bagged confusion matrix}
 #Formatted Confusion Matrix for bagge forest
-knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Bagged Forest")
+knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="Table 5.2.1: Confusion Matrix of Bagged Forest")
 ```
 
-$$Sensitivity=\frac{679}{496+679}\approx0.578$$
+$$Sensitivity=\frac{879}{296+879}\approx0.748$$
 
-$$Specificity=\frac{4511}{4511+189}\approx0.960$$ 
-$$Accuracy=\frac{4511+785}{5875}\approx0.901$$
+$$Specificity=\frac{4510}{4510+190}\approx0.960$$ 
+$$Accuracy=\frac{4511+785}{5875}\approx0.917$$
 
-$$CER=1-Accuracy=0.099$$
+$$CER=1-Accuracy=0.083$$
 
 ```{r Random Forest Confusion Matrix}
-knitr::kable(table("Prediction"=random$predicted,"Actual"=test$stroke),caption="Table 5.x: Confusion Matrix of Random Forest")
+knitr::kable(table("Prediction"=random$predicted,"Actual"=test$stroke),caption="Table 5.2.2: Confusion Matrix of Random Forest")
 ```
 
-$$Sensitivity=\frac{750}{425+750}\approx0.638$$
+$$Sensitivity=\frac{867}{867+308}\approx0.738$$
 
-$$Specificity=\frac{4532}{4532+168}\approx0.964$$
+$$Specificity=\frac{4532}{4532+168}\approx0.965$$
 
-$$Accuracy=\frac{4532+750}{5875}\approx0.899$$ 
-$$CER=1-Accuracy=1-0.899=0.101$$
+$$Accuracy=\frac{4532+750}{5875}\approx0.920$$ 
+$$CER=1-Accuracy=1-0.920=0.08$$
+
+## Section 5.3 Result
 
 ## Conclusion
 
