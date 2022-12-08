@@ -55,9 +55,11 @@ glimpse(originalStroke)
 v1<-class(originalStroke$hypertension)
 v2<-class(originalStroke$heart_disease)
 v3<-class(originalStroke$stroke)
-columns_to_convert<-c(v1,v2,v3)
-features<-c("hypertension","heart_disease","stroke")
+v4<-class(originalStroke$bmi)
+columns_to_convert<-c(v1,v2,v3,v4)
+features<-c("hypertension","heart_disease","stroke","BMI")
 features_to_convert<-data.frame("Features" = features,"Type" = columns_to_convert)
+features_to_convert
 ```
 
 
@@ -115,6 +117,7 @@ Table 2.1 and Figure 2.1 show that 201 rows of missing values were found from th
 stroke<-na.omit(originalStroke)
 ```
 
+
 ```{r stroke class}
 #View Classese of stroke
 stroke_classes<-ggplot(data = originalStroke, mapping = aes(x=stroke,fill=stroke))+
@@ -145,6 +148,11 @@ This technique allows us to mitigate the imbalance in the data set with less con
 
 An experimental package from github was utilized to conduct SMOTE for our datat set that consists of both categorical and numeric features(Wu).
 
+
+```{r}
+test<-test%>%
+  subset(bmi<75)
+```
 
 
 
@@ -330,7 +338,7 @@ numericOnly<-test[,c(2,8,9,11)]
 ```{r 10 fold CV determine best k }
 set.seed(114514)
 n<-nrow(numericOnly)
-nk<-50
+nk<-25
 storage<-data.frame("K"=rep(NA,nk),
                     "Sensitivity" = rep(NA,nk),
                     "Specificity" = rep(NA,nk),
