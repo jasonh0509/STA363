@@ -31,7 +31,7 @@ library(report)
 ```
 
 ## Abstract
-
+Stroke, defined as the brain disease that happens when the blood supply to part of the brain was blocked or when a blood vessel in the brain breaks, is a leading cause of death and a major cause of severe disability among adults in the United States.According to CDC, more than 795000 people suffer from stroke every years in the United States. While being regarded as a factor that leads to serious consequences and even mortality, stroke is preventable and treatable(CDC).Therefore, it is important to conduct screening on the population in order to identify people who have higher risk of having stroke, and provide preventive support on these people. The primary goal of this project is to build a classifier for medical professionals to conduct screening for risk of stroke. Three techniques, the k-Nearest Neighbors, penalized regression, and forest were implemented to build this classifer. ## 
 ## Section 1: Data and Motivation
 
 Our goal of this project is to build a classifier that helps to predict whether someone is more likely or less likely to have stroke based on the health condition, health measures and related information provided. This classifier can be utilized to assist the prevention of stroke event along with other testing techniques, and facilitate the diagnosis process through providing a preliminary screening, which can help medical professionals to identify people who are more likely to suffer stroke, and implement preventive care if needed.
@@ -215,6 +215,9 @@ ggplot(data=test,aes(x=age,y=bmi,color=stroke))+geom_point()+ggtitle("Figure 2.9
 ```
 
 We can see from Figure 2.9 that there are more older adults who had stroke.
+
+
+
 
 
 ## Section 3: Method 1:k Nearest Neighbor(KNN)
@@ -574,6 +577,10 @@ $$Accuracy=\frac{4532+750}{5875}\approx0.920$$ $$CER=1-Accuracy=1-0.920=0.08$$
 ## Conclusion
 
 ## Works Cited
+
+“About Stroke.” Centers for Disease Control and Prevention, Centers for Disease Control and Prevention, 2 Nov. 2022, https://www.cdc.gov/stroke/about.htm. 
+
+“Stroke Facts.” Centers for Disease Control and Prevention, Centers for Disease Control and Prevention, 14 Oct. 2022, https://www.cdc.gov/stroke/facts.htm. 
 
 Fedesoriano. "Stroke Prediction Dataset." Kaggle, 26 Jan. 2021, <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset/code>.
 
