@@ -31,7 +31,9 @@ library(report)
 ```
 
 ## Abstract
-Stroke, defined as the brain disease that happens when the blood supply to part of the brain was blocked or when a blood vessel in the brain breaks, is a leading cause of death and a major cause of severe disability among adults in the United States.According to CDC, more than 795000 people suffer from stroke every years in the United States. While being regarded as a factor that leads to serious consequences and even mortality, stroke is preventable and treatable(CDC).Therefore, it is important to conduct screening on the population in order to identify people who have higher risk of having stroke, and provide preventive support on these people. The primary goal of this project is to build a classifier for medical professionals to conduct screening for risk of stroke. Three techniques, the k-Nearest Neighbors, penalized regression, and forest were implemented to build this classifer. ## 
+
+Stroke, defined as the brain disease that happens when the blood supply to part of the brain was blocked or when a blood vessel in the brain breaks, is a leading cause of death and a major cause of severe disability among adults in the United States.According to CDC, more than 795000 people suffer from stroke every years in the United States. While being regarded as a factor that leads to serious consequences and even mortality, stroke is preventable and treatable(CDC).Therefore, it is important to conduct screening on the population in order to identify people who have higher risk of having stroke, and provide preventive support on these people. The primary goal of this project is to build a classifier for medical professionals to conduct screening for risk of stroke. Three techniques, the k-Nearest Neighbors, penalized regression, and forest were implemented to build this classifer. \##
+
 ## Section 1: Data and Motivation
 
 Our goal of this project is to build a classifier that helps to predict whether someone is more likely or less likely to have stroke based on the health condition, health measures and related information provided. This classifier can be utilized to assist the prevention of stroke event along with other testing techniques, and facilitate the diagnosis process through providing a preliminary screening, which can help medical professionals to identify people who are more likely to suffer stroke, and implement preventive care if needed.
@@ -137,8 +139,6 @@ An experimental package created by Dongyuan Wu from github was utilized to condu
 
 ### EDA
 
-
-
 ```{r bmi distribution}
 ggplot(data=test,aes(x=bmi))+
   geom_boxplot()+
@@ -191,7 +191,6 @@ ggplot(data=test,aes(x=avg_glucose_level))+
 
 We can see from Figure 2.6 that the distribution of average glucose level of patients is rightly skewed.
 
-
 ```{r}
 ggplot(data=test,aes(x=age,y=bmi))+
   geom_point()+
@@ -215,10 +214,6 @@ ggplot(data=test,aes(x=age,y=bmi,color=stroke))+geom_point()+ggtitle("Figure 2.9
 ```
 
 We can see from Figure 2.9 that there are more older adults who had stroke.
-
-
-
-
 
 ## Section 3: Method 1:k Nearest Neighbor(KNN)
 
@@ -335,7 +330,6 @@ Figure 3.2.2 shows that k=5 is the best k value for the 10-fold Cross Validation
 
 ### Section 3.3: Results
 
-
 We assesses the predictive accuracy of kNN through the following predictive metric: sensitivity(true positive rate),specificity(true negative rate), accuracy, and classification error rate(CER). The sensitivity indicates the percentage of patients who had stroke that we correctly predicted on their higher risk of having stroke in all patients who had stroke. The specificity indicates the percentage of patients who have not had stroke that we correctly predicted on their lower risk of having stroke in all patients who have not suffered from stroke. Accuracy indicates the percentage of patients we correctly predicted on in all patients. CER indicates the percentage of patients that we failed to make correct prediction on whether they had stroke in all patients.
 
 Below is a confusion matrix of the prediction using kNN with k value equals to 5.
@@ -372,7 +366,6 @@ corrplot(M, method= "number",type = "upper",title="Figure 4.1 Correlation Plot o
 We can see from the Figure 4.1 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models is appropriate for the data set.
 
 Therefore, we decided to implement penalized regression techniques, along with logistic regression, to build the second classifier that not only utilizes both numeric and categorical features on making prediction, but also mitigate the impact of multicolinearity (correlations between features) in the prediction.
-
 
 ### Section 4.2: Method
 
@@ -466,12 +459,12 @@ From Table 4.2.2, we have:
 
 ##### Table 4.2.3 Predictive Metrics of Ridge Regression Model (Threshold unadjusted)
 
-|             	|       	|
-|-------------	|-------	|
-| Sensitivity 	| 0.367 	|
-| Specificity 	| 0.963 	|
-| Accuracy    	| 0.844 	|
-| CER         	| 0.156 	|
+|             |       |
+|-------------|-------|
+| Sensitivity | 0.367 |
+| Specificity | 0.963 |
+| Accuracy    | 0.844 |
+| CER         | 0.156 |
 
 We can see from Table 4.2.3 that although our ridge regression model reaches an overall predictive accuracy of 0.844, we only reached a sensitivity of 0.366, meaning that among all of the patients who had stroke, we are only able to accurately predict 36.6 % them on their higher risk of suffering from stroke. This is caused by the imbalanced nature of our data set(Brownlee).
 
@@ -493,8 +486,6 @@ We can see from Table 4.2.4 that threshold = 0.191465 provides us a balance betw
 pred_ridge_Y<-ifelse(pred_ridge>holder[which.max(holder$GMean),]$Threshold,"1","0")
 ```
 
-
-
 ### Section 4.3: Results:
 
 Below is a confusion matrix of prediction on whether a patient in our cleaned data set has higher risk of having stroke.
@@ -507,25 +498,22 @@ From Table 4.3.1,we have;
 
 ##### Table 4.3.2 Predictive Metrics of Ridge Regression Model(Threshold Adjusted)
 
-|             	|       	|
-|-------------	|-------	|
-| Sensitivity 	| 0.860 	|
-| Specificity 	| 0.706 	|
-| Accuracy    	| 0.737 	|
-| FPF         	| 0.263 	|
-
+|             |       |
+|-------------|-------|
+| Sensitivity | 0.860 |
+| Specificity | 0.706 |
+| Accuracy    | 0.737 |
+| FPF         | 0.263 |
 
 We can see from Table 4.3.2 that the ridge regression model along with logistic regression reached a sensitivity of 0.86, meaning we correctly predicted 86% of the patients on their higher risk of having stroke among all patients with higher stroke risk in our cleaned data set. The specificity of our model is 0.706, which indicates that the model correctly predicted for 70.6% of patients on their lower risk of having stroke among all patients with lower risk of having stroke. An overall accuracy of 73.7 indicates that the model correctly predicts the stroke risk status for 73.7% of the patients. A CER of 0.263 indicates that the model incorrectly predicted the stroke risk status of 26.3% of the patients.
 
-The ridge regression model enabled us to predict more accurately than kNN on identifying people with higher stroke risk. However, the decreased CER on prediction would lead to more incorrect prediction on people' stroke risk. Therefore, further techniques may be needed for mitigating this issue and developing better classifier on stroke risk prediction.
+The ridge regression model enabled us to predict more accurately than kNN on identifying people with higher stroke risk. However, the increased CER on prediction would lead to more incorrect prediction on people' stroke risk. Therefore, further techniques may be needed for mitigating this issue and developing better classifier on stroke risk prediction.
 
-
-
-## Section 5: Method 3 Forests 
+## Section 5: Method 3 Forests
 
 ### Section 5.1: Introduction
 
-Although the ridge regression model we used in section 4 reached a higher predictive accuracy on predicting patients with higher risk on having stroke, the classification error rate of the prediction model was 0.263, meaning the risk status of 26.3% of the patients from the cleaned data set was incorrectly predicted. Thus, we introduces the techniques of  Bagged Forest and Random Forest to build the third classifier.
+Although the ridge regression model we used in Section 4 reached a higher predictive accuracy on predicting patients with higher risk on having stroke, the classification error rate of the prediction model was 0.263, meaning the risk status of 26.3% of the patients from the cleaned data set was incorrectly predicted. Thus, we introduces the technique called Bagged Forest to build the third classifier.
 
 ### Section 5.2: Method
 
@@ -546,9 +534,9 @@ pred_bag<-predict(bagged)
 #table("Prediction"= pred_bag,"Actual" = test$stroke)
 ```
 
-```{r random forest}
-set.seed(100)
-random<-randomForest(stroke~.,data=test,mtry=sqrt(10),importance=TRUE,ntree=1000,compete=FALSE)
+```{r random forest, eval=FALSE, include=FALSE}
+#set.seed(100)
+#random<-randomForest(stroke~.,data=test,mtry=sqrt(10),importance=TRUE,ntree=1000,compete=FALSE)
 ```
 
 ```{r bagged confusion matrix}
@@ -558,7 +546,9 @@ knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="
 
 $$Sensitivity=\frac{879}{296+879}\approx0.748$$
 
-$$Specificity=\frac{4510}{4510+190}\approx0.960$$ $$Accuracy=\frac{4511+785}{5875}\approx0.917$$
+$$Specificity=\frac{4510}{4510+190}\approx0.960$$ 
+
+$$Accuracy=\frac{4511+785}{5875}\approx0.917$$
 
 $$CER=1-Accuracy=0.083$$
 
@@ -578,9 +568,9 @@ $$Accuracy=\frac{4532+750}{5875}\approx0.920$$ $$CER=1-Accuracy=1-0.920=0.08$$
 
 ## Works Cited
 
-“About Stroke.” Centers for Disease Control and Prevention, Centers for Disease Control and Prevention, 2 Nov. 2022, https://www.cdc.gov/stroke/about.htm. 
+"About Stroke." Centers for Disease Control and Prevention, Centers for Disease Control and Prevention, 2 Nov. 2022, <https://www.cdc.gov/stroke/about.htm>.
 
-“Stroke Facts.” Centers for Disease Control and Prevention, Centers for Disease Control and Prevention, 14 Oct. 2022, https://www.cdc.gov/stroke/facts.htm. 
+"Stroke Facts." Centers for Disease Control and Prevention, Centers for Disease Control and Prevention, 14 Oct. 2022, <https://www.cdc.gov/stroke/facts.htm>.
 
 Fedesoriano. "Stroke Prediction Dataset." Kaggle, 26 Jan. 2021, <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset/code>.
 
