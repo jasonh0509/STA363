@@ -38,24 +38,19 @@ Our goal of this project is to build a classifier that helps to predict whether 
 
 The data that we are dealing on is a data consist of 5110 rows and 12 columns.The data set record the 12 features(4 numeric features and 8 categorical features) of 5110 patients who have either had suffered or have not suffered from stroke. We have the information on the patient's biological gender, the age of each patient in years,whether a patient has heart disease/hypertension, marital status, smoking status, stroke status and other related information. For other features not mentioned, please refer to the following link for a detailed description of features in this data set.(Fedesoriano) Link: <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset>
 
-
-
 ## Section 2: Data Cleaning and EDA
 
-```{r load data}
+```{r load data, include=FALSE}
 originalStroke<-read.csv("StrokeSet.csv")
 ```
 
-```{r take a look}
+```{r take a look, include=FALSE}
 glimpse(originalStroke)
 ```
-
 
 ```{r}
 originalStroke<-originalStroke[,-1]
 ```
-
-
 
 ```{r include=FALSE}
 v1<-class(originalStroke$hypertension)
@@ -68,7 +63,6 @@ features_to_convert<-data.frame("Features" = features,"Type" = columns_to_conver
 features_to_convert
 ```
 
-
 We started with converting the data types of several features to more appropriate type. There are three features that need to be converted from numeric data to categorical data, which are hypertension, heart_disease, and stroke. These three features were converted from numeric type to categorical type. Other categorical features that are originally in character type were also converted into factor type for the model building later.
 
 ```{r change data type}
@@ -80,17 +74,12 @@ originalStroke$heart_disease<-as.factor(originalStroke$heart_disease)
 #originalStroke$stroke<-as.factor(originalStroke$stroke)
 ```
 
-
-
 ```{r change data type2}
 #Change all categorical data that are in character type to factor type
 originalStroke <- as.data.frame(unclass(originalStroke),stringsAsFactors=TRUE)
 ```
 
-
 We then check for NA's in the data set. The result was shown in the table below.
-
-
 
 ```{r check NA after conversion}
 # Check missing data
@@ -112,13 +101,12 @@ bmi_na_row<-which(is.na(originalStroke$bmi))
 knitr::kable(table(originalStroke$stroke[bmi_na_row]),caption = "Table 2.2 Stroke Status of Rows with Missing Value")
 ```
 
-Table 2.1 and Figure 2.1 show that 201 rows of missing values were found from the data set, which were only present in the column "bmi". According to Table 2.2, there are 161 patients who suffered from stroke and 40 patients who did not suffer from stroke in patients with their BMI value missing(Here, 0 = the patient had stroke, 1 =  the patient have not had stroke). We decide to remove these rows with missing values in BMI.
+Table 2.1 and Figure 2.1 show that 201 rows of missing values were found from the data set, which were only present in the column "bmi". According to Table 2.2, there are 161 patients who suffered from stroke and 40 patients who did not suffer from stroke in patients with their BMI value missing(Here, 0 = the patient had stroke, 1 = the patient have not had stroke). We decide to remove these rows with missing values in BMI.
 
 ```{r dealing with missing data}
 ## Remove NAs
 stroke<-na.omit(originalStroke)
 ```
-
 
 ```{r stroke class}
 #View Classese of stroke
@@ -129,9 +117,6 @@ stroke_classes<-ggplot(data = originalStroke, mapping = aes(x=stroke,fill=stroke
   
 stroke_classes
 ```
-
-
-
 
 ```{r dealing with imbalance of data set}
 #Utilizing smote_nc to synthesize additional data points for the minority class in the data set.
@@ -150,32 +135,17 @@ This technique allows us to mitigate the imbalance in the data set with less con
 
 An experimental package created by Dongyuan Wu from github was utilized to conduct SMOTE_NC for our data set that consists of both categorical and numeric features(Wu).
 
-
-
-
-
-
-
 ### EDA
 
-
-
-```{r correlation plot for numeric features}
-M<-cor(test[,c(2,8,9)])
-#Create correlation plot
-corrplot(M, method= "number",type = "upper",title="Figure 2.3 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
-```
-
-We can see from the Figure 2.3 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models(ridge, lasso, elastic net) were appropriate for the data set.
 
 
 ```{r bmi distribution}
 ggplot(data=test,aes(x=bmi))+
   geom_boxplot()+
-  ggtitle("Figure 2.4 Distribution of BMI")
+  ggtitle("Figure 2.3 Distribution of BMI")
 ```
 
-We can see from Figure 2.4 that the distribution of patients' BMI is rightly skewed.
+We can see from Figure 2.3 that the distribution of patients' BMI is rightly skewed.
 
 ```{r stroke across gender}
 positive_stroke<-test$stroke==1
@@ -187,7 +157,7 @@ stroke_gender<-positive_stroke_set%>%
   ggplot(aes(x = Gender, y = n,fill=Gender))+
   geom_col()+
   labs(y="Count of Stroke Events")+
-  ggtitle("Figure 2.5 Stroke Event Across Gender")
+  ggtitle("Figure 2.4 Stroke Event Across Gender")
 stroke_gender
 
 
@@ -195,8 +165,7 @@ stroke_gender
 
 ```
 
-We can see from  Figure 2.4 that there are more female patients among all patients who had stroke.  
-
+We can see from Figure 2.4 that there are more female patients among all patients who had stroke.
 
 ```{r stroke and work type}
 
@@ -208,7 +177,7 @@ stroke_work<-positive_stroke_work%>%
   ggplot(aes(x = Work, y = n,fill=Work))+
   geom_col()+
   labs(y="Count of Stroke Events")+
-  ggtitle("Figure 2.6 Stroke Event Across Work Type" ) + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+  ggtitle("Figure 2.5 Stroke Event Across Work Type" ) + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
 stroke_work
 ```
 
@@ -217,75 +186,35 @@ We can see from Figure 2.6 that their are more patients who had stroke that has 
 ```{r}
 ggplot(data=test,aes(x=avg_glucose_level))+
   geom_boxplot()+
-  ggtitle("Figure 2.7 Distribution of Average Glucose Level")
+  ggtitle("Figure 2.6 Distribution of Average Glucose Level")
 ```
 
-We can see from figure 2.7 that the distribution of average glucose level of patients is rightly skewed.
+We can see from Figure 2.6 that the distribution of average glucose level of patients is rightly skewed.
 
 
-
-
-```{r empirical logit function, include=FALSE}
-#Load function for empirical logit plot
-emplogitPlot <- function(x, y, binsize = NULL, ci = FALSE, probit = FALSE,
-prob = FALSE, main = NULL, xlab = "", ylab = "", lowess.in = FALSE){
-  
-  if(class(y) =="character"){
-   y <- as.numeric(as.factor(y))-1
-   }
-  
-  if (length(x) != length(y))
-    stop("x and y lengths differ")
-  if (any(y < 0 | y > 1))
-    stop("y not between 0 and 1")
-  if (length(x) < 100 & is.null(binsize))
-    stop("Less than 100 observations: specify binsize manually")
-  
-  if (is.null(binsize)) binsize = min(round(length(x)/10), 50)
-  
-  if (probit){
-    link = qnorm
-    if (is.null(main)) main = "Empirical probits"
-  } else {
-    link = function(x) log(x/(1-x))
-    if (is.null(main)) main = "Empirical logits"
-  }
-  
-  sort = order(x)
-  x = x[sort]
-  y = y[sort]
-  a = seq(1, length(x), by=binsize)
-  b = c(a[-1] - 1, length(x))
-  
-  prob = xmean = ns = rep(0, length(a)) # ns is for CIs
-  for (i in 1:length(a)){
-    range = (a[i]):(b[i])
-    prob[i] = mean(y[range])
-    xmean[i] = mean(x[range])
-    ns[i] = b[i] - a[i] + 1 # for CI 
-  }
-  
-  extreme = (prob == 1 | prob == 0)
-  prob[prob == 0] = min(prob[!extreme])
-  prob[prob == 1] = max(prob[!extreme])
-  
-  g = link(prob) # logits (or probits if probit == TRUE)
-  
-  linear.fit = lm(g[!extreme] ~ xmean[!extreme])
-  b0 = linear.fit$coef[1]
-  b1 = linear.fit$coef[2]
-  
-  loess.fit = loess(g[!extreme] ~ xmean[!extreme])
-  
-  plot(xmean, g, main=main, xlab=xlab, ylab=ylab)
-  abline(b0,b1)
-  if(lowess.in ==TRUE){
-  lines(loess.fit$x, loess.fit$fitted, lwd=2, lty=2)
-  }
-}
+```{r}
+ggplot(data=test,aes(x=age,y=bmi))+
+  geom_point()+
+  ggtitle("Figure 2.7 Scatterplot of Patients' Age vs BMI ")+
+  geom_smooth()
 ```
 
+We can see from Figure 2.7 that patients' age and their BMI may have correlation.
 
+```{r}
+ggplot(data=test,aes(x=avg_glucose_level,y=bmi))+
+  geom_point()+
+  geom_smooth()+
+  ggtitle("Figure 2.8 Scatterplot ")
+```
+
+We can see from Figure 2.8 that patients' BMI and their average blood glucose level may have correlation.
+
+```{r}
+ggplot(data=test,aes(x=age,y=bmi,color=stroke))+geom_point()+ggtitle("Figure 2.9 Age vs BMI Plot Respect to Stroke Status")
+```
+
+We can see from Figure 2.9 that there are more older adults who had stroke.
 
 
 ## Section 3: Method 1:k Nearest Neighbor(KNN)
@@ -296,7 +225,7 @@ We begin building the classifier by implementing a technique called K-Nearest Ne
 
 ### Sectio 3.2 Method
 
-Figure 3.2.1 is an illustration of the kNN technique with only age and bmi as the features utilized in kNN, where 0 = the patient had a stroke, 1 =  the patient have not had stroke(For demonstration purpose, we only sampled 400 rows of data from the cleaned stroke data set).
+Figure 3.2.1 is an illustration of the kNN technique with only age and bmi as the features utilized in kNN, where 0 = the patient had a stroke, 1 = the patient have not had stroke(For demonstration purpose, we only sampled 400 rows of data from the cleaned stroke data set).
 
 ```{r demo set}
 set.seed(114514)
@@ -304,7 +233,6 @@ numRow<-nrow(test)
 chosenDemo<-sample(1:numRow,400,replace = FALSE)
 set_demo<-test[chosenDemo,]
 ```
-
 
 ```{r knn demo illustration}
 demo_data<-data.frame("Age"= rep(NA,1),"BMI"=rep(NA,1),"Stroke"=rep(NA,1))
@@ -404,47 +332,56 @@ Figure 3.2.2 shows that k=5 is the best k value for the 10-fold Cross Validation
 
 ### Section 3.3: Results
 
-Below is a confusion matrix of the prediction using kNN with k value equals to 5. 
 
-We assesses the predictive accuracy of kNN through the following predictive metric: sensitivity(true positive rate),specificity(true negative rate), accuracy, and classification error rate(CER). The sensitivity indicates the percentage of patients who had stroke that we correctly predicted on their elevated risk of having stroke in all patients who had stroke. The specificity indicates the percentage of patients who have not had stroke that we correctly predicted on their lower risk of having stroke in all patients who have not suffered from stroke. Accuracy indicates the percentage of patients we correctly predicted on in all patients. CER indicates the percentage of patients that we failed to make correct prediction on whether they had stroke in all patients.
+We assesses the predictive accuracy of kNN through the following predictive metric: sensitivity(true positive rate),specificity(true negative rate), accuracy, and classification error rate(CER). The sensitivity indicates the percentage of patients who had stroke that we correctly predicted on their higher risk of having stroke in all patients who had stroke. The specificity indicates the percentage of patients who have not had stroke that we correctly predicted on their lower risk of having stroke in all patients who have not suffered from stroke. Accuracy indicates the percentage of patients we correctly predicted on in all patients. CER indicates the percentage of patients that we failed to make correct prediction on whether they had stroke in all patients.
 
+Below is a confusion matrix of the prediction using kNN with k value equals to 5.
 
 ```{r}
 knitr::kable(table("Prediction" = storage_inner$YHat,"Actual" = numericOnly$stroke),caption = "Tabl 3.3.1 Confusion Matrix of Predicting Stroke(10-fold Cross Validation with k=5")
 ```
 
 From Table 3.3.1, we have:
-$$Sensitivity=\frac{604}{604+571}\approx0.514$$
-$$Specificity=\frac{4325}{4325+372}\approx0.928$$
-$$Accuracy=\frac{4325+505}{5872}\approx0.844$$
-$$CER=1-Accuracy=1-0.844=0.156$$
 
+##### Table 3.3.2 Predictive Metrics (kNN)
 
-According to the result obtained from 10-fold Cross Validation, kNN allowed us to reach a sensitivity of 0.514 and a specificity of 0.928, and an overall accuracy of 0.844 on predicting for patients in the cleaned data set on whether each of them are more likely or less likely to have stroke. Despite the accuracy of 0.83 that indicates we made accurate predictions on 83% of the patients on their risk of having stroke, the sensitivity of our prediction revealed that we only predicted accurately for 51.4% of the patients on their elevated risk of having stroke.
+|             |       |
+|-------------|-------|
+| Sensitivity | 0.514 |
+| Specificity | 0.928 |
+| Accuracy    | 0.844 |
+| CER         | 0.156 |
+
+According to the result obtained from 10-fold Cross Validation, kNN allowed us to reach a sensitivity of 0.514 and a specificity of 0.928, and an overall accuracy of 0.844 on predicting for patients in the cleaned data set on whether each of them are more likely or less likely to have stroke. Despite the accuracy of 0.83 that indicates we made accurate predictions on 83% of the patients on their risk of having stroke, the sensitivity of our prediction revealed that we only predicted accurately for 51.4% of the patients on their higher risk of having stroke.
 
 ## Section 4: Method 2: Ridge Regression
 
 ### Section 4.1: Introduction
 
-The kNN algorithm we used in section 3 would only accept numeric features, the 8 remaining categorical features were not used for the prediction. Therefore, we decided to implement penalized regression techniques, along with logistic regression, to build the second classifier that not only utilizes both numeric and categorical features on making prediction, but also mitigate the impact of multicolinearity in the prediction.
+The kNN algorithm we used in section 3 would only accept numeric features, therefore the 8 remaining categorical features were not used for the prediction. Since we found in section 2 that the correlations might exist in between features, we created a correlation plot for the numeric features to further investigate the presence of correlations between features.
 
-Additionally, figure 2.1 indicated that the correlations between features exists, therefore, we decide to implement penalized regression models to mitigate this situation.
+```{r correlation plot for numeric features}
+M<-cor(test[,c(2,8,9)])
+#Create correlation plot
+corrplot(M, method= "number",type = "upper",title="Figure 4.1 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
+```
 
+We can see from the Figure 4.1 that correlations present between the numeric features in the data set, indicating that multicolinearity exists across features, therefore utilizing penalized regression models is appropriate for the data set.
+
+Therefore, we decided to implement penalized regression techniques, along with logistic regression, to build the second classifier that not only utilizes both numeric and categorical features on making prediction, but also mitigate the impact of multicolinearity (correlations between features) in the prediction.
 
 
 ### Section 4.2: Method
 
-We used ridge regression to create the model for classification, as it provides the effect of shrinkage. In other words, shrinking the coefficients of correlated features towards 0 while still maintaining all the features in the cleaned data set when building the model, thus restrains the impact from them and mitigates the effect caused by multicollinearity(correlated features in the data set). To do this we need to find the tuning parameter that provides the best shrinking effect.
+We used ridge regression to create the a prediction model for classification, as it provides the effect of shrinkage. In other words, shrinking the coefficients of correlated features towards 0 while still maintaining all the features in the cleaned data set when building the model, thus restrains the impact from them and mitigates the effect caused by multicollinearity(correlated features in the data set). To do this we need to find the tuning parameter that provides the best shrinking effect.
 
 The general form of our model is the following:
 
-$$log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})=\boldsymbol{X_D\beta+\epsilon}$$
-, where XD is our design matrix that consists of all the features remained in the data set after data cleaning.
+$$log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})=\boldsymbol{X_D\beta+\epsilon}$$ , where XD is our design matrix that consists of all the features remained in the data set after data cleaning.
 
 The deviance of the logistic regression model is defined as a measurement of how much the fitted logistic regression model deviates from a model that perfectly predicts each of the observation. In other words, deviance refers to the goodness of fit. Therefore, the smaller the deviance is, the better the model fits on the observed response(Kjytay and Kjytay).
 
 For using ridge regression along with logistic regression, we uses Deviance, plus the penalty term $\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$, which constrains the regression coefficient when correlated feature exist.
-
 
 $$Deviance+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
 
@@ -454,7 +391,6 @@ $$Deviance + \lambda
 \boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
 
 In order to implement ridge regression ,we need to find the value of tuning parameter $\lambda$ that provides the most ideal shrinkage to the regression. We use the deviance to assess the predictive accuracy of the models that uses different values of $\lambda$. The logistic regression is said to be more accurate when has smaller deviance. The model with smaller deviance will perform better on predicting observed response, therefore lead to a higher predictive accuracy(Kjytay and Kjytay).
-
 
 ```{r load a function, include=FALSE}
 ##Load a function for creating the plot of RMSE in response of change in Lambda
@@ -489,16 +425,13 @@ set.seed(114514)
 ridge.modFind_Lambda <- cv.glmnet(XD[,-1], test$stroke , alpha = 0,standardize = TRUE,family = "binomial")
 ```
 
-
 ```{r}
 #plot(ridge.modFind_Lambda)
 ```
 
-
 ```{r}
 ridgePlot(ridge.modFind_Lambda, metric = "Deviance" , title ="Figure 4.2.1 Change of Deviance in Response to  Change of Lambda(Ridge)" )
 ```
-
 
 ```{r}
 CV_result_ridge<-data.frame("Lambda" = ridge.modFind_Lambda$lambda,"Deviance" = ridge.modFind_Lambda$cvm)
@@ -506,8 +439,7 @@ smallestRidge_Deviance<-which.min(CV_result_ridge$Deviance)
 knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Table 4.2.1 Deviance of Model with Chosen Lambda(Ridge)")
 ```
 
-We can see from Figure 4.2.1 and Table 4.2.1 that the lowest deviance(0.69) occurred when the model is using $\lambda=0.0182421$ as the tuning parameter the ridge regression model. Therefore, we select $\lambda = 0.0182421$
-and fit the the final ridge regression model.
+We can see from Figure 4.2.1 and Table 4.2.1 that the lowest deviance(0.69) occurred when the model is using $\lambda=0.0182421$ as the tuning parameter the ridge regression model. Therefore, we select $\lambda = 0.0182421$ and fit the the final ridge regression model.
 
 ```{r ridge final and pred}
 ridge.final<-glmnet(XD[,-1], test$stroke , alpha = 0,lambda = CV_result_ridge[smallestRidge_Deviance,]$Lambda	, standardize = TRUE,family = "binomial")
@@ -521,19 +453,24 @@ rownames(coef_ridge)<-colnames(XD)
 knitr::kable(coef_ridge)
 ```
 
-
 ```{r unadjusted pred}
 unadjusted_pred_ridge<-ifelse(pred_ridge>0.5,"1","0")
 
 knitr::kable(table("Prediction" = unadjusted_pred_ridge,"Actual"= test$stroke),caption = "Table 4.2.2 Confusion Matrix for Prediction of Stroke Via Ridge(Unadjusted)")
 ```
 
-$$Sensitivity=\frac{431}{744+431}\approx0.367$$
-$$Specificity=\frac{4525}{4525+172}\approx0.963$$
-$$Accuracy=\frac{4525+430}{5872}=0.844$$
-$$CER=1-Accuracy=0.156$$
+From Table 4.2.2, we have:
 
-We can see from Table 4.2.2 that although our ridge regression model reaches an overall predictive accuracy of 0.844, we only reached a sensitivity of 0.366, meaning that among all of the patients who had stroke, we are only able to accurately predict 36.6 % them on their higher risk of suffering from stroke. This is caused by the imbalanced nature of our data set(Brownlee).
+##### Table 4.2.3 Predictive Metrics of Ridge Regression Model (Threshold unadjusted)
+
+|             	|       	|
+|-------------	|-------	|
+| Sensitivity 	| 0.367 	|
+| Specificity 	| 0.963 	|
+| Accuracy    	| 0.844 	|
+| CER         	| 0.156 	|
+
+We can see from Table 4.2.3 that although our ridge regression model reaches an overall predictive accuracy of 0.844, we only reached a sensitivity of 0.366, meaning that among all of the patients who had stroke, we are only able to accurately predict 36.6 % them on their higher risk of suffering from stroke. This is caused by the imbalanced nature of our data set(Brownlee).
 
 If we uses the default setting 0.5 as the threshold used on predicting whether a patient has higher risk of suffering from stroke,the sensitivity(true positive rate) of our prediction model is going to be low while the specificity is going to be high since majority of the observations we use to build the model consist of patients who have not suffered from stroke(Brownlee). To mitigate the issue and reach our goal of predicting if a patient has higher risk of suffering from stroke, we utilizes ROC curve to find the ideal threshold of the prediction(Google Developers Machine Learning Crash Course).
 
@@ -544,43 +481,50 @@ plot(roc_ridge,main="Figure 4.2.2 ROC Curve Ridge Regression")
 #knitr::kable(auc(roc_ridge))
 holder <- data.frame("Threshold" = roc_ridge$thresholds, "Sensivity" = roc_ridge$sensitivities, "Spec" = roc_ridge$specificities, "GMean" = sqrt(roc_ridge$sensitivities*roc_ridge$specificities))
 knitr::kable(holder[which.max(holder$GMean),]
-,caption = "Table 4.2.3 Threshold With Ideally Balanced Sensitivity and Specificity and Largest Geometric Mean ")
+,caption = "Table 4.2.4 Threshold With Ideally Balanced Sensitivity and Specificity and Largest Geometric Mean ")
 ```
 
-We can see from Table 4.2.3 that threshold = 0.191465 provides us a balance between sensitivity and specificity of the prediction model, since it has the largest largest geometric mean that indicate the ideal balance between sensitivity and specificity of the prediction model.
-
+We can see from Table 4.2.4 that threshold = 0.191465 provides us a balance between sensitivity and specificity of the prediction model, since it has the largest largest geometric mean that indicate the ideal balance between sensitivity and specificity of the prediction model.
 
 ```{r prediction with adjuste threshold}
 pred_ridge_Y<-ifelse(pred_ridge>holder[which.max(holder$GMean),]$Threshold,"1","0")
 ```
 
-```{r ridge mtx2}
-knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = "Table 4.2.3 Confusion Matrix for Prediction of Stroke Via Ridge(threshold adjusted")
-```
-
-
-$$Sensitivity=\frac{1011}{1011+164}=0.8604$$
-$$Specificity=\frac{3317}{3317+1383}=0.706$$
-$$Accuracy=\frac{3317+1011}{5875}=0.737$$
-$$CER=1-Accuracy=0.263$$
-
-
-
-
-
 
 
 ### Section 4.3: Results:
 
+Below is a confusion matrix of prediction on whether a patient in our cleaned data set has higher risk of having stroke.
+
+```{r ridge mtx2}
+knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = "Table 4.3.1 Confusion Matrix for Prediction of Stroke Via Ridge(threshold adjusted")
+```
+
+From Table 4.3.1,we have;
+
+##### Table 4.3.2 Predictive Metrics of Ridge Regression Model(Threshold Adjusted)
+
+|             	|       	|
+|-------------	|-------	|
+| Sensitivity 	| 0.860 	|
+| Specificity 	| 0.706 	|
+| Accuracy    	| 0.737 	|
+| FPF         	| 0.263 	|
 
 
-## Section 5: Method 3
+We can see from Table 4.3.2 that the ridge regression model along with logistic regression reached a sensitivity of 0.86, meaning we correctly predicted 86% of the patients on their higher risk of having stroke among all patients with higher stroke risk in our cleaned data set. The specificity of our model is 0.706, which indicates that the model correctly predicted for 70.6% of patients on their lower risk of having stroke among all patients with lower risk of having stroke. An overall accuracy of 73.7 indicates that the model correctly predicts the stroke risk status for 73.7% of the patients. A CER of 0.263 indicates that the model incorrectly predicted the stroke risk status of 26.3% of the patients.
+
+The ridge regression model enabled us to predict more accurately than kNN on identifying people with higher stroke risk. However, the decreased CER on prediction would lead to more incorrect prediction on people' stroke risk. Therefore, further techniques may be needed for mitigating this issue and developing better classifier on stroke risk prediction.
+
+
+
+## Section 5: Method 3 Forests 
 
 ### Section 5.1: Introduction
 
+Although the ridge regression model we used in section 4 reached a higher predictive accuracy on predicting patients with higher risk on having stroke, the classification error rate of the prediction model was 0.263, meaning the risk status of 26.3% of the patients from the cleaned data set was incorrectly predicted. Thus, we introduces the techniques of  Bagged Forest and Random Forest to build the third classifier.
 
 ### Section 5.2: Method
-
 
 ```{r bagged forest}
 #Set seed 
@@ -605,14 +549,13 @@ random<-randomForest(stroke~.,data=test,mtry=sqrt(10),importance=TRUE,ntree=1000
 ```
 
 ```{r bagged confusion matrix}
-#Formatted Confusion Matrix for bagge forest
+#Formatted Confusion Matrix for bagged forest
 knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="Table 5.2.1: Confusion Matrix of Bagged Forest")
 ```
 
 $$Sensitivity=\frac{879}{296+879}\approx0.748$$
 
-$$Specificity=\frac{4510}{4510+190}\approx0.960$$ 
-$$Accuracy=\frac{4511+785}{5875}\approx0.917$$
+$$Specificity=\frac{4510}{4510+190}\approx0.960$$ $$Accuracy=\frac{4511+785}{5875}\approx0.917$$
 
 $$CER=1-Accuracy=0.083$$
 
@@ -624,8 +567,7 @@ $$Sensitivity=\frac{867}{867+308}\approx0.738$$
 
 $$Specificity=\frac{4532}{4532+168}\approx0.965$$
 
-$$Accuracy=\frac{4532+750}{5875}\approx0.920$$ 
-$$CER=1-Accuracy=1-0.920=0.08$$
+$$Accuracy=\frac{4532+750}{5875}\approx0.920$$ $$CER=1-Accuracy=1-0.920=0.08$$
 
 ## Section 5.3 Result
 
@@ -635,7 +577,7 @@ $$CER=1-Accuracy=1-0.920=0.08$$
 
 Fedesoriano. "Stroke Prediction Dataset." Kaggle, 26 Jan. 2021, <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset/code>.
 
-Imbalaced Learn. “2. Over-Sampling#.” 2. Over-Sampling - Version 0.10.0.dev0, https://imbalanced-learn.org/dev/over_sampling.html#smote-variants. 
+Imbalanced Learn. "2. Over-Sampling#." 2. Over-Sampling - Version 0.10.0.dev0, <https://imbalanced-learn.org/dev/over_sampling.html#smote-variants>.
 
 Wijaya, Cornellius Yudha. "5 Smote Techniques for Oversampling Your Imbalance Data." Medium, Towards Data Science, 24 May 2022, <https://towardsdatascience.com/5-smote-techniques-for-oversampling-your-imbalance-data-b8155bdbe2b5>.
 
@@ -643,14 +585,14 @@ RolandRoland."Convert All Data Frame Character Columns to Factors." Stack Overfl
 
 Wu, Dongyuan. "Dongyuanwu/RSBID: Resampling Strategies for Binary Imbalanced Datasets Version 0.0.2.0000 from Github." Version 0.0.2.0000 from GitHub, 18 July 2022, <https://rdrr.io/github/dongyuanwu/RSBID/>.
 
-Singh, Deepika. “Deepika Singh.” Pluralsight, 12 Nov. 2019, https://www.pluralsight.com/guides/finding-relationships-data-with-r. 
+Singh, Deepika. "Deepika Singh." Pluralsight, 12 Nov. 2019, <https://www.pluralsight.com/guides/finding-relationships-data-with-r>.
 
-Reka Solymosi (maintained and updated by David Buil-Gil and Nicolas Trajtenberg). “Making Sense of Crim Data.” Chapter 3 Week 3, 8 Nov. 2022, https://maczokni.github.io/MSCD_labs/week3.html. 
+Reka Solymosi (maintained and updated by David Buil-Gil and Nicolas Trajtenberg). "Making Sense of Crim Data." Chapter 3 Week 3, 8 Nov. 2022, <https://maczokni.github.io/MSCD_labs/week3.html>.
 
-Kumar, Naresh. “Advantages and Disadvantages of KNN Algorithm in Machine Learning.” Advantages and Disadvantages of KNN Algorithm in Machine Learning, http://theprofessionalspoint.blogspot.com/2019/02/advantages-and-disadvantages-of-knn.html. 
+Kumar, Naresh. "Advantages and Disadvantages of KNN Algorithm in Machine Learning." Advantages and Disadvantages of KNN Algorithm in Machine Learning, <http://theprofessionalspoint.blogspot.com/2019/02/advantages-and-disadvantages-of-knn.html>.
 
-Kjytay, and Kjytay. “What Is Deviance?” Statistical Odds &amp; Ends, 27 Mar. 2019, https://statisticaloddsandends.wordpress.com/2019/03/27/what-is-deviance/.
+Kjytay, and Kjytay. "What Is Deviance?" Statistical Odds & Ends, 27 Mar. 2019, <https://statisticaloddsandends.wordpress.com/2019/03/27/what-is-deviance/>.
 
-Brownlee, Jason. “A Gentle Introduction to Threshold-Moving for Imbalanced Classification.” MachineLearningMastery.com, 4 Jan. 2021, https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/. 
+Brownlee, Jason. "A Gentle Introduction to Threshold-Moving for Imbalanced Classification." MachineLearningMastery.com, 4 Jan. 2021, <https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/>.
 
-“Classification: Roc Curve and AUC &nbsp;|&nbsp; Machine Learning &nbsp;|&nbsp; Google Developers.” Google, Google, https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc#:~:text=An%20ROC%20curve%20(receiver%20operating,False%20Positive%20Rate. 
+"Classification: Roc Curve and AUC  \|  Machine Learning  \|  Google Developers." Google, Google, <https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc#>:\~:text=An%20ROC%20curve%20(receiver%20operating,False%20Positive%20Rate.
