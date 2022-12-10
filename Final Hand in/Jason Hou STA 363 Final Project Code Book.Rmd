@@ -1,0 +1,549 @@
+---
+title: "Jason Hou STA 363 Final Project"
+author: "Jason Hou"
+date: '2022-12-09'
+output: 
+  pdf_document:
+  toc: true
+  number_sections: true
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE) 
+```
+\newpage 
+\tableofcontents 
+\listoftables
+\newpage
+
+```{r load packages, include=FALSE}
+##Here we load the packages needed and install a package that is not on CRAN
+library(ggplot2)
+library(broom)
+library(gridExtra)
+library(dplyr)
+library(class)
+library(tidyverse)
+library(gridExtra)
+library(leaps)
+library(corrplot)
+library(RColorBrewer)
+library(glmnet)
+library(xtable)
+library(randomForest)
+library(pROC)
+#library(smotefamily)
+library(devtools)
+devtools::install_github("dongyuanwu/RSBID")
+library(RSBID)
+library(UpSetR)
+library(naniar)
+library(report)
+library(rpart)
+library(rattle)
+library(rpart.plot)
+```
+
+
+
+```{r load data, include=FALSE}
+originalStroke<-read.csv("StrokeSet.csv")
+```
+
+```{r take a look, include=FALSE}
+glimpse(originalStroke)
+```
+
+```{r}
+originalStroke<-originalStroke[,-1]
+```
+
+
+```{r}
+v1<-class(originalStroke$hypertension)
+v2<-class(originalStroke$heart_disease)
+v3<-class(originalStroke$stroke)
+v4<-class(originalStroke$bmi)
+columns_to_convert<-c(v1,v2,v3,v4)
+features<-c("hypertension","heart_disease","stroke","bmi")
+features_to_convert<-data.frame("Features" = features,"Type" = columns_to_convert)
+knitr::kable(features_to_convert,caption = "Features Need to Convert to Other Type")
+```
+
+
+```{r change data type, warning=FALSE}
+originalStroke$bmi<-as.numeric(originalStroke$bmi)
+originalStroke$stroke<-as.factor(originalStroke$stroke)
+originalStroke$hypertension<-as.factor(originalStroke$hypertension)
+originalStroke$heart_disease<-as.factor(originalStroke$heart_disease)
+
+#originalStroke$stroke<-as.factor(originalStroke$stroke)
+```
+
+```{r change data type2}
+#Change all categorical data that are in character type to factor type
+originalStroke <- as.data.frame(unclass(originalStroke),stringsAsFactors=TRUE)
+```
+
+
+```{r check NA after conversion, warning=FALSE}
+# Check missing data
+knitr::kable(sum(is.na(originalStroke))
+,caption = "Number of Missing Values")
+```
+
+```{r show where NA is,fig.height=4,fig.width=4}
+NA_plot<-vis_miss(originalStroke)
+NA_plot+ggtitle("Figure 2.1 Graph of NA in Each Column")
+```
+
+```{r bmi na row}
+bmi_na_row<-which(is.na(originalStroke$bmi))
+```
+
+```{r missing value row stroke status}
+knitr::kable(table(originalStroke$stroke[bmi_na_row]),caption = "Stroke Status of Rows with Missing Value")
+```
+
+
+```{r dealing with missing data, include=FALSE}
+## Remove NAs
+stroke<-na.omit(originalStroke)
+```
+
+```{r,fig.height=4,fig.width=4}
+stroke_classes<-ggplot(data = originalStroke, mapping = aes(x=stroke,fill=stroke))+
+  geom_bar()+
+  xlab("Stroke Status")+
+  ggtitle("Figure 2.2 Classes of Stroke")
+  
+stroke_classes
+```
+
+
+
+
+
+
+```{r dealing with imbalance of data set, include=FALSE}
+#Utilizing smote_nc to synthesize additional data points for the minority class in the data set.
+set.seed(114514)
+test<-SMOTE_NC(stroke,"stroke",perc_maj = 25,5)
+#write.csv(test, file = "Smote0.25.csv")
+#test <- as.data.frame(unclass(test),stringsAsFactors=TRUE)
+
+```
+
+
+
+
+
+
+
+```{r bmi distribution,fig.height=4,fig.width=4}
+ggplot(data=test,aes(x=bmi))+
+  geom_boxplot()+ggtitle("Figure 2.3 Distribution of BMI")
+```
+
+
+
+
+
+
+
+
+```{r stroke across gender, fig.height=4, fig.width=4, warning=TRUE}
+positive_stroke<-test$stroke==1
+positive_stroke_set<-data.frame("Stroke"=as.factor(positive_stroke),"Gender"=test$gender)
+
+stroke_gender<-positive_stroke_set%>%
+  group_by(Gender)%>%
+  summarise(n = n()) %>%
+  ggplot(aes(x = Gender, y = n,fill=Gender))+
+  geom_col()+
+  labs(y="Count of Stroke Events")
+stroke_gender+ggtitle("Figure 2.4 Stroke Event Across Gender")
+
+
+
+
+```
+
+
+
+
+
+
+
+
+```{r stroke and work type,fig.height=4,fig.width=4}
+
+positive_stroke_work<-data.frame("Stroke"=as.factor(positive_stroke),"Work"=test$work_type)
+
+stroke_work<-positive_stroke_work%>%
+  group_by(Work)%>%
+  summarise(n = n()) %>%
+  ggplot(aes(x = Work, y = n,fill=Work))+
+  geom_col()+
+  labs(y="Count of Stroke Events")+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+stroke_work+ggtitle("Figure 2.5 Stroke Event Across Work Type")
+```
+
+
+
+
+
+
+
+
+```{r,fig.height=4,fig.width=4}
+ggplot(data=test,aes(x=avg_glucose_level))+
+  geom_boxplot()+
+  ggtitle("Figure 2.6 Distribution of Average Glucose Level")
+```
+
+
+
+
+
+
+
+
+```{r fig.height=4, fig.width=4, warning=FALSE}
+ggplot(data=test,aes(x=age,y=bmi))+
+  geom_point()+
+  geom_smooth()+ggtitle("Figure 2.7 Age vs BMI")
+```
+
+
+
+
+
+
+
+
+```{r warning=FALSE}
+ggplot(data=test,aes(x=avg_glucose_level,y=bmi))+
+  geom_point()+
+  geom_smooth()+
+  ggtitle("Figure 2.8 BMI and Blood Glucose Level")
+```
+
+
+
+
+
+
+```{r echo=FALSE, warning=FALSE}
+age_stroke<-ggplot(data=test,aes(x=age,y=bmi,color=stroke))+geom_point()
+age_stroke+ggtitle("Figure 2.9 Age vs BMI Respect to Stroke")
+```
+
+
+
+
+
+
+
+
+
+
+```{r demo set}
+set.seed(114514)
+numRow<-nrow(test)
+chosenDemo<-sample(1:numRow,400,replace = FALSE)
+set_demo<-test[chosenDemo,]
+```
+
+```{r kNN demo illustration,fig.height=4,fig.width=4}
+demo_data<-data.frame("Age"= rep(NA,1),"BMI"=rep(NA,1),"Stroke"=rep(NA,1))
+demo_data$Age[1]<-63
+demo_data$BMI[1]<-24
+demo_data$Stroke<-1
+#demoTest<-example_data%>%
+ # mutate(dengue_status_test=as.character(dengue_status))
+ggplot()+
+  geom_point(data = set_demo,aes(x=age,y=bmi,col=stroke),size=2,alpha=0.9,shape=19)+
+  geom_point(data =demo_data,aes(x=Age,y=BMI),size=2,alpha=0.9,shape=19)+
+  geom_segment(aes(x=63,xend=62.2,y=24,yend=28))+
+  geom_segment(aes(x=63,xend=66,y=24,yend=24.5))+
+  geom_segment(aes(x=63,xend=65.,y=24,yend=27))+
+  ggtitle("Figure 3.2.1 Illustration of kNN")
+  
+```
+
+
+
+```{r kNN Data}
+#Create a data set with only numeric features for the kNN
+numericOnly<-test[,c(2,8,9,11)]
+```
+
+```{r 10 fold CV determine best k }
+set.seed(114514)
+n<-nrow(numericOnly)
+nk<-30
+storage<-data.frame("K"=rep(NA,nk),
+                    "Sensitivity" = rep(NA,nk),
+                    "Specificity" = rep(NA,nk),
+                    "GeoMean" = rep(NA,nk))
+
+#Set a seed for sampling and create a pool and set fold for K fold CV
+set.seed(114514)
+pool<-rep(1:10,ceiling(n/10))
+
+fold<-sample(pool,n,replace = FALSE)
+
+#Outer loop for increment k 
+for(k in 1:nk){
+  storage$K[k]<-k
+  
+  storage_inner<-data.frame("YHat" = rep(NA,n))
+  #Inner loop for 10 fold CV
+  for(i in 1:10){
+    #Find data in each fold
+    infold<-which(fold == i)
+    
+    #Create training and testing sets
+    Train_Stroke<-numericOnly[-infold,]
+    Test_Stroke<-numericOnly[infold,]
+   #(set.seed(114514))
+    #Run kNN
+    k_preds<-knn(Train_Stroke[,c(1,2,3)],Test_Stroke[,c(1,2,3)],k=k,cl=Train_Stroke$stroke)
+    
+    #store predicted result from each fold to storage_inner and obtain predictions to     the full data set 
+    storage_inner$YHat[infold]<-as.numeric(as.character(k_preds))
+  }
+    #Find rows with positive and negative result
+    true1K<-which(numericOnly$stroke == 1)
+    true0K<-which(numericOnly$stroke == 0)
+    
+    #Compute the amount of rows corresponding to each result
+    ntrue1K<-length(true1K)
+    ntrue0K<-length(true0K)
+    #Compute sensitivity and specificity, as well as GeoMetric Mean for determining the best value for k
+    sensitivity<-sum(storage_inner$YHat[true1K] == 1)/ntrue1K
+    storage$Sensitivity[k]<-sensitivity
+    specificity<-sum(storage_inner$YHat[true0K] == 0)/ntrue0K
+    storage$Specificity[k]<-specificity
+    storage$GeoMean[k]<-sqrt(sensitivity*specificity)
+    
+    #if(k==8){
+     # YHatOut <- storage_inner$YHat
+    #}
+   
+}
+
+```
+
+```{r find best k}
+#Create plot to find the best k for kNN 
+knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
+  geom_line()+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 3.2.2 GeoMean Graph of kNN with Best k Shown
+  (10 Fold Cross Validation)",y = " ")+
+  geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
+#Show Plot
+knnActualPlot
+```
+
+
+
+
+
+```{r}
+knitr::kable(table("Prediction" = storage_inner$YHat,"Actual" = numericOnly$stroke),caption = "Confusion Matrix of Predicting Stroke(10-fold Cross Validation with k=5")
+```
+
+
+```{r}
+KNN_metrics<-data.frame("Sensitivity"= 0.514,"Specificity" = 0.928,"Accuracy" = 0.844,"CER" = 0.156)
+knitr::kable(KNN_metrics,caption = "Performance Metrics kNN(K=5)")
+```
+
+
+
+
+
+
+
+
+```{r correlation plot for numeric features,fig.height=4,fig.width=4}
+M<-cor(test[,c(2,8,9)])
+#Create correlation plot
+corrplot(M, method= "number",type = "upper",title="Figure 4.1.1 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
+```
+
+
+
+
+
+
+
+
+
+
+```{r load a function, include=FALSE}
+##Load a function for creating the plot of RMSE in response of change in Lambda
+ridgePlot <- function(ridge.mod, metric, title){
+  library(ggplot2)
+  
+  smallestLambda <- ridge.mod$lambda[which.min(ridge.mod$cvm)] 
+  
+  if(metric == "MSE"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = (ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test MSE values for Different Tuning Parameters. Smallest MSE at lambda = ", smallestLambda), title = title, y = "Deviance", x = "Tuning Parameter")
+  
+  }
+  
+  if(metric == "Deviance"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = sqrt(ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test RMSE values for Different Tuning Parameters. Smallest RMSE at lambda = ", smallestLambda), title = title, y = "Deviance", x = "Tuning Parameter")
+
+  }
+  
+  g1
+}
+```
+
+```{r creating design matrix ridge}
+# Create the design matrix for ridge regression
+XD <- model.matrix(stroke ~., data = test)
+```
+
+```{r cv to find the best lambda,cache=TRUE}
+#Set seed for random sampling
+set.seed(114514)
+#Run cross validation for lambda value from 1 to 50(increment by 0.05 for each run)
+ridge.modFind_Lambda <- cv.glmnet(XD[,-1], test$stroke , alpha = 0,standardize = TRUE,family = "binomial")
+```
+
+```{r}
+#plot(ridge.modFind_Lambda)
+```
+
+```{r,fig.height=4,fig.width=4}
+ridgePlot(ridge.modFind_Lambda, metric = "Deviance" , title ="Figure 4.2.1 Change of Deviance in Response to  Change of Lambda(Ridge)" )
+```
+
+```{r}
+CV_result_ridge<-data.frame("Lambda" = ridge.modFind_Lambda$lambda,"Deviance" = ridge.modFind_Lambda$cvm)
+smallestRidge_Deviance<-which.min(CV_result_ridge$Deviance)
+knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Deviance of Model with Chosen Lambda(Ridge)")
+```
+
+
+```{r ridge final and pred}
+ridge.final<-glmnet(XD[,-1], test$stroke , alpha = 0,lambda = CV_result_ridge[smallestRidge_Deviance,]$Lambda	, standardize = TRUE,family = "binomial")
+pred_ridge<-predict(ridge.final,newx=XD[,-1],type = "response")
+```
+
+```{r beta ridge, eval=FALSE, include=FALSE}
+beta_ridge<-as.numeric(coefficients(ridge.final))
+coef_ridge<-data.frame("Coef"=beta_ridge,"Selecting Status" = ifelse(beta_ridge==0,"Removed",""))
+rownames(coef_ridge)<-colnames(XD)
+knitr::kable(coef_ridge)
+```
+
+```{r unadjusted pred}
+unadjusted_pred_ridge<-ifelse(pred_ridge>0.5,"1","0")
+
+knitr::kable(table("Prediction" = unadjusted_pred_ridge,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Ridge(Unadjusted)")
+```
+
+
+```{r}
+#Row ridge metrics
+ridge_raw<-data.frame("Sensitivity"=0.367,"Specificity"=0.963,"Accuracy"=0.844,"CER"=0.156)
+knitr::kable(ridge_raw,caption = "Performance Metrics Ridge(Threshold Unadjusted)")
+```
+
+
+
+
+
+```{r ROCAUC ridge,fig.height=4,fig.width=4}
+roc_ridge<-roc(test$stroke,pred_ridge)
+plot(roc_ridge,main="Figure 4.2.2 ROC Curve Ridge Regression")
+
+#knitr::kable(auc(roc_ridge))
+holder <- data.frame("Threshold" = roc_ridge$thresholds, "Sensivity" = roc_ridge$sensitivities, "Spec" = roc_ridge$specificities, "GMean" = sqrt(roc_ridge$sensitivities*roc_ridge$specificities))
+knitr::kable(holder[which.max(holder$GMean),]
+,caption = "Threshold With Ideally Balanced Sensitivity and Specificity and Largest Geometric Mean ")
+```
+
+
+```{r prediction with adjuste threshold}
+pred_ridge_Y<-ifelse(pred_ridge>holder[which.max(holder$GMean),]$Threshold,"1","0")
+```
+
+
+
+```{r ridge mtx2}
+knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Ridge(threshold adjusted")
+```
+
+
+```{r}
+ridge_metrics<-data.frame("Sensitivity"=0.860,"Specificity"=0.706,"Accuracy"=0.737,"CER"=0.263)
+knitr::kable(ridge_metrics,caption = "Performance Metrics Ridge Regression(Threshold Adjusted")
+```
+
+
+
+
+
+
+```{r,fig.height=4,fig.width=4}
+##sample classification tree in bagging 
+set.seed(114514)
+select_rows<-sample(1:n,n,replace = TRUE)
+select_set<-test[select_rows,c(1:5,11)]
+sample_tree<-rpart(stroke~.,method = "class",data=select_set)
+fancyRpartPlot(sample_tree,sub="Sample Classification Tree (Only Use 6 features)",cex=0.75)
+```
+
+
+
+
+```{r bagged forest}
+#Set seed 
+set.seed(100)
+set_for_forest<-test
+#set_for_forest$hypertension <- as.numeric(set_for_forest$hypertension)
+#set_for_forest$heart_disease <- as.numeric(set_for_forest$heart_disease)
+bagged<-randomForest(stroke~.,data=test,mtry=10,importance=TRUE,ntree=1000,compete=FALSE)
+```
+
+```{r bagged prediction}
+#bag forest prediction
+for_predict<-test[,-11]
+pred_bag<-predict(bagged)
+#table(pred_bag)
+#table("Prediction"= pred_bag,"Actual" = test$stroke)
+```
+
+
+
+```{r bagged confusion matrix}
+#Formatted Confusion Matrix for bagged forest
+knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="Confusion Matrix of Bagged Forest")
+```
+
+
+```{r}
+bagged_metrics<-data.frame("Sensitivity"=0.748,"Specificity"=0.960,"Accuracy"=0.917,"CER"=0.083)
+knitr::kable(bagged_metrics,caption = "Performance Metrics Bagged Forest")
+```
+
+
+
+
+
+```{r}
+metrics_sum<-rbind(KNN_metrics,ridge_metrics,bagged_metrics)
+techniques<-c("kNN with k=5","Logistic Regression With Ridge Regularization","Bagged Forest")
+metrics_sum<-cbind(techniques,metrics_sum)
+knitr::kable(metrics_sum)
+```
+
+
+
