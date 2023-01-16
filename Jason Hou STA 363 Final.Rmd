@@ -102,7 +102,7 @@ originalStroke$heart_disease<-as.factor(originalStroke$heart_disease)
 originalStroke <- as.data.frame(unclass(originalStroke),stringsAsFactors=TRUE)
 ```
 
-We then check for NA's in the data set. The result was shown in the table below.
+We then check for missing in the data set. The result was shown in the table below.
 
 ```{r check NA after conversion, warning=FALSE}
 # Check missing data
@@ -123,7 +123,7 @@ bmi_na_row<-which(is.na(originalStroke$bmi))
 knitr::kable(table(originalStroke$stroke[bmi_na_row]),caption = "Stroke Status of Rows with Missing Value")
 ```
 
-Table 2 and Figure 2.1 show that 201 rows of missing values were found from the data set, which was only present in the column "bmi". According to Table 3, there are 161 patients who suffered from stroke events and 40 patients who did not suffer from stroke in patients with their BMI value missing(Here, 0 = the patient had stroke, 1 = the patient have not had a stroke). We decide to remove these rows with missing values in BMI.
+Table 2 and Figure 2.1 show that 201 rows of missing values were found from the data set, which was only present in the column "bmi". According to Table 3, there are 161 patients who suffered from stroke events and 40 patients who did not suffer from stroke in patients with their BMI value missing(Here, 0 = the patient had stroke, 1 = the patient have not had a stroke). We decide to remove these rows with missing values in BMI.The data set after the removal of missing data contains 4909 rows of data.
 
 ```{r dealing with missing data, include=FALSE}
 ## Remove NAs
@@ -199,7 +199,7 @@ stroke_gender+ggtitle("Figure 2.4 Stroke Event Across Gender")
 
 
 
-We can see from Figure 2.4 that there are more female patients among all patients who had stroke.
+We can see from Figure 2.4 that there are more female patients among all patients who had stroke. Additionally, one patient with gender "Other" exist in the data set.
 
 
 
@@ -248,12 +248,12 @@ ggplot(data=test,aes(x=age,y=bmi))+
 
 
 
-We can see from Figure 2.7 that patients' age and their BMI may have correlation.
+We can see from Figure 2.7 that patients' age and their BMI may have non linear correlation.
 
 
 
 
-```{r warning=FALSE}
+```{r message=FALSE, warning=FALSE}
 ggplot(data=test,aes(x=avg_glucose_level,y=bmi))+
   geom_point()+
   geom_smooth()+
@@ -261,7 +261,7 @@ ggplot(data=test,aes(x=avg_glucose_level,y=bmi))+
 ```
 
 
-We can see from Figure 2.8 that patients' BMI and their average blood glucose level may have weak correlation.
+We can see from Figure 2.8 that patients' BMI and their average blood glucose level may have weak non linear correlation.
 
 
 
@@ -396,10 +396,10 @@ Figure 3.2.2 shows that k=5 is the best k value for the 10-fold Cross Validation
 
 We assesses the predictive accuracy of kNN through the following predictive metric: sensitivity(true positive rate),specificity(true negative rate), accuracy, and classification error rate(CER). The sensitivity indicates the percentage of patients who had stroke that we correctly predicted on their higher risk of having stroke in all patients who had stroke. The specificity indicates the percentage of patients who have not had stroke that we correctly predicted on their lower risk of having stroke in all patients who have not suffered from stroke. Accuracy indicates the percentage of patients we correctly predicted on in all patients. CER indicates the percentage of patients that we failed to make correct prediction on whether they had stroke in all patients.
 
-Below is a confusion matrix of the prediction using kNN with k value equals to 5.
+Below is a confusion matrix of the prediction using kNN with k value equals to 5, where rows are predicted stroke status and columns are actual stroke status of patients.
 
 ```{r}
-knitr::kable(table("Prediction" = storage_inner$YHat,"Actual" = numericOnly$stroke),caption = "Confusion Matrix of Predicting Stroke(10-fold Cross Validation with k=5")
+knitr::kable(table("Prediction" = storage_inner$YHat,"Actual" = numericOnly$stroke),caption = "Confusion Matrix of Predicting Stroke(10-fold Cross Validation with k=5)")
 ```
 
 From Table 4, we have:
@@ -420,13 +420,13 @@ According to the result obtained from 10-fold Cross Validation, kNN allowed us t
 
 The kNN algorithm we used in section 3 would only accept numeric features, therefore the 8 remaining categorical features were not used for the prediction. Since we found in section 2 that correlations might exist between features, we created a correlation plot for the numeric features to further investigate the presence of correlations between features.
 
-```{r correlation plot for numeric features}
+```{r correlation plot for numeric features, eval=FALSE, include=FALSE}
 M<-cor(test[,c(2,8,9)])
 #Create correlation plot
 corrplot(M, method= "number",type = "upper",title="Figure 4.1.1 Correlation Plot of Numeric Variables in Stroke Data Set ",mar = c(0,0,2,0))
 ```
 
-We can see from the Figure 4.1.1 that correlations present between the numeric features in the data set, indicating that multicollinearity exists across features, therefore utilizing penalized regression models is appropriate for the data set.
+Figure 2.7 and 2.8 from the EDA section indicates that some therefore utilizing penalized regression models is appropriate for the data set.
 
 Therefore, we decided to implement penalized regression techniques, along with logistic regression, to build the second classifier that not only utilizes both numeric and categorical features in making predictions, but also mitigates the impact of multicollinearity (correlations between features) in the prediction.
 
@@ -434,9 +434,9 @@ Therefore, we decided to implement penalized regression techniques, along with l
 
 We uses logistic regression model withridge regularization to create the prediction model for predicting risk stroke status, as it provides the effect of shrinkage. In other words, shrinking the coefficients of correlated features towards 0 while still maintaining all the features in the cleaned data set when building the model, thus restrains the impact from them and mitigates the effect caused by multicollinearity(correlated features in the data set). To do this we need to find the tuning parameter that provides the best shrinking effect.
 
-The general form of our model is the following:
+The general form of our model is the following(where $Y_i\sim Bernoulli(\pi_i)$):
 
-$$log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})=\boldsymbol{X_D\beta+\epsilon}$$ , where XD is our design matrix that consists of all the features remained in the data set after data cleaning.
+$$log(\frac{\boldsymbol{\pi_i}}{1-\boldsymbol{\pi_i}})=\boldsymbol{X_D\beta+\epsilon}$$ , where $\pi_i$ is the probability that a patient has higher risk of having stroke. The $\boldsymbol{X_D}$ is our design matrix that consists of all the features remained in the data set after data cleaning.
 
 The deviance of the logistic regression model is defined as a measurement of how much the fitted logistic regression model deviates from a model that perfectly predicts each of the observation. In other words, deviance refers to the goodness of fit. Therefore, the smaller the deviance is, the better the model fits on the observed response(Kjytay and Kjytay).
 
@@ -447,7 +447,7 @@ $$Deviance+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
 Our goal is to find $\boldsymbol{\beta}$ coefficients that minimizes the following:
 
 $$Deviance + \lambda
-\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})^T(\boldsymbol{log(\frac{\boldsymbol{Y}}{1-\boldsymbol{Y}})-X_\mathbf{D}\hat{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
+\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(-2log(L(\boldsymbol{\beta})))+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=\sum\limits_{i=1}^nY_ilog(\frac{e^\boldsymbol{\beta}}{1+e^\boldsymbol{\beta}})+\sum\limits_{i=1}^n(1-Y_i)log(\frac{e^\boldsymbol{\beta}}{1+e^\boldsymbol{\beta}})+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
 
 In order to implement ridge regression ,we need to find the value of tuning parameter $\lambda$ that provides the most ideal shrinkage to the model. We use the deviance to assess the predictive accuracy of the models that uses different values of $\lambda$. The logistic regression is said to be more accurate when has smaller deviance. The model with smaller deviance will perform better on predicting observed response, therefore lead to a higher predictive accuracy(Kjytay and Kjytay).
 
@@ -579,7 +579,7 @@ Although the ridge regression model we used in Section 4 reached a higher predic
 ### Section 5.2: Method
 
 
-The classification tree uses tree representation to resolve classification problems(GeeksForGeeks). Below is a sample decision tree created based on features including gender, age, hypertension, heart disease status, marriage status and stroke(response variable).
+Below is a sample decision tree created based on features including gender, age, hypertension, heart disease status, marriage status and stroke(response variable).
 
 ```{r}
 ##sample classification tree in bagging 
@@ -590,7 +590,7 @@ sample_tree<-rpart(stroke~.,method = "class",data=select_set)
 fancyRpartPlot(sample_tree,sub="Figure 5.2.1 Sample Classification Tree (Only Use 6 Features)",cex=0.75)
 ```
 
-At the begging of this tree, we put the patients of the entire cleaned data set as the “root” of the tree, then we split the root of the tree into two nodes based on the features we used, which distribute the patients in the cleaned data set into the two nodes based on their class on this specific feature. The split was decided based on the way that gives us the smallest Gini Index (A measure of a split’s effectiveness of correctly classifying a patient into a node in the tree). This process was repeated until we get the lowest Gini Index, which indicates the most ideal classifying ability of a classification tree(Dash).
+At the beginning of this tree, we put the patients of the entire cleaned data set as the “root” of the tree, then we split the root of the tree into two nodes based on the features we used, which distribute the patients in the cleaned data set into the two nodes based on their class on this specific feature. The split was decided based on the way that gives us the smallest Gini Index (A measure of a split’s effectiveness of correctly classifying a patient into a node in the tree). This process was repeated until we get the lowest Gini Index, which indicates the most ideal classifying ability of a classification tree(Dash).
 
 However, a single decision tree is prone to overfitting, which results in a high variance on the classifier. In other words, the tree model is trained to tightly to the data set we use to create it, and made it unusable to predict for the stroke status of new patients in screening(Liberman). 
 
@@ -642,11 +642,10 @@ We have conducted kNN, logistic regression with ridge regularization method, and
 metrics_sum<-rbind(KNN_metrics,ridge_metrics,bagged_metrics)
 techniques<-c("kNN with k=5","Logistic Regression With Ridge Regularization","Bagged Forest")
 metrics_sum<-cbind(techniques,metrics_sum)
-knitr::kable(metrics_sum,caption = "Table 14: Compare 3 Techniques on Performance Metrics")
+knitr::kable(metrics_sum,caption = "Compare 3 Techniques on Performance Metrics")
 ```
 
-We can see from Table 14 that logistic regression with ridge regularization has the highest sensitivity (0.86) with relatively low specificity (0.706), while kNN has the lowest sensitivity (0.514). Bagged Forest outperformed logistic regression and kNN on the overall accuracy and CER of the prediction (0.917 and 0.083, respectively). Despite the highest sensitivity that logistic regression with ridge regularization has, we would recommend using the bagged forest model as the classifier for identifying people with a higher risk of having a stroke during screening, since it has the lowest classification error rate and highest specificity while maintaining a relatively high ability to identify people with a higher risk of having stroke. Additionally, bagged forest will be able to perform better in the real-life setting when predicting new data from people. The limitation we found is that models constructed through all 3 techniques are impacted by the imbalanced nature of our data set, we recommend collecting more data to resolve this issue.
-
+We can see from Table 14 that logistic regression with ridge regularization has the highest sensitivity (0.86) with relatively low specificity (0.706), while kNN has the lowest sensitivity (0.514). Bagged Forest outperformed logistic regression and kNN on the overall accuracy and CER of the prediction (0.917 and 0.083, respectively). Despite the highest sensitivity that logistic regression with ridge regularization has, we would recommend using the bagged forest model as the classifier for identifying people with a higher risk of having a stroke during screening, since it has the lowest classification error rate and highest specificity while maintaining a relatively high ability to identify people with a higher risk of having stroke. Additionally, the bagged forest will be able to perform better in the real-life setting when predicting new data from people. The limitation we found is that models constructed through all 3 techniques are impacted by the imbalanced nature of our data set, we recommend collecting more data to resolve this issue.
 
 
 
