@@ -1,0 +1,25 @@
+---
+title: "Deviance Text"
+author: "Jason Hou"
+date: "2023-01-16"
+output: pdf_document
+---
+
+We uses logistic regression model with ridge regularization to create the prediction model for predicting risk stroke status, as it provides the effect of shrinkage. In other words, shrinking the coefficients of correlated features towards 0 while still maintaining all the features in the cleaned data set when building the model, thus restrains the impact from them and mitigates the effect caused by multicollinearity(correlated features in the data set). To do this we need to find the tuning parameter that provides the best shrinking effect.
+
+The general form of our model is the following(where $Y_i\sim Bernoulli(\pi_i)$):
+
+$$log(\frac{\boldsymbol{\pi_i}}{1-\boldsymbol{\pi_i}})=\boldsymbol{X_D\beta+\epsilon}$$ , where $\pi_i$ is the probability that a patient has higher risk of having stroke. The $\boldsymbol{X_D}$ is our design matrix that consists of all the features remained in the data set after data cleaning.
+
+The deviance of the logistic regression model is defined as a measurement of how much the fitted logistic regression model deviates from a model that perfectly predicts each of the observation. In other words, deviance refers to the goodness of fit. Therefore, the smaller the deviance is, the better the model fits on the observed response(Kjytay and Kjytay).
+
+For using ridge regression along with logistic regression, we uses Deviance, plus the penalty term $\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$, which constrains the regression coefficient when correlated feature exist.
+
+$$Deviance+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
+
+Our goal is to find $\boldsymbol{\beta}$ coefficients that minimizes the following:
+
+$$Deviance + \lambda
+\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(-2log(L(\boldsymbol{\beta})))+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=\sum$$
+
+In order to implement ridge regression ,we need to find the value of tuning parameter $\lambda$ that provides the most ideal shrinkage to the model. We use the deviance to assess the predictive accuracy of the models that uses different values of $\lambda$. The logistic regression is said to be more accurate when has smaller deviance. The model with smaller deviance will perform better on predicting observed response, therefore lead to a higher predictive accuracy(Kjytay and Kjytay).
