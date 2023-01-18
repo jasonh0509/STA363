@@ -1,0 +1,706 @@
+---
+title: "Classifier for Predicting Stroke Risks"
+author: "Jueshen Hou"
+date: '2022-12-09'
+output: 
+  pdf_document:
+  toc: true
+  number_sections: true
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE) 
+```
+\newpage 
+\tableofcontents 
+\listoftables
+\newpage
+
+```{r load packages, include=FALSE}
+##Here we load the packages needed and install a package that is not on CRAN
+library(ggplot2)
+library(broom)
+library(gridExtra)
+library(dplyr)
+library(class)
+library(tidyverse)
+library(gridExtra)
+library(leaps)
+library(corrplot)
+library(RColorBrewer)
+library(glmnet)
+library(xtable)
+library(randomForest)
+library(pROC)
+#library(smotefamily)
+library(devtools)
+devtools::install_github("dongyuanwu/RSBID")
+library(RSBID)
+library(UpSetR)
+library(naniar)
+library(report)
+library(rpart)
+library(rattle)
+library(rpart.plot)
+```
+
+
+## Abstract
+
+Stroke, defined as a brain disease that happens when the blood supply to part of the brain was blocked or when a blood vessel in the brain breaks, is a leading cause of death and a major cause of severe disability among adults in the United States. According to CDC, more than 795000 people suffer from stroke every year in the United States. While being regarded as a factor that leads to serious consequences and even mortality, stroke is preventable and treatable(CDC). Therefore, it is important to conduct screening on the population to identify people who have a higher risk of having stroke and provide preventive support to these people. The primary goal of this project is to build a classifier for medical professionals to conduct screening for the risk of stroke. Three techniques, the k-Nearest Neighbors, penalized regression and bagged forest was implemented to build this classifier and their performance metrics were compared. We found the model built through the bagged forest has a better performance in predicting the stroke risk status of people and suggest using it to build the classifier, while improvements can still be made through collecting more data to mitigate the impact caused by imbalanced data set.
+
+
+## Section 1: Data and Motivation
+
+Our goal for this project is to build a classifier that helps to predict whether someone is at a higher or lower risk of having a stroke based on the health condition, health measures, and related information provided. This classifier can be utilized to assist in the prevention of stroke events along with other testing techniques and facilitate the diagnosis process through providing a preliminary screening, which can help medical professionals to identify people who are more likely to have a stroke, and implement preventive care if needed.
+
+The data that we are dealing with consists of 5110 rows and 12 columns. The data set records the 12 features(4 numeric features and 8 categorical features) of 5110 patients who have either had suffered or have not suffered from stroke. We have information on the patient's biological gender, the age of each patient in years, whether a patient has heart disease/hypertension, marital status, smoking status, stroke status, and other related information. For other features not mentioned, please refer to the following link for a detailed description of features in this data set. (Fedesoriano)
+Link: <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset>
+
+Below is a table of all the features and their descriptions from the data set.
+
+
+```{r echo=FALSE}
+attributes_stroke<-read.csv("Stroke Attributes.csv")
+attributes_stroke<-replace(attributes_stroke,is.na(attributes_stroke),"")
+colnames(attributes_stroke)[2]<-" "
+knitr::kable(attributes_stroke,caption = "Features and Descriptions")
+```
+
+
+
+## Section 2: Data Cleaning and EDA
+
+### Data Cleaning
+
+```{r load data, include=FALSE}
+originalStroke<-read.csv("StrokeSet.csv")
+```
+
+```{r take a look, include=FALSE}
+glimpse(originalStroke)
+```
+
+```{r}
+originalStroke<-originalStroke[,-1]
+```
+
+We started with converting the data types of several features to more appropriate types.
+
+```{r}
+v1<-class(originalStroke$hypertension)
+v2<-class(originalStroke$heart_disease)
+v3<-class(originalStroke$stroke)
+v4<-class(originalStroke$bmi)
+columns_to_convert<-c(v1,v2,v3,v4)
+features<-c("hypertension","heart_disease","stroke","bmi")
+features_to_convert<-data.frame("Features" = features,"Type" = columns_to_convert)
+knitr::kable(features_to_convert,caption = "Features Need to Convert to Other Type")
+```
+
+There are three features that need to be converted from numeric data to categorical data, which are hypertension, heart_disease, and stroke. These three features were converted from numeric type to categorical type. Other categorical features that are originally in character type were also converted into factor type for the model building later.
+
+```{r change data type, warning=FALSE}
+originalStroke$bmi<-as.numeric(originalStroke$bmi)
+originalStroke$stroke<-as.factor(originalStroke$stroke)
+originalStroke$hypertension<-as.factor(originalStroke$hypertension)
+originalStroke$heart_disease<-as.factor(originalStroke$heart_disease)
+
+#originalStroke$stroke<-as.factor(originalStroke$stroke)
+```
+
+```{r change data type2}
+#Change all categorical data that are in character type to factor type
+originalStroke <- as.data.frame(unclass(originalStroke),stringsAsFactors=TRUE)
+```
+
+We then check for missing in the data set. The result was shown in the table below.
+
+```{r check NA after conversion, warning=FALSE}
+# Check missing data
+knitr::kable(sum(is.na(originalStroke))
+,caption = "Number of Missing Values")
+```
+
+```{r show where NA is,fig.height=4,fig.width=4,fig.align='center'}
+NA_plot<-vis_miss(originalStroke)
+NA_plot+ggtitle("Figure 2.1 Graph of NA in Each Column")
+```
+
+```{r bmi na row}
+bmi_na_row<-which(is.na(originalStroke$bmi))
+```
+
+```{r missing value row stroke status}
+knitr::kable(table(originalStroke$stroke[bmi_na_row]),caption = "Stroke Status of Rows with Missing Value")
+```
+
+Table 3 and Figure 2.1 show that 201 rows of missing values were found from the data set, which was only present in the column "bmi". According to Table 3, there are 161 patients who suffered from stroke events and 40 patients who did not suffer from stroke in patients with their BMI value missing(Here, 0 = the patient had stroke, 1 = the patient have not had a stroke). We decide to remove these rows with missing values in BMI.The data set after the removal of missing data contains 4909 rows of data.
+
+```{r dealing with missing data, include=FALSE}
+## Remove NAs
+stroke<-na.omit(originalStroke)
+```
+
+```{r,fig.height=4,fig.width=4,fig.align='center'}
+stroke_classes<-ggplot(data = originalStroke, mapping = aes(x=stroke,fill=stroke))+
+  geom_bar()+
+  xlab("Stroke Status")+
+  ggtitle("Figure 2.2 Classes of Stroke")
+  
+stroke_classes
+```
+
+We can see from Figure 2.2 that the class of stroke status was imbalanced, therefore, we utilized the technique called Synthetic Minority Oversampling Technique(SMOTE) to synthesize data points for the minority class, therefore increasing the proportion of the minority class in the data set and enable us to build a usable classifier.
+
+The SMOTE technique is an oversampling technique that utilizes the technique called k-Nearest Neighbor algorithm to synthesize data. In this project, we choose to use SMOTE_NC, which is a modification of SMOTE that is able to handle data sets with both categorical and numeric features. For numeric features in the data set, SMOTE_NC randomly chooses k data points from the minority class in the data set and synthesizes new data points on the line segment between each of the two data points. For categorical features, SMOTE_NC selects the most frequent category of the nearest neighbor data points and assigns it to the new synthesized data point. (Imbalanced learn)
+
+This technique allows us to mitigate the imbalance in the data set with less concern on the issue of overfitting in regular oversampling that make the model giving better predictions on training data but failed to make correct prediction on new data(Wijaya).
+
+An experimental package created by Dongyuan Wu from github was utilized to conduct SMOTE_NC for our data set that consists of both categorical and numeric features(Wu).
+
+### EDA
+
+
+```{r dealing with imbalance of data set, include=FALSE}
+#Utilizing smote_nc to synthesize additional data points for the minority class in the data set.
+set.seed(114514)
+test<-SMOTE_NC(stroke,"stroke",perc_maj = 25,5)
+test$ever_married<-recode(test$ever_married,Yes="1",No="0")
+#write.csv(test, file = "Smote0.25.csv")
+#test <- as.data.frame(unclass(test),stringsAsFactors=TRUE)
+
+```
+
+
+
+We begin exploratory data analysis to explore characteristics of features in the cleaned data set.
+
+
+
+
+```{r bmi distribution,fig.height=4,fig.width=4,fig.align='center'}
+ggplot(data=test,aes(x=bmi))+
+  geom_boxplot()+ggtitle("Figure 2.3 Distribution of BMI")
+```
+
+
+
+
+We can see from Figure 2.3 that the distribution of patients' BMI is rightly skewed.
+
+
+
+
+```{r stroke across gender, fig.height=4, fig.width=4, warning=TRUE,fig.align='center'}
+positive_stroke<-test$stroke==1
+positive_stroke_set<-data.frame("Stroke"=as.factor(positive_stroke),"Gender"=test$gender)
+
+stroke_gender<-positive_stroke_set%>%
+  group_by(Gender)%>%
+  summarise(n = n()) %>%
+  ggplot(aes(x = Gender, y = n,fill=Gender))+
+  geom_col()+
+  labs(y="Count of Stroke Events")
+stroke_gender+ggtitle("Figure 2.4 Stroke Event Across Gender")
+
+
+
+
+```
+
+
+
+
+We can see from Figure 2.4 that there are more female patients among all patients who had stroke. Additionally, one patient with gender "Other" exist in the data set.
+
+
+
+
+```{r stroke and work type,fig.height=4,fig.width=4,fig.align='center'}
+
+positive_stroke_work<-data.frame("Stroke"=as.factor(positive_stroke),"Work"=test$work_type)
+
+stroke_work<-positive_stroke_work%>%
+  group_by(Work)%>%
+  summarise(n = n()) %>%
+  ggplot(aes(x = Work, y = n,fill=Work))+
+  geom_col()+
+  labs(y="Count of Stroke Events")+theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1))
+stroke_work+ggtitle("Figure 2.5 Stroke Event Across Work Type")
+```
+
+
+
+
+We can see from Figure 2.5 that their are more patients who had stroke that has private as their work type.
+
+
+
+
+```{r,fig.height=4,fig.width=4,message=FALSE,fig.align='center'}
+ggplot(data=test,aes(x=avg_glucose_level))+
+  geom_boxplot()+
+  ggtitle("Figure 2.6 Distribution of Average Glucose Level")
+```
+
+
+
+
+We can see from Figure Figure 2.6 that the distribution of average glucose level of patients is rightly skewed.
+
+
+
+
+```{r fig.height=4, fig.width=4, message=FALSE, warning=FALSE,fig.align='center'}
+ggplot(data=test,aes(x=age,y=bmi))+
+  geom_point()+
+  geom_smooth()+ggtitle("Figure 2.7 Age vs BMI")
+```
+
+
+
+
+We can see from Figure 2.7 that patients' age and their BMI may have non linear correlation.
+
+
+
+
+```{r message=FALSE, warning=FALSE,fig.align='center'}
+ggplot(data=test,aes(x=avg_glucose_level,y=bmi))+
+  geom_point()+
+  geom_smooth()+
+  ggtitle("Figure 2.8 BMI and Blood Glucose Level")
+```
+
+
+We can see from Figure 2.8 that patients' BMI and their average blood glucose level may have weak non linear correlation.
+
+
+
+
+```{r echo=FALSE, warning=FALSE,fig.align='center'}
+age_stroke<-ggplot(data=test,aes(x=age,y=bmi,color=stroke))+geom_point()
+age_stroke+ggtitle("Figure 2.9 Age vs BMI Respect to Stroke")
+```
+
+
+
+
+We can see from Figure 2.9 that there are more older adults who had stroke.
+
+
+
+
+## Section 3: Method 1:k Nearest Neighbor(kNN)
+
+### Section 3.1: Introduction
+
+We begin building the classifier by implementing a technique called k-Nearest Neighbor(kNN) to predict the stroke status of the patients. It uses the stroke status of the k nearest neighbor data points to predict the stroke status of any given data point in the data set. We employed this technique to predict patients' stroke status since it does not have explicit training before making predictions, therefore allowing the data of new patients to be added without the need of training the model again(Kumar).
+
+### Sectio 3.2 Method
+
+Figure 10 is an illustration of the kNN technique with only age and BMI as the features utilized in kNN, where 0 = the patient had a stroke, 1 = the patient has not had a stroke(For demonstration purposes, we only sampled 400 rows of data from the cleaned stroke data set).
+
+```{r demo set}
+set.seed(114514)
+numRow<-nrow(test)
+chosenDemo<-sample(1:numRow,400,replace = FALSE)
+set_demo<-test[chosenDemo,]
+```
+
+```{r kNN demo illustration,fig.height=4,fig.width=4,fig.align='center'}
+demo_data<-data.frame("Age"= rep(NA,1),"BMI"=rep(NA,1),"Stroke"=rep(NA,1))
+demo_data$Age[1]<-63
+demo_data$BMI[1]<-24
+demo_data$Stroke<-1
+#demoTest<-example_data%>%
+ # mutate(dengue_status_test=as.character(dengue_status))
+ggplot()+
+  geom_point(data = set_demo,aes(x=age,y=bmi,col=stroke),size=2,alpha=0.9,shape=19)+
+  geom_point(data =demo_data,aes(x=Age,y=BMI),size=2,alpha=0.9,shape=19)+
+  geom_segment(aes(x=63,xend=62.2,y=24,yend=28))+
+  geom_segment(aes(x=63,xend=66,y=24,yend=24.5))+
+  geom_segment(aes(x=63,xend=65.,y=24,yend=27))+
+  ggtitle("Figure 3.2.1 Illustration of kNN")
+  
+```
+
+In Figure 3.2.1, we have a new data point representing a patient who is 63 years old with BMI equals to 24(shown as the black dot on the graph).If we set the k value for k Nearest Neighbors as 3. The kNN algorithm will find the stroke status of the 3 nearest data point to the data point of this patient, as shown in Figure 3.1 with black line segments connecting 3 neighbor points and the black dot. The algorithm the assigns the stroke status of majority of the 3 neighbor points as the predicted stroke status of this patient. Since all 3 neighbor points has 0 as their stroke status, this patient was predicted that he/she/them have not had a stroke.
+
+We utilized 10-fold Cross Validation to assess the predictive accuracy of kNN on predict stroke of patients in the stroke data set. To do this we randomly divided the stroke data set into 10 folds with equal size, where each fold contains $\frac{1}{10}$ of the rows in stroke data set. We then started with treating fold 1 as the new test set of stroke data and the remaining 9 folds as the training data. We repeated this process for 10 times to train the model and obtain predictions on the training data. This method was used along with the process of determine the best k value for kNN.That is, we conduct 10-fold Cross Validation for each k value, and calculate the sensitivity(true positive rate, percent of patients who had strokes that we correctly predicted on their higher stroke risk), specificity(true negative rate, percent of patients who have not had stroke that we correctly predicted) and the geometric mean of them. The geometric mean is calculated by taking the square root of sensitivity and specificity, the closer the two metrics are, the larger the geometric mean. The k value that provides the largest geometric mean is regarded as the best k value for this prediction through kNN. A line graph of geometric mean with respect to each k value was used to indicate the best k value for our prediction.
+
+```{r kNN Data}
+#Create a data set with only numeric features for the kNN
+numericOnly<-test[,c(2,8,9,11)]
+```
+
+```{r 10 fold CV determine best k }
+set.seed(114514)
+n<-nrow(numericOnly)
+nk<-30
+storage<-data.frame("K"=rep(NA,nk),
+                    "Sensitivity" = rep(NA,nk),
+                    "Specificity" = rep(NA,nk),
+                    "GeoMean" = rep(NA,nk))
+
+#Set a seed for sampling and create a pool and set fold for K fold CV
+set.seed(114514)
+pool<-rep(1:10,ceiling(n/10))
+
+fold<-sample(pool,n,replace = FALSE)
+
+#Outer loop for increment k 
+for(k in 1:nk){
+  storage$K[k]<-k
+  
+  storage_inner<-data.frame("YHat" = rep(NA,n))
+  #Inner loop for 10 fold CV
+  for(i in 1:10){
+    #Find data in each fold
+    infold<-which(fold == i)
+    
+    #Create training and testing sets
+    Train_Stroke<-numericOnly[-infold,]
+    Test_Stroke<-numericOnly[infold,]
+   #(set.seed(114514))
+    #Run kNN
+    k_preds<-knn(Train_Stroke[,c(1,2,3)],Test_Stroke[,c(1,2,3)],k=k,cl=Train_Stroke$stroke)
+    
+    #store predicted result from each fold to storage_inner and obtain predictions to     the full data set 
+    storage_inner$YHat[infold]<-as.numeric(as.character(k_preds))
+  }
+    #Find rows with positive and negative result
+    true1K<-which(numericOnly$stroke == 1)
+    true0K<-which(numericOnly$stroke == 0)
+    
+    #Compute the amount of rows corresponding to each result
+    ntrue1K<-length(true1K)
+    ntrue0K<-length(true0K)
+    #Compute sensitivity and specificity, as well as GeoMetric Mean for determining the best value for k
+    sensitivity<-sum(storage_inner$YHat[true1K] == 1)/ntrue1K
+    storage$Sensitivity[k]<-sensitivity
+    specificity<-sum(storage_inner$YHat[true0K] == 0)/ntrue0K
+    storage$Specificity[k]<-specificity
+    storage$GeoMean[k]<-sqrt(sensitivity*specificity)
+    
+    #if(k==8){
+     # YHatOut <- storage_inner$YHat
+    #}
+   
+}
+
+```
+
+```{r find best k}
+#Create plot to find the best k for kNN 
+knnActualPlot<-ggplot(storage,aes(K,GeoMean))+
+  geom_line()+
+  labs(caption = paste("Geometric Mean, ReD Line at K=", which.max(storage$GeoMean)),title = "Figure 3.2.2 GeoMean Graph of kNN with Best k Shown
+  (10 Fold Cross Validation)",y = " ")+
+  geom_vline(xintercept = which.max(storage$GeoMean),lty = 2,col="red")
+#Show Plot
+knnActualPlot
+```
+
+Figure 3.2.2 shows that k=5 is the best k value for the 10-fold Cross Validation, as it provides the largest geometric mean in k values from 1-30, therefore providing the most balance between sensitivity(true positive rate) and specificity(true negative rate) of the prediction.
+
+### Section 3.3: Results
+
+We assesses the predictive accuracy of kNN through the following predictive metric: sensitivity(true positive rate),specificity(true negative rate), accuracy, and classification error rate(CER). The sensitivity indicates the percentage of patients who had stroke that we correctly predicted on their higher risk of having stroke in all patients who had stroke. The specificity indicates the percentage of patients who have not had stroke that we correctly predicted on their lower risk of having stroke in all patients who have not suffered from stroke. Accuracy indicates the percentage of patients we correctly predicted on in all patients. CER indicates the percentage of patients that we failed to make correct prediction on whether they had stroke in all patients.
+
+Below is a confusion matrix of the prediction using kNN with k value equals to 5, where rows are predicted stroke status and columns are actual stroke status of patients.
+
+```{r}
+knitr::kable(table("Prediction" = storage_inner$YHat,"Actual" = numericOnly$stroke),caption = "Confusion Matrix of Predicting Stroke(10-fold Cross Validation with k=5)")
+```
+
+From Table 5, we have:
+
+```{r}
+KNN_metrics<-data.frame("Sensitivity"= 0.514,"Specificity" = 0.928,"Accuracy" = 0.844,"CER" = 0.156)
+knitr::kable(KNN_metrics,caption = "Performance Metrics kNN(k=5)")
+```
+
+
+
+According to the result obtained from 10-fold Cross Validation, kNN allowed us to reach a sensitivity of 0.514 and a specificity of 0.928, and an overall accuracy of 0.844 on predicting patients in the cleaned data set on whether each of them are at higher or lower risk of having stroke. Despite the accuracy of 0.83 which indicates we made accurate predictions for 83% of the patients on their risk of having a stroke, the sensitivity of our prediction revealed that we only predicted accurately for 51.4% of the patients on their higher risk of having a stroke. Since the kNN algorithm only accept numeric features,the 8 remaining categorical features were not used for the prediction. Thus, other techniques that can utilize all available features might be needed for offering better prediction on risk of having stroke.
+
+
+## Section 4: Method 2: Ridge Regression
+
+### Section 4.1: Introduction
+
+The kNN algorithm we used in Section 3 was unable to utilize all available features for the prediction of risk of stroke. Additionally, Figure 2.7 and 2.8 from the EDA section indicates that non linear correlations exist among the three numeric features in the data set. Therefore, we decided to implement penalized regression techniques, along with logistic regression, to build the second classifier that not only utilizes both numeric and categorical features in making predictions, but also mitigates the impact of multicollinearity (correlations between features) in the prediction.
+
+### Section 4.2: Method
+
+We uses logistic regression model with ridge regularization to create the prediction model for predicting risk stroke status, as it provides the effect of shrinkage. In other words, shrinking the coefficients of correlated features towards 0 while still maintaining all the features in the cleaned data set when building the model, thus restrains the impact from them and mitigates the effect caused by multicollinearity(correlated features in the data set). To do this we need to find the tuning parameter that provides the best shrinking effect.
+
+The general form of our model is the following(where $Y_i\sim Bernoulli(\pi_i)$):
+
+$$log(\frac{\boldsymbol{\pi_i}}{1-\boldsymbol{\pi_i}})=\boldsymbol{X_D\beta+\epsilon}$$ , where $\pi_i$ is the probability that a patient has higher risk of having stroke. The $\boldsymbol{X_D}$ is our design matrix that consists of all the features remained in the data set after data cleaning.
+
+The deviance of the logistic regression model is defined as a measurement of how much the fitted logistic regression model deviates from a model that perfectly predicts each of the observation. In other words, deviance refers to the goodness of fit. Therefore, the smaller the deviance is, the better the model fits on the observed response(Kjytay and Kjytay).
+
+For using ridge regression along with logistic regression, we uses Deviance, plus the penalty term $\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$, which constrains the regression coefficient when correlated feature exist.
+
+$$Deviance+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
+\newline
+
+Our goal is to find $\boldsymbol{\beta}$ coefficients that minimizes the following:
+
+$$Deviance + \lambda
+\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=(-2log(L(\hat{\boldsymbol{\beta}})))+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
+
+where the log(L) represents the log likelihood. The likelihood is defined as the probability of the observed data, given that we assume a certain model and certain values for the parameteres that define the model(Evans).
+
+
+In order to implement ridge regression ,we need to find the value of tuning parameter $\lambda$ that provides the most ideal shrinkage to the model. We use the deviance to assess the predictive accuracy of the models that uses different values of $\lambda$. The logistic regression is said to be more accurate when has smaller deviance. The model with smaller deviance will perform better on predicting observed response, therefore lead to a higher predictive accuracy(Kjytay and Kjytay).To find the most ideal value of lambda, we utilize 10-fold Cross Validation along with each value of lambda from 1 to 50(increment by 0.05 for each time) to determine the value of lambda that correspond to the lowest deviance among all the lambda values we tested.This lambda value will be used to train the logistic regression model with ridge regulariation. 
+
+```{r load a function, include=FALSE}
+##Load a function for creating the plot of RMSE in response of change in Lambda
+ridgePlot <- function(ridge.mod, metric, title){
+  library(ggplot2)
+  
+  smallestLambda <- ridge.mod$lambda[which.min(ridge.mod$cvm)] 
+  
+  if(metric == "MSE"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = (ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste("Test MSE values for Different Tuning Parameters. Smallest MSE at lambda = ", smallestLambda), title = title, y = "Deviance", x = "Tuning Parameter")
+  
+  }
+  
+  if(metric == "Deviance"){
+  g1 <- ggplot( data.frame(ridge.mod$lambda), aes( x = ridge.mod$lambda, y = sqrt(ridge.mod$cvm))) + geom_point() + geom_vline( xintercept = smallestLambda, col = "blue" , lty = 2 ) +  labs(caption = paste(" Smallest Deviance at lambda = ", smallestLambda), title = title, y = "Deviance", x = "Tuning Parameter")
+
+  }
+  
+  g1
+}
+```
+
+```{r creating design matrix ridge}
+# Create the design matrix for ridge regression
+XD <- model.matrix(stroke ~., data = test)
+```
+
+```{r cv to find the best lambda,cache=TRUE}
+#Set seed for random sampling
+set.seed(114514)
+#Run cross validation for lambda value from 1 to 50(increment by 0.05 for each run)
+ridge.modFind_Lambda <- cv.glmnet(XD[,-1], test$stroke , alpha = 0,standardize = TRUE,family = "binomial")
+```
+
+```{r}
+#plot(ridge.modFind_Lambda)
+```
+
+```{r,fig.height=5,fig.width=5,fig.align='center'}
+ridgePlot(ridge.modFind_Lambda, metric = "Deviance" , title ="Figure 4.2.1 Change of Deviance vs Lambda(Ridge)" )
+```
+
+
+
+```{r}
+CV_result_ridge<-data.frame("Lambda" = ridge.modFind_Lambda$lambda,"Deviance" = ridge.modFind_Lambda$cvm)
+smallestRidge_Deviance<-which.min(CV_result_ridge$Deviance)
+knitr::kable(CV_result_ridge[smallestRidge_Deviance,],caption = "Deviance of Model with Chosen Lambda(Ridge)")
+```
+
+We can see from Figure 4.2.1 and Table 7 that the lowest deviance(0.69) occurred when the model is using $\lambda=0.0182421$ as the tuning parameter of model. Therefore, we select $\lambda = 0.0182421$ and fit the the final logistic regression model with ridge regularization.
+
+```{r ridge final and pred}
+ridge.final<-glmnet(XD[,-1], test$stroke , alpha = 0,lambda = CV_result_ridge[smallestRidge_Deviance,]$Lambda	, standardize = TRUE,family = "binomial")
+pred_ridge<-predict(ridge.final,newx=XD[,-1],type = "response")
+```
+
+```{r beta ridge, eval=FALSE, include=FALSE}
+beta_ridge<-as.numeric(coefficients(ridge.final))
+coef_ridge<-data.frame("Coef"=beta_ridge,"Selecting Status" = ifelse(beta_ridge==0,"Removed",""))
+rownames(coef_ridge)<-colnames(XD)
+knitr::kable(coef_ridge)
+```
+
+Below is the confusion matrix of prediction using logistic regression with ridge regularization with default threshold,where rows are predicted stroke status and columns are actual stroke status of patients.
+
+```{r unadjusted pred}
+unadjusted_pred_ridge<-ifelse(pred_ridge>0.5,"1","0")
+
+knitr::kable(table("Prediction" = unadjusted_pred_ridge,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Ridge(Unadjusted)")
+```
+
+From Table 8, we have:
+
+```{r}
+ridge_raw<-data.frame("Sensitivity"=0.367,"Specificity"=0.963,"Accuracy"=0.844,"CER"=0.156)
+knitr::kable(ridge_raw,caption = "Performance Metrics Ridge(Threshold Unadjusted)")
+```
+
+
+
+We can see from Table 9 that although our ridge regression model reaches an overall predictive accuracy of 0.844, we only reached a sensitivity of 0.366, meaning that among all of the patients who had stroke, we are only able to accurately predict 36.6 % them on their higher risk of suffering from stroke. This is caused by the imbalanced nature of our data set(Brownlee).
+
+If we uses the default setting 0.5 as the threshold used on predicting whether a patient has higher risk of suffering from stroke,the sensitivity(true positive rate) of our prediction model is going to be low while the specificity is going to be high since majority of the observations we use to build the model consist of patients who have not suffered from stroke(Brownlee). To mitigate the issue and reach our goal of predicting if a patient has higher risk of suffering from stroke, we utilizes ROC curve to find the ideal threshold of the prediction(Google Developers Machine Learning Crash Course).
+
+```{r ROCAUC ridge, fig.height=4, fig.width=4, message=FALSE, warning=FALSE,fig.align='center'}
+roc_ridge<-roc(test$stroke,pred_ridge)
+plot(roc_ridge,main="Figure 4.2.2 ROC Curve Ridge Regression")
+
+#knitr::kable(auc(roc_ridge))
+holder <- data.frame("Threshold" = roc_ridge$thresholds, "Sensivity" = roc_ridge$sensitivities, "Spec" = roc_ridge$specificities, "GMean" = sqrt(roc_ridge$sensitivities*roc_ridge$specificities))
+knitr::kable(holder[which.max(holder$GMean),]
+,caption = "Threshold With Ideally Balanced Sensitivity and Specificity and Largest Geometric Mean ")
+```
+
+We can see from Table 10 that threshold = 0.191465 provides us a balance between sensitivity and specificity of the prediction model, since it has the largest largest geometric mean that indicate the ideal balance between sensitivity and specificity of the prediction model.
+
+```{r prediction with adjuste threshold}
+pred_ridge_Y<-ifelse(pred_ridge>holder[which.max(holder$GMean),]$Threshold,"1","0")
+```
+
+### Section 4.3: Results:
+
+Below is a confusion matrix of prediction on whether a patient in our cleaned data set has higher risk of having stroke(rows in the matrix are predicted stroke status and columns are actual stroke status of patients)
+
+```{r ridge mtx2}
+knitr::kable(table("Prediction" = pred_ridge_Y,"Actual"= test$stroke),caption = "Confusion Matrix for Prediction of Stroke Via Ridge(Threshold Adjusted)")
+```
+
+\newpage
+
+From Table 11,we have;
+
+```{r}
+ridge_metrics<-data.frame("Sensitivity"=0.860,"Specificity"=0.706,"Accuracy"=0.737,"CER"=0.263)
+knitr::kable(ridge_metrics,caption = "Performance Metrics Ridge Regression(Threshold Adjusted)")
+```
+
+
+We can see from Table 12 that logistic regression with ridge regularization reached a sensitivity of 0.86, meaning the model is able to correctly predict for 86% of the patients on their higher risk of having stroke in all patients who had stroke in our cleaned data set. The specificity of our model is 0.706, which indicates that the model is able correctly predict for 70.6% of patients on their lower risk of having stroke in all patients with have not had stroke. An overall accuracy of 0.737 indicates that the model correctly predicts the stroke risk status for 73.7% of the patients in our cleaned data set. A CER of 0.263 indicates that the model incorrectly predicted the stroke risk status of 26.3% of the patients.
+
+The logistic regression with ridge regularization enabled us to predict more accurately than kNN on identifying people with higher stroke risk. However, the increased CER on prediction would lead to more incorrect prediction on people' stroke risk. Therefore, further techniques may be needed for mitigating this issue and developing better classifier on stroke risk prediction.
+
+## Section 5: Method 3 Bagged Forest
+
+### Section 5.1: Introduction
+
+Although the ridge regression model we used in Section 4 reached a higher predictive accuracy on predicting patients with higher risk on having stroke, the classification error rate of the prediction model was 0.263, meaning the risk status of 26.3% of the patients from the cleaned data set was incorrectly predicted. Thus, we introduce the technique called Bagged Forest to build the third classifier and attempt to mitigate this situation. As it may provide higher accuracy on the prediction on stroke risk status. To do this we need to discuss about the classification tree in the next section, which are the components of the bagged forest.
+
+
+
+
+### Section 5.2: Method
+
+
+Below is a sample decision tree created based on features including gender, age, hypertension, heart disease status, marriage status and stroke(response variable).
+
+```{r}
+##sample classification tree in bagging 
+set.seed(114514)
+select_rows<-sample(1:n,n,replace = TRUE)
+select_set<-test[select_rows,c(1:5,11)]
+sample_tree<-rpart(stroke~.,method = "class",data=select_set)
+fancyRpartPlot(sample_tree,sub="Figure 5.2.1 Sample Classification Tree (Only Use 6 Features)",cex=0.7)
+```
+
+At the beginning of this tree, we put the patients of the entire cleaned data set as the “root” of the tree, then we split the root of the tree into two nodes based on the features we used, which distribute the patients in the cleaned data set into the two nodes based on their class on this specific feature. The split was decided based on the way that gives us the smallest Gini Index (A measure of a split’s effectiveness of correctly classifying a patient into a node in the tree). This process was repeated until we get the lowest Gini Index, which indicates the most ideal classifying ability of a classification tree(Dash).
+
+However, a single decision tree is prone to overfitting, which results in a high variance on the classifier. In other words, the tree model is trained to tightly to the data set we use to create it, and made it unusable to predict for the stroke status of new patients in screening(Liberman). 
+
+The technique of bagged forest consists of a series of decision trees(in this project, classification trees). The bagged forest utilizes the bagging(abbreviation of Bootstrap Aggregation) process, which randomly draws out rows of data from our cleaned data set, and creates classification trees with using the data from each bootstrapping process. All the features in the data set will be used to create each classification tree. When using the bagged forest to predict the risk of stroke of a patient, each tree in the forest will make a prediction based on the data, and the majority of the prediction result will be assigned to the patient as the predicted stroke risk status. This "voting" process helps to mitigates the issue of overfitting and decrease the variance.
+
+```{r bagged forest}
+#Set seed 
+set.seed(100)
+set_for_forest<-test
+#set_for_forest$hypertension <- as.numeric(set_for_forest$hypertension)
+#set_for_forest$heart_disease <- as.numeric(set_for_forest$heart_disease)
+bagged<-randomForest(stroke~.,data=test,mtry=10,importance=TRUE,ntree=1000,compete=FALSE)
+```
+
+```{r bagged prediction}
+#bag forest prediction
+for_predict<-test[,-11]
+pred_bag<-predict(bagged)
+#table(pred_bag)
+#table("Prediction"= pred_bag,"Actual" = test$stroke)
+```
+
+### Section 5.3 Results
+
+Below is the confusion matrix of prediction on the set of data that is not been used for growing each tree in the forest, respectively. This is named as the "Out of Bag" data, abbreviated as "OOB" data. The rows in the matrix are predicted stroke status and columns are actual stroke status of patients)
+
+```{r bagged confusion matrix}
+#Formatted Confusion Matrix for bagged forest
+knitr::kable(table("Prediction"=bagged$predicted,"Actual"=test$stroke),caption="Confusion Matrix of Bagged Forest")
+```
+
+From Table 13, we have:
+
+
+
+```{r}
+bagged_metrics<-data.frame("Sensitivity"=0.748,"Specificity"=0.960,"Accuracy"=0.917,"CER"=0.083)
+knitr::kable(bagged_metrics,caption = "Performance Metrics Bagged Forest")
+```
+
+
+We can see from Table 14 that the bagged forest allowed us to reach a sensitivity of 0.748, meaning in all patients who had stroke in the OOB data of this bagged forest model, the model can correctly predict for 74.8% of the patients on their higher risk of having stroke. The specificity of the prediction is 0.96, which indicated that the model can correctly predict for 96% of patients on their lower stroke risk in OOB data of this bagged forest model. An overall accuracy of 0.917 indicates that the model is able to correctly predict the stroke risk status of 96% of patients in the OOB data of this bagged forest. A CER of 0.083 means the model incorrectly predicts the stroke risk status of 8.3% of the patient in the OOB data of this bagged forest.
+
+## Conclusion
+
+We have conducted kNN, logistic regression with ridge regularization method, and bagged forest to build the model for predicting stroke risk.
+
+```{r}
+metrics_sum<-rbind(KNN_metrics,ridge_metrics,bagged_metrics)
+techniques<-c("kNN with k=5","Logistic Regression With Ridge Regularization","Bagged Forest")
+metrics_sum<-cbind(techniques,metrics_sum)
+knitr::kable(metrics_sum,caption = "Compare 3 Techniques on Performance Metrics")
+```
+
+We can see from Table 14 that logistic regression with ridge regularization has the highest sensitivity (0.86) with relatively low specificity (0.706), while kNN has the lowest sensitivity (0.514). Bagged Forest outperformed logistic regression and kNN on the overall accuracy and CER of the prediction (0.917 and 0.083, respectively). Despite the highest sensitivity that logistic regression with ridge regularization has, we would recommend using the bagged forest model as the classifier for identifying people with a higher risk of having a stroke during screening, since it has the lowest classification error rate and highest specificity while maintaining a relatively high ability to identify people with a higher risk of having stroke. Additionally, the bagged forest will be able to perform better in the real-life setting when predicting new data from people. The limitation we found is that models constructed through all 3 techniques are impacted by the imbalanced nature of our data set, we recommend collecting more data to resolve this issue.
+
+
+
+
+
+
+
+
+\newpage
+
+## Works Cited
+
+"About Stroke." Centers for Disease Control and Prevention, Centers for Disease Control and Prevention, 2 Nov. 2022, <https://www.cdc.gov/stroke/about.htm>.
+
+"Stroke Facts." Centers for Disease Control and Prevention, Centers for Disease Control and Prevention, 14 Oct. 2022, <https://www.cdc.gov/stroke/facts.htm>.
+
+Fedesoriano. "Stroke Prediction Dataset." Kaggle, 26 Jan. 2021, <https://www.kaggle.com/datasets/fedesoriano/stroke-prediction-dataset/code>.
+
+Imbalanced Learn. "2. Over-Sampling#." 2. Over-Sampling - Version 0.10.0.dev0, <https://imbalanced-learn.org/dev/over_sampling.html#smote-variants>.
+
+Wijaya, Cornellius Yudha. "5 Smote Techniques for Oversampling Your Imbalance Data." Medium, Towards Data Science, 24 May 2022, <https://towardsdatascience.com/5-smote-techniques-for-oversampling-your-imbalance-data-b8155bdbe2b5>.
+
+RolandRoland."Convert All Data Frame Character Columns to Factors." Stack Overflow, 17 Dec. 2013, <https://stackoverflow.com/questions/20637360/convert-all-data-frame-character-columns-to-factors>.
+
+Wu, Dongyuan. "Dongyuanwu/RSBID: Resampling Strategies for Binary Imbalanced Datasets Version 0.0.2.0000 from Github." Version 0.0.2.0000 from GitHub, 18 July 2022, <https://rdrr.io/github/dongyuanwu/RSBID/>.
+
+Singh, Deepika. "Deepika Singh." Pluralsight, 12 Nov. 2019, <https://www.pluralsight.com/guides/finding-relationships-data-with-r>.
+
+Reka Solymosi (maintained and updated by David Buil-Gil and Nicolas Trajtenberg). "Making Sense of Crim Data." Chapter 3 Week 3, 8 Nov. 2022, <https://maczokni.github.io/MSCD_labs/week3.html>.
+
+Kumar, Naresh. "Advantages and Disadvantages of kNN Algorithm in Machine Learning." Advantages and Disadvantages of kNN Algorithm in Machine Learning, <http://theprofessionalspoint.blogspot.com/2019/02/advantages-and-disadvantages-of-kNN.html>.
+
+Maximum Likelihood Estimation, https://sta279-s22.github.io/slides/lecture_6.html.
+
+Kjytay, and Kjytay. "What Is Deviance?" Statistical Odds & Ends, 27 Mar. 2019, <https://statisticaloddsandends.wordpress.com/2019/03/27/what-is-deviance/>.
+
+Brownlee, Jason. "A Gentle Introduction to Threshold-Moving for Imbalanced Classification." MachineLearningMastery.com, 4 Jan. 2021, <https://machinelearningmastery.com/threshold-moving-for-imbalanced-classification/>.
+
+"Classification: Roc Curve and AUC  \|  Machine Learning  \|  Google Developers." Google, Google,<https://developers.google.com/machine-learning/crash-course/classification/roc-and-auc#>:\~:text=An%20ROC%20curve%20(receiver%20operating,False%20Positive%20Rate.
+
+“Decision Tree Introduction with Example.” GeeksforGeeks, 10 Nov. 2022, https://www.geeksforgeeks.org/decision-tree-introduction-example/. 
+
+Liberman, Neil. “Decision Trees and Random Forests.” Medium, Towards Data Science, 21 May 2020, https://medium.com/towards-data-science/decision-trees-and-random-forests-df0c3123f991. 
+
+Dash, Shailey. “Decision Trees Explained-Entropy, Information Gain, Gini Index, CCP Pruning..” Medium, Towards Data Science, 2 Nov. 2022, https://towardsdatascience.com/decision-trees-explained-entropy-information-gain-gini-index-ccp-pruning-4d78070db36c.
