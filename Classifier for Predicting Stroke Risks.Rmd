@@ -621,7 +621,7 @@ set_for_forest<-test
 bagged<-randomForest(stroke~.,data=test,mtry=10,importance=TRUE,ntree=1000,compete=FALSE)
 ```
 
-```{r bagged prediction}
+```{r bagged prediction, include=FALSE}
 #bag forest prediction
 for_predict<-test[,-11]
 pred_bag<-predict(bagged)
