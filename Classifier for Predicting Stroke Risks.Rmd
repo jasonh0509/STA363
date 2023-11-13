@@ -69,12 +69,12 @@ knitr::kable(attributes_stroke,caption = "Features and Descriptions")
 
 
 
-## Section 2: Data Cleaning and EDA
+## Section 2: Data Cleaning and Exploratory Data Analysis (EDA)
 
 ### Data Cleaning
 
 ```{r load data, include=FALSE}
-originalStroke<-read.csv("StrokeSet.csv")
+originalStroke<-read.csv("https://raw.githubusercontent.com/jasonh0509/STA363/main/StrokeSet.csv")
 ```
 
 ```{r take a look, include=FALSE}
@@ -122,9 +122,9 @@ knitr::kable(sum(is.na(originalStroke))
 ,caption = "Number of Missing Values")
 ```
 
-```{r show where NA is,fig.height=4,fig.width=4,fig.align='center'}
+```{r show where NA is,fig.height=5,fig.width=5,fig.align='center'}
 NA_plot<-vis_miss(originalStroke)
-NA_plot+ggtitle("Figure 2.1 Graph of NA in Each Column")
+NA_plot+ggtitle("Figure 2.1 Graph of Missing Values in Each Column")
 ```
 
 ```{r bmi na row}
@@ -153,11 +153,14 @@ stroke_classes
 
 We can see from Figure 2.2 that the class of stroke status was imbalanced, therefore, we utilized the technique called Synthetic Minority Oversampling Technique(SMOTE) to synthesize data points for the minority class, therefore increasing the proportion of the minority class in the data set and enable us to build a usable classifier.
 
-The SMOTE technique is an oversampling technique that utilizes the technique called k-Nearest Neighbors algorithm to synthesize data. In this project, we choose to use SMOTE_NC, which is a modification of SMOTE that is able to handle data sets with both categorical and numeric features. For numeric features in the data set, SMOTE_NC randomly chooses k data points from the minority class in the data set and synthesizes new data points on the line segment between each of the two data points. For categorical features, SMOTE_NC selects the most frequent category of the nearest neighbor data points and assigns it to the new synthesized data point (Imbalanced learn).
+The SMOTE technique is an oversampling technique that utilizes the technique called k-Nearest Neighbors algorithm to synthesize data. In this project, we choose to use SMOTE_NC, which is a modification of SMOTE that is able to handle data sets with both categorical and numeric features. For numeric features in the data set, SMOTE_NC randomly chooses k data points from the minority class in the data set and synthesizes new data points on the line segment between each of the two data points. For categorical features, SMOTE_NC selects the most frequent category of the nearest neighbor data points and assigns it to the new synthesized data point (Imbalanced Learn).
 
 This technique allows us to mitigate the imbalance in the data set with less concern on the issue of overfitting in regular oversampling that make the model giving better predictions on training data but failed to make correct prediction on new data (Wijaya).
 
 An experimental package created by Dongyuan Wu from github was utilized to conduct SMOTE_NC for our data set that consists of both categorical and numeric features (Wu).
+
+
+\newpage
 
 ### EDA
 
@@ -187,7 +190,7 @@ ggplot(data=test,aes(x=bmi))+
 
 
 
-We can see from Figure 2.3 that the distribution of patients' BMI is rightly skewed.
+We can see from Figure 2.3 that the distribution of patients' BMI is slightly rightly skewed.
 
 
 
@@ -292,13 +295,13 @@ We can see from Figure 2.9 that there are more older adults who had stroke.
 
 
 
-## Section 3: Method 1:k Nearest Neighbors(kNN)
+## Section 3: Method 1: k Nearest Neighbors(kNN)
 
 ### Section 3.1: Introduction
 
-We begin building the classifier by implementing a technique called k-Nearest Neighbors(kNN) to predict the stroke status of the patients. It uses the stroke status of the k nearest neighboring data points to predict the stroke status of any given data point in the data set. We employed this technique to predict patients' stroke status since it does not have explicit training before making predictions, therefore allowing the data of new patients to be added without the need of training the model again(Kumar).
+We begin building the classifier by implementing a technique called k-Nearest Neighbors(kNN) to predict the stroke status of the patients. It uses the stroke status of the k nearest neighboring data points to predict the stroke status of any given data point in the data set. We employed this technique to predict patients' stroke status since it does not have explicit training before making predictions, therefore allowing the data of new patients to be added without the need of training the model again (Kumar).
 
-### Sectio 3.2 Method
+### Sectio 3.2: Method
 
 Figure 10 is an illustration of the kNN technique with only age and BMI as the features utilized in kNN, where 0 = the patient have not had a stroke, 1 = the patient had a stroke (For demonstration purposes, we only sampled 400 rows of data from the cleaned stroke data set).
 
@@ -415,6 +418,9 @@ Below is a confusion matrix of the prediction using kNN with k value equals to 5
 knitr::kable(table("Prediction" = storage_inner$YHat,"Actual" = numericOnly$stroke),caption = "Confusion Matrix of Predicting Stroke (10-fold Cross Validation with k=5)")
 ```
 
+\newpage
+\newpage
+
 From Table 5, we have:
 
 ```{r}
@@ -453,7 +459,7 @@ Our goal is to find $\boldsymbol{\beta}$ coefficients that minimizes the followi
 $$Deviance + \lambda
 \boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}=-2 log ( f( Y | \mathbf{\boldsymbol{\hat{\beta}}} ) )+\lambda\boldsymbol{\hat{\beta}^\mathbf{T}\mathbf{\hat{\beta}}}$$
 
-In order to implement ridge regression ,we need to find the value of tuning parameter $\lambda$ that provides the most ideal shrinkage to the model. We use the deviance to assess the predictive accuracy of the models that uses different values of $\lambda$. The logistic regression is said to be more accurate when has smaller deviance. The model with smaller deviance will perform better on predicting observed response, therefore lead to a higher predictive accuracy (Kjytay and Kjytay).To find the most ideal value of lambda, we utilize 10-fold Cross Validation along with each value of lambda from 1 to 50 (increment by 0.05 for each time) to determine the value of lambda that correspond to the lowest deviance among all the lambda values we tested.This lambda value will be used to train the logistic regression model with ridge regularization. 
+In order to implement ridge regression ,we need to find the value of tuning parameter $\lambda$ that provides the most ideal shrinkage to the model. We use the deviance to assess the predictive accuracy of the models that uses different values of $\lambda$. The logistic regression is said to be more accurate when has smaller deviance. The model with smaller deviance will perform better on predicting observed response, therefore lead to a higher predictive accuracy (Kjytay and Kjytay). To find the most ideal value of lambda, we utilize 10-fold Cross Validation along with each value of lambda from 1 to 50 (increment by 0.05 for each time) to determine the value of lambda that correspond to the lowest deviance among all the lambda values we tested.This lambda value will be used to train the logistic regression model with ridge regularization. 
 
 ```{r load a function, include=FALSE}
 ##Load a function for creating the plot of RMSE in response of change in Lambda
@@ -555,7 +561,7 @@ We can see from Table 10 that threshold = 0.191465 provides us a balance between
 pred_ridge_Y<-ifelse(pred_ridge>holder[which.max(holder$GMean),]$Threshold,"1","0")
 ```
 
-### Section 4.3: Results:
+### Section 4.3: Results
 
 Below is a confusion matrix of prediction on whether a patient in our cleaned data set has higher risk of having stroke (rows in the matrix are predicted stroke status and columns are actual stroke status of patients)
 
@@ -577,7 +583,7 @@ We can see from Table 12 that logistic regression with ridge regularization reac
 
 The logistic regression with ridge regularization enabled us to predict more accurately than kNN on identifying people with higher stroke risk. However, the increased CER on prediction would lead to more incorrect prediction on people' stroke risk. Therefore, further techniques may be needed for mitigating this issue and developing better classifier on stroke risk prediction.
 
-## Section 5: Method 3 Bagged Forest
+## Section 5: Method 3: Bagged Forest
 
 ### Section 5.1: Introduction
 
@@ -619,9 +625,12 @@ bagged<-randomForest(stroke~.,data=test,mtry=10,importance=TRUE,ntree=1000,compe
 #bag forest prediction
 for_predict<-test[,-11]
 pred_bag<-predict(bagged)
-#table(pred_bag)
+table(pred_bag)
 #table("Prediction"= pred_bag,"Actual" = test$stroke)
 ```
+
+
+\newpage
 
 ### Section 5.3 Results
 
